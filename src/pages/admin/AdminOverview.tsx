@@ -1,21 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchApi } from '../../lib/api';
+
+interface Stats {
+  totalChapters: number;
+  upcomingEvents: number;
+  activeMembers: number;
+  totalPartners: number;
+  recentActivity: { activity: string; date: string; status: string }[];
+}
 
 export const AdminOverview: React.FC = () => {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await fetchApi('/api/admin/stats');
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load stats', error);
+      }
+    };
+    loadStats();
+  }, []);
+
+  if (!stats) return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
-          Add New Widget
+          Refresh Data
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: 'Total Chapters', value: '12' },
-          { label: 'Upcoming Events', value: '5' },
-          { label: 'Active Members', value: '342' },
-          { label: 'Partners', value: '28' },
+          { label: 'Total Chapters', value: stats.totalChapters },
+          { label: 'Upcoming Events', value: stats.upcomingEvents },
+          { label: 'Active Members', value: stats.activeMembers },
+          { label: 'Partners', value: stats.totalPartners },
         ].map((stat, idx) => (
           <div key={idx} className="bg-white rounded-lg shadow p-6">
             <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider">{stat.label}</h3>
@@ -35,21 +60,21 @@ export const AdminOverview: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {[1, 2, 3].map((item) => (
-                <tr key={item}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-10-{10 + item}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">New Chapter Added</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">Completed</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
-                  </td>
+              {stats.recentActivity.map((item, idx) => (
+                <tr key={idx}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(item.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.activity}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{item.status}</td>
                 </tr>
               ))}
+              {stats.recentActivity.length === 0 && (
+                <tr>
+                   <td colSpan={3} className="px-6 py-4 text-center text-gray-500">No recent activity</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

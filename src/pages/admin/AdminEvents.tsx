@@ -1,40 +1,19 @@
 import React from 'react';
+import { GenericAdminCrud, ColumnDef, FieldDef } from '../../components/admin/GenericAdminCrud';
 
 export const AdminEvents: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Manage Events</h1>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
-          Add New Event
-        </button>
-      </div>
+  const columns: ColumnDef[] = [
+    { key: 'name', label: 'Event Name' },
+    { key: 'event_date', label: 'Date', render: (val) => new Date(val).toLocaleDateString() },
+    { key: 'location', label: 'Location' },
+  ];
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {[1, 2, 3].map((item) => (
-              <tr key={item}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Annual Summit {2024 + item}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nov {item * 10}, {2024 + item}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Colombo, Sri Lanka</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                  <button className="text-red-600 hover:text-red-900">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const fields: FieldDef[] = [
+    { name: 'name', label: 'Event Name', type: 'text', required: true },
+    { name: 'event_date', label: 'Date', type: 'date', required: true },
+    { name: 'location', label: 'Location', type: 'text', required: true },
+    { name: 'description', label: 'Description', type: 'textarea' },
+  ];
+
+  return <GenericAdminCrud title="Manage Events" tableName="events" columns={columns} fields={fields} />;
 };
