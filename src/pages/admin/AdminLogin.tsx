@@ -7,13 +7,29 @@ export const AdminLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
-      login();
-      navigate('/admin');
-    } else {
-      alert('Invalid credentials. Use admin/admin');
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        login();
+        navigate('/admin');
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Failed to connect to the server');
     }
   };
 
@@ -21,6 +37,7 @@ export const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Admin Login</h2>
+        {error && <div className="mb-4 text-red-500 text-sm text-center">{error}</div>}
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
