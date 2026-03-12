@@ -14,17 +14,18 @@ export const AdminLogin: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        login();
+        login(data.token);
         navigate('/admin');
       } else {
-        const data = await response.json();
         setError(data.error || 'Invalid credentials');
       }
     } catch (err) {

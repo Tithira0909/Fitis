@@ -4,10 +4,13 @@ import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -39,8 +42,22 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Authentication Middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.status(401).json({ error: 'Unauthorized' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Forbidden' });
+    req.user = user;
+    next();
+  });
+};
+
 // Admin Login
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -60,12 +77,24 @@ app.post('/api/admin/login', async (req, res) => {
        return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Create JWT
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     // Success
-    res.json({ message: 'Login successful', user: { id: user.id, username: user.username } });
+    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username } });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Protected Route Example
+app.get('/api/admin/data', authenticateToken, (req, res) => {
+  res.json({ message: 'This is protected data', user: req.user });
 });
 
 // Start the server

@@ -1,11 +1,11 @@
 export const isAuthenticated = (): boolean => {
-  return localStorage.getItem('adminAuthenticated') === 'true';
+  return !!localStorage.getItem('adminToken');
 };
 
-export const login = () => {
-  localStorage.setItem('adminAuthenticated', 'true');
+export const login = (token: string) => {
+  localStorage.setItem('adminToken', token);
 };
 
 export const logout = () => {
-  localStorage.removeItem('adminAuthenticated');
+  localStorage.removeItem('adminToken');
 };
