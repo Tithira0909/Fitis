@@ -1,4 +1,3 @@
-import { BoardMembers } from '../components/BoardMembers';
 import React from 'react';
 import { motion } from 'motion/react';
 import { 
@@ -115,11 +114,10 @@ const NetworkMesh = () => {
         ].map(([x, y], i) => (
           <motion.circle
             key={i}
-            cx={x ?? 0}
-            cy={y ?? 0}
-            r={4}
+            cx={x}
+            cy={y}
+            r="4"
             fill="url(#nodeGlow)"
-            initial={{ r: 4, opacity: 0.5 }}
             animate={{ r: [3, 5, 3], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2 + i % 3, repeat: Infinity }}
           />
@@ -463,7 +461,7 @@ export const Home = () => {
     <>
       <GlobeHero />
       <ChairmanMessage />
-      <BoardMembers />
+      <BoardSection />
       <ServicesSection />
       <MembershipCTA />
       <PartnersSection />

@@ -21,7 +21,6 @@ export const Navbar = () => {
     { name: 'News', href: '/Home/news' },
     { name: 'Events', href: '/Home/event_homenow' },
     { name: 'Chapters', href: '/Chapter/chapters' },
-    { name: 'Gallery', href: '/Home/gallery' },
   ];
 
   const isActive = (href: string) => {

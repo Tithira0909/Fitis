@@ -316,7 +316,6 @@ const HeroOverlay = () => {
 
 export const GlobeHero = () => {
   const [isWebGLSupported, setIsWebGLSupported] = useState(true);
-  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     try {
@@ -326,43 +325,8 @@ export const GlobeHero = () => {
     } catch (e) {
       setIsWebGLSupported(false);
     }
-
-    // Fetch site settings
-    const fetchSettings = async () => {
-      try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
-        }
-      } catch (err) {
-        console.error('Failed to load site settings for hero', err);
-      }
-    };
-    fetchSettings();
   }, []);
 
-  // Use custom media if configured
-  if (settings?.hero_url) {
-    // If the URL is already absolute, use it directly. Otherwise, prepend the API URL.
-    const mediaUrl = settings.hero_url.startsWith('http')
-      ? settings.hero_url
-      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.hero_url}`;
-    return (
-      <section className="relative h-screen w-full bg-[#000d1a] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-60 z-0" />
-        {settings.hero_type === 'video' ? (
-           <video src={mediaUrl} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-[-1]" />
-        ) : (
-           <div className="absolute inset-0 bg-cover bg-center z-[-1]" style={{ backgroundImage: `url(${mediaUrl})` }} />
-        )}
-        <HeroOverlay />
-      </section>
-    );
-  }
-
-  // Fallback to WebGL Globe or Static image
   if (!isWebGLSupported) {
     return (
       <section className="relative h-screen w-full bg-[#000d1a] flex items-center justify-center overflow-hidden">
