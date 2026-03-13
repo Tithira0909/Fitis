@@ -18,6 +18,7 @@ import { AdminChapters } from './pages/admin/AdminChapters';
 import { AdminBoardMembers } from './pages/admin/AdminBoardMembers';
 import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
+import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -27,6 +28,32 @@ const ScrollToTop = () => {
   }, [pathname]);
 
   return null;
+};
+
+const useSiteSettings = () => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/site-settings`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favicon_url) {
+            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (!link) {
+              link = document.createElement('link');
+              link.rel = 'icon';
+              document.head.appendChild(link);
+            }
+            link.href = `${baseUrl}${data.favicon_url}`;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load site settings for favicon', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 };
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
@@ -40,6 +67,8 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function App() {
+  useSiteSettings();
+
   return (
     <Router>
       <ScrollToTop />
@@ -54,6 +83,7 @@ export default function App() {
           <Route path="board-members" element={<AdminBoardMembers />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
+          <Route path="site-settings" element={<AdminSiteSettings />} />
         </Route>
 
         {/* Public Routes */}

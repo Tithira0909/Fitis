@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated, logout } from '../../lib/auth';
-import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, LogOut } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, Settings, LogOut } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +30,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/board-members', label: 'Board Members', icon: <Briefcase size={20} /> },
     { path: '/admin/partners', label: 'Partners', icon: <Handshake size={20} /> },
     { path: '/admin/newsletter', label: 'Newsletter', icon: <Mail size={20} /> },
+    { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },
   ];
 
   return (

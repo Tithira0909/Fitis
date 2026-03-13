@@ -67,6 +67,16 @@ const initializeDB = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS site_settings (
+        id INT PRIMARY KEY DEFAULT 1,
+        site_email VARCHAR(255),
+        site_phone VARCHAR(255),
+        site_location VARCHAR(255),
+        hero_type ENUM('image', 'video') DEFAULT 'image',
+        hero_url VARCHAR(500),
+        favicon_url VARCHAR(500),
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
 
@@ -86,6 +96,18 @@ const initializeDB = async () => {
       console.log('Seeded admin user.');
     } else {
       console.log('Admin user already exists.');
+    }
+
+    // Seed default site settings
+    const [settingsRows] = await connection.execute('SELECT * FROM site_settings WHERE id = 1');
+    if (settingsRows.length === 0) {
+      await connection.execute(
+        'INSERT INTO site_settings (id, site_email, site_phone, site_location) VALUES (1, ?, ?, ?)',
+        ['info@fitis.lk', '+94 11 2 000 000', 'Colombo, Sri Lanka']
+      );
+      console.log('Seeded default site settings.');
+    } else {
+      console.log('Site settings already exist.');
     }
 
     console.log('Database initialization complete.');

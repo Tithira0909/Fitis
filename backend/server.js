@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +19,48 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Expose uploads directory statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let dest = 'uploads/';
+    if (req.path.includes('/upload/hero')) {
+      dest += 'hero';
+    } else if (req.path.includes('/upload/favicon')) {
+      dest += 'favicon';
+    }
+    // Ensure directory exists
+    fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
+    cb(null, path.join(__dirname, dest));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const uploadHero = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for hero media'));
+  }
+});
+
+const uploadFavicon = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/x-icon', 'image/png', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for favicon'));
+  }
+});
 
 // Database connection pool
 const pool = mysql.createPool({
@@ -102,6 +146,59 @@ const TABLE_COLUMNS = {
   newsletter_subscribers: ['email']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
+
+// Public Site Settings
+app.get('/api/site-settings', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM site_settings WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Settings not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching site settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Admin Site Settings (Protected)
+app.get('/api/admin/site-settings', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM site_settings WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Settings not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching site settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
+  const { site_email, site_phone, site_location, hero_type, hero_url, favicon_url } = req.body;
+  try {
+    await pool.execute(
+      `UPDATE site_settings
+       SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?
+       WHERE id=1`,
+      [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
+    );
+    res.json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// File Uploads (Protected)
+app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const url = `/uploads/hero/${req.file.filename}`;
+  res.json({ url });
+});
+
+app.post('/api/admin/upload/favicon', authenticateToken, uploadFavicon.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const url = `/uploads/favicon/${req.file.filename}`;
+  res.json({ url });
+});
 
 // Dashboard Stats
 app.get('/api/admin/stats', authenticateToken, async (req, res) => {
