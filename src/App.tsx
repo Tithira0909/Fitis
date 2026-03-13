@@ -6,6 +6,7 @@ import { Home } from './pages/Home';
 import { Introduction } from './pages/Introduction';
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
+import { Gallery } from './pages/Gallery';
 import { Events } from './pages/Events';
 import { Chapters } from './pages/Chapters';
 import { ChapterDetail } from './pages/ChapterDetail';
@@ -20,6 +21,7 @@ import { AdminLeadership } from './pages/admin/AdminLeadership';
 import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
+import { AdminGallery } from './pages/admin/AdminGallery';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -86,6 +88,7 @@ export default function App() {
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
+          <Route path="gallery" element={<AdminGallery />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
         </Route>
 
@@ -97,6 +100,7 @@ export default function App() {
               <Route path="/Home/introduction" element={<Introduction />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
+              <Route path="/Home/gallery" element={<Gallery />} />
               <Route path="/Home/event_homenow" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
               <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
