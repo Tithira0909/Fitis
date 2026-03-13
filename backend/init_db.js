@@ -42,13 +42,25 @@ const initializeDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
-      `CREATE TABLE IF NOT EXISTS events (
+      `DROP TABLE IF EXISTS events`,
+      `CREATE TABLE events (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        flyer_image_url VARCHAR(500),
+        venue VARCHAR(255) NOT NULL,
         event_date DATE NOT NULL,
-        location VARCHAR(255) NOT NULL,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        timezone VARCHAR(50) DEFAULT 'GMT+5:30',
+        rsvp_open BOOLEAN DEFAULT TRUE,
+        short_description TEXT,
+        details_url VARCHAR(500),
+        facebook_url VARCHAR(500),
+        twitter_url VARCHAR(500),
+        linkedin_url VARCHAR(500),
+        status ENUM('draft', 'published') DEFAULT 'draft',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS chapters (
         id INT AUTO_INCREMENT PRIMARY KEY,

@@ -11,9 +11,10 @@ export interface ColumnDef {
 export interface FieldDef {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'select' | 'number' | 'email';
+  type: 'text' | 'textarea' | 'date' | 'select' | 'number' | 'email' | 'checkbox' | 'image' | 'time';
   options?: { value: string; label: string }[];
   required?: boolean;
+  uploadUrl?: string; // e.g. /api/admin/upload/event-flyer
 }
 
 interface GenericAdminCrudProps {
@@ -81,8 +82,38 @@ export const GenericAdminCrud: React.FC<GenericAdminCrudProps> = ({ title, table
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, uploadUrl: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataUpload
+      });
+      if (!res.ok) throw new Error('Failed to upload image');
+      const data = await res.json();
+      setFormData(prev => ({ ...prev, [fieldName]: data.url }));
+      showToast('Image uploaded successfully', 'success');
+    } catch (error) {
+      showToast('Failed to upload image', 'error');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,6 +228,30 @@ export const GenericAdminCrud: React.FC<GenericAdminCrudProps> = ({ title, table
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
+                  ) : field.type === 'checkbox' ? (
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name={field.name}
+                        checked={formData[field.name] ? true : false}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Enabled / Open</span>
+                    </div>
+                  ) : field.type === 'image' ? (
+                    <div className="space-y-2">
+                      {formData[field.name] && (
+                        <img src={formData[field.name]} alt="Preview" className="w-32 h-32 object-cover border rounded" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => field.uploadUrl && handleImageUpload(e, field.name, field.uploadUrl)}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        required={field.required && !formData[field.name]}
+                      />
+                    </div>
                   ) : (
                     <input
                       type={field.type}

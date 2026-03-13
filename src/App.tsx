@@ -101,7 +101,7 @@ export default function App() {
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
               <Route path="/Home/gallery" element={<Gallery />} />
-              <Route path="/Home/event_homenow" element={<Events />} />
+              <Route path="/Home/events" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
               <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
             </Routes>

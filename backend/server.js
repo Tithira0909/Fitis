@@ -39,6 +39,8 @@ const storage = multer.diskStorage({
       dest += 'news-pdf';
     } else if (req.path.includes('/upload/gallery')) {
       dest += 'gallery';
+    } else if (req.path.includes('/upload/event-flyer')) {
+      dest += 'events';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
@@ -106,6 +108,16 @@ const uploadGallery = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for gallery image'));
+  }
+});
+
+const uploadEventFlyer = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for event flyer'));
   }
 });
 
@@ -186,7 +198,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Allowed tables and columns for generic CRUD to prevent SQL injection
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
-  events: ['name', 'event_date', 'location', 'description'],
+  events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
   chapters: ['name', 'head', 'member_count'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
   partners: ['company_name', 'tier', 'contact_person'],
@@ -282,6 +294,14 @@ app.post('/api/admin/upload/news-pdf', authenticateToken, uploadNewsPdf.single('
   const protocol = req.protocol;
   const host = req.get('host');
   const fullUrl = `${protocol}://${host}/uploads/news-pdf/${req.file.filename}`;
+  res.json({ url: fullUrl });
+});
+
+app.post('/api/admin/upload/event-flyer', authenticateToken, uploadEventFlyer.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/events/${req.file.filename}`;
   res.json({ url: fullUrl });
 });
 
@@ -612,6 +632,18 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public Events API
+app.get('/api/events', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM events WHERE status = ? ORDER BY event_date ASC', [status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
