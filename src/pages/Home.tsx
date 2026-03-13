@@ -1,3 +1,4 @@
+import { BoardMembers } from '../components/BoardMembers';
 import React from 'react';
 import { motion } from 'motion/react';
 import { 
@@ -462,7 +463,7 @@ export const Home = () => {
     <>
       <GlobeHero />
       <ChairmanMessage />
-      <BoardSection />
+      <BoardMembers />
       <ServicesSection />
       <MembershipCTA />
       <PartnersSection />
