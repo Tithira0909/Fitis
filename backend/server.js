@@ -342,9 +342,10 @@ app.get('/api/gallery', async (req, res) => {
     // Fetch posts
     const [posts] = await pool.execute('SELECT * FROM gallery_posts WHERE status = ? ORDER BY event_date DESC, created_at DESC', [status]);
 
-    // Fetch one cover image per post (first image based on sort_order)
+    // Fetch all images per post
     for (let post of posts) {
-      const [images] = await pool.execute('SELECT image_url FROM gallery_images WHERE post_id = ? ORDER BY sort_order ASC LIMIT 1', [post.id]);
+      const [images] = await pool.execute('SELECT * FROM gallery_images WHERE post_id = ? ORDER BY sort_order ASC', [post.id]);
+      post.images = images;
       post.cover_image = images.length > 0 ? images[0].image_url : null;
     }
 
