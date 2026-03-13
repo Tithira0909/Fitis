@@ -33,6 +33,10 @@ const storage = multer.diskStorage({
       dest += 'favicon';
     } else if (req.path.includes('/upload/leadership')) {
       dest += 'leadership';
+    } else if (req.path.includes('/upload/news-banner')) {
+      dest += 'news-banner';
+    } else if (req.path.includes('/upload/news-pdf')) {
+      dest += 'news-pdf';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
@@ -71,6 +75,25 @@ const uploadLeadership = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for leadership image'));
+  }
+});
+
+const uploadNewsBanner = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for banner image'));
+  }
+});
+
+const uploadNewsPdf = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Invalid file type for PDF'));
   }
 });
 
@@ -150,7 +173,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Allowed tables and columns for generic CRUD to prevent SQL injection
 const TABLE_COLUMNS = {
-  news: ['title', 'content', 'author'],
+  news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['name', 'event_date', 'location', 'description'],
   chapters: ['name', 'head', 'member_count'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
@@ -231,6 +254,22 @@ app.post('/api/admin/upload/leadership', authenticateToken, uploadLeadership.sin
   const protocol = req.protocol;
   const host = req.get('host');
   const fullUrl = `${protocol}://${host}/uploads/leadership/${req.file.filename}`;
+  res.json({ url: fullUrl });
+});
+
+app.post('/api/admin/upload/news-banner', authenticateToken, uploadNewsBanner.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/news-banner/${req.file.filename}`;
+  res.json({ url: fullUrl });
+});
+
+app.post('/api/admin/upload/news-pdf', authenticateToken, uploadNewsPdf.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/news-pdf/${req.file.filename}`;
   res.json({ url: fullUrl });
 });
 
@@ -378,6 +417,29 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public News API
+app.get('/api/news', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM news WHERE status = ? ORDER BY publish_date DESC, created_at DESC', [status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+app.get('/api/news/:slug', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM news WHERE slug = ? AND status = ?', [req.params.slug, 'published']);
+    if (rows.length === 0) return res.status(404).json({ error: 'News article not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching news article:', error);
+    res.status(500).json({ error: 'Failed to fetch news article' });
   }
 });
 

@@ -30,9 +30,17 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS news (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        excerpt TEXT,
+        content LONGTEXT,
+        banner_image_url VARCHAR(500),
+        pdf_url VARCHAR(500),
+        category ENUM('Announcement', 'Event', 'Industry') DEFAULT 'Announcement',
+        status ENUM('draft', 'published') DEFAULT 'draft',
+        publish_date DATE,
         author VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,

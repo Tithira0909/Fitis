@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { Introduction } from './pages/Introduction';
 import { News } from './pages/News';
+import { NewsDetail } from './pages/NewsDetail';
 import { Events } from './pages/Events';
 import { Chapters } from './pages/Chapters';
 import { ChapterDetail } from './pages/ChapterDetail';
@@ -95,6 +96,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/Home/introduction" element={<Introduction />} />
               <Route path="/Home/news" element={<News />} />
+              <Route path="/Home/news/:slug" element={<NewsDetail />} />
               <Route path="/Home/event_homenow" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
               <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
