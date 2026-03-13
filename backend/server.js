@@ -174,12 +174,21 @@ app.get('/api/admin/site-settings', authenticateToken, async (req, res) => {
 app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
   const { site_email, site_phone, site_location, hero_type, hero_url, favicon_url } = req.body;
   try {
-    await pool.execute(
-      `UPDATE site_settings
-       SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?
-       WHERE id=1`,
-      [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
-    );
+    const [existing] = await pool.execute('SELECT id FROM site_settings WHERE id = 1');
+    if (existing.length === 0) {
+      await pool.execute(
+        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, favicon_url)
+         VALUES (1, ?, ?, ?, ?, ?, ?)`,
+        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
+      );
+    } else {
+      await pool.execute(
+        `UPDATE site_settings
+         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?
+         WHERE id=1`,
+        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
+      );
+    }
     res.json({ message: 'Settings updated successfully' });
   } catch (error) {
     console.error('Error updating settings:', error);
@@ -190,14 +199,19 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
 // File Uploads (Protected)
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const url = `/uploads/hero/${req.file.filename}`;
-  res.json({ url });
+  // Ensure we get the correct host even if behind a proxy
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/hero/${req.file.filename}`;
+  res.json({ url: fullUrl });
 });
 
 app.post('/api/admin/upload/favicon', authenticateToken, uploadFavicon.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const url = `/uploads/favicon/${req.file.filename}`;
-  res.json({ url });
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/favicon/${req.file.filename}`;
+  res.json({ url: fullUrl });
 });
 
 // Dashboard Stats

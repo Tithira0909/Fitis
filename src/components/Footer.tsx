@@ -1,7 +1,33 @@
-import React from 'react';
-import { Facebook, Twitter, Linkedin, Instagram, Globe, Mail, ExternalLink } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Facebook, Twitter, Linkedin, Instagram, Globe, Mail, Phone } from 'lucide-react';
 
 export const Footer = () => {
+  const [settings, setSettings] = useState<any>({
+    site_location: "No. 123, Galle Road, Colombo 03, Sri Lanka.",
+    site_email: "info@fitis.lk",
+    site_phone: "+94 11 234 5678",
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setSettings({
+            site_location: data.site_location || settings.site_location,
+            site_email: data.site_email || settings.site_email,
+            site_phone: data.site_phone || settings.site_phone,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load site settings for footer', err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <footer className="bg-slate-900 text-white pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
@@ -49,15 +75,15 @@ export const Footer = () => {
           <ul className="space-y-4 text-slate-400">
             <li className="flex gap-3">
               <Globe size={18} className="text-fitis-blue shrink-0" />
-              <span>No. 123, Galle Road, Colombo 03, Sri Lanka.</span>
+              <span>{settings.site_location}</span>
             </li>
             <li className="flex gap-3">
               <Mail size={18} className="text-fitis-blue shrink-0" />
-              <span>info@fitis.lk</span>
+              <span>{settings.site_email}</span>
             </li>
             <li className="flex gap-3">
-              <ExternalLink size={18} className="text-fitis-blue shrink-0" />
-              <span>+94 11 234 5678</span>
+              <Phone size={18} className="text-fitis-blue shrink-0" />
+              <span>{settings.site_phone}</span>
             </li>
           </ul>
         </div>

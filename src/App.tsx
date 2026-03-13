@@ -35,7 +35,8 @@ const useSiteSettings = () => {
     const fetchSettings = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${baseUrl}/api/site-settings`);
+        // Add cache busting to ensure we get latest settings
+        const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.favicon_url) {
@@ -45,7 +46,8 @@ const useSiteSettings = () => {
               link.rel = 'icon';
               document.head.appendChild(link);
             }
-            link.href = `${baseUrl}${data.favicon_url}`;
+            // If the URL is already absolute, use it directly. Otherwise, prepend the API URL.
+            link.href = data.favicon_url.startsWith('http') ? data.favicon_url : `${baseUrl}${data.favicon_url}`;
           }
         }
       } catch (err) {

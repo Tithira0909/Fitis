@@ -331,7 +331,7 @@ export const GlobeHero = () => {
     const fetchSettings = async () => {
       try {
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${baseUrl}/api/site-settings`);
+        const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setSettings(data);
@@ -345,7 +345,10 @@ export const GlobeHero = () => {
 
   // Use custom media if configured
   if (settings?.hero_url) {
-    const mediaUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.hero_url}`;
+    // If the URL is already absolute, use it directly. Otherwise, prepend the API URL.
+    const mediaUrl = settings.hero_url.startsWith('http')
+      ? settings.hero_url
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.hero_url}`;
     return (
       <section className="relative h-screen w-full bg-[#000d1a] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-60 z-0" />
