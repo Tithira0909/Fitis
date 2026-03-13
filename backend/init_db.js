@@ -12,9 +12,9 @@ const initializeDB = async () => {
   try {
     connection = await mysql.createConnection({
       host: process.env.DB_HOST || '127.0.0.1',
-      user: process.env.DB_USER || 'fitis_user',
-      password: process.env.DB_PASSWORD || 'fitis_password',
-      database: process.env.DB_NAME || 'fitis',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || 'fitis1234',
+      database: process.env.DB_NAME || 'fitis_db',
     });
 
     console.log('Connected to MySQL database.');
@@ -42,25 +42,13 @@ const initializeDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
-      `DROP TABLE IF EXISTS events`,
-      `CREATE TABLE events (
+      `CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        flyer_image_url VARCHAR(500),
-        venue VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
         event_date DATE NOT NULL,
-        start_time TIME NOT NULL,
-        end_time TIME NOT NULL,
-        timezone VARCHAR(50) DEFAULT 'GMT+5:30',
-        rsvp_open BOOLEAN DEFAULT TRUE,
-        short_description TEXT,
-        details_url VARCHAR(500),
-        facebook_url VARCHAR(500),
-        twitter_url VARCHAR(500),
-        linkedin_url VARCHAR(500),
-        status ENUM('draft', 'published') DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        location VARCHAR(255) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS chapters (
         id INT AUTO_INCREMENT PRIMARY KEY,
