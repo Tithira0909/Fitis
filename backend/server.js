@@ -31,6 +31,8 @@ const storage = multer.diskStorage({
       dest += 'hero';
     } else if (req.path.includes('/upload/favicon')) {
       dest += 'favicon';
+    } else if (req.path.includes('/upload/leadership')) {
+      dest += 'leadership';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
@@ -59,6 +61,16 @@ const uploadFavicon = multer({
     const allowed = ['image/x-icon', 'image/png', 'image/svg+xml'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for favicon'));
+  }
+});
+
+const uploadLeadership = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for leadership image'));
   }
 });
 
@@ -141,7 +153,7 @@ const TABLE_COLUMNS = {
   news: ['title', 'content', 'author'],
   events: ['name', 'event_date', 'location', 'description'],
   chapters: ['name', 'head', 'member_count'],
-  board_members: ['name', 'position', 'company'],
+  leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
   partners: ['company_name', 'tier', 'contact_person'],
   newsletter_subscribers: ['email']
 };
@@ -211,6 +223,14 @@ app.post('/api/admin/upload/favicon', authenticateToken, uploadFavicon.single('f
   const protocol = req.protocol;
   const host = req.get('host');
   const fullUrl = `${protocol}://${host}/uploads/favicon/${req.file.filename}`;
+  res.json({ url: fullUrl });
+});
+
+app.post('/api/admin/upload/leadership', authenticateToken, uploadLeadership.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const fullUrl = `${protocol}://${host}/uploads/leadership/${req.file.filename}`;
   res.json({ url: fullUrl });
 });
 
@@ -347,6 +367,17 @@ app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(`Error deleting from ${table}:`, error);
     res.status(500).json({ error: `Failed to delete item from ${table}` });
+  }
+});
+
+// Public Leadership Members
+app.get('/api/leadership-members', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM leadership_members ORDER BY hierarchy_level ASC, seat ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching leadership members:', error);
+    res.status(500).json({ error: 'Failed to fetch leadership members' });
   }
 });
 

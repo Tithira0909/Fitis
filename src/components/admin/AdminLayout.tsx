@@ -27,7 +27,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/news', label: 'News', icon: <Newspaper size={20} /> },
     { path: '/admin/events', label: 'Events', icon: <Calendar size={20} /> },
     { path: '/admin/chapters', label: 'Chapters', icon: <Users size={20} /> },
-    { path: '/admin/board-members', label: 'Board Members', icon: <Briefcase size={20} /> },
+    { path: '/admin/leadership', label: 'Leadership', icon: <Briefcase size={20} /> },
     { path: '/admin/partners', label: 'Partners', icon: <Handshake size={20} /> },
     { path: '/admin/newsletter', label: 'Newsletter', icon: <Mail size={20} /> },
     { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },

@@ -49,12 +49,17 @@ const initializeDB = async () => {
         member_count INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`,
-      `CREATE TABLE IF NOT EXISTS board_members (
+      `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        position VARCHAR(255) NOT NULL,
-        company VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        designation VARCHAR(255) NOT NULL,
+        type ENUM('current', 'past') DEFAULT 'current',
+        image_url VARCHAR(500),
+        linkedin_url VARCHAR(500),
+        hierarchy_level INT DEFAULT 1,
+        seat INT DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS partners (
         id INT AUTO_INCREMENT PRIMARY KEY,

@@ -15,7 +15,7 @@ import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminNews } from './pages/admin/AdminNews';
 import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminChapters } from './pages/admin/AdminChapters';
-import { AdminBoardMembers } from './pages/admin/AdminBoardMembers';
+import { AdminLeadership } from './pages/admin/AdminLeadership';
 import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
@@ -82,7 +82,7 @@ export default function App() {
           <Route path="news" element={<AdminNews />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="chapters" element={<AdminChapters />} />
-          <Route path="board-members" element={<AdminBoardMembers />} />
+          <Route path="leadership" element={<AdminLeadership />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
