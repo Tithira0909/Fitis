@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Tag, ArrowRight, Loader } from 'lucide-react';
+import { Calendar, Tag, ArrowRight, Loader, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PressRoomBar } from '../components/PressRoomBar';
 
 interface NewsItem {
   id: number;
@@ -17,12 +18,23 @@ export const News = () => {
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [visibleCount, setVisibleCount] = useState(10);
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
+    // Parse query param on mount
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) setSearchQuery(q);
+
     const fetchNews = async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/news?t=${new Date().getTime()}`);
+        let url = `${baseUrl}/api/news?t=${new Date().getTime()}`;
+        if (q) url += `&q=${encodeURIComponent(q)}`;
+
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to load news');
         const data = await res.json();
         setNewsList(data);
@@ -34,36 +46,61 @@ export const News = () => {
       }
     };
     fetchNews();
-  }, []);
+  }, [baseUrl]);
+
+  const categories = ['All', 'Announcement', 'Event', 'Industry'];
+
+  // Only filter by category client-side if a search query was used, as the backend handled the text search.
+  // If user starts typing locally, filter the already fetched results.
+  const filteredNews = newsList.filter(news => {
+    const matchesSearch = news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (news.excerpt && news.excerpt.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = selectedCategory === 'All' || news.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const displayedNews = filteredNews.slice(0, visibleCount);
 
   return (
-    <div className="pt-24 pb-20 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="bg-slate-50 min-h-screen pb-20">
 
-        {/* Header */}
-        <div className="text-center mb-16">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-4"
-          >
-            News & Announcements
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-600 max-w-2xl mx-auto"
-          >
-            Stay up to date with the latest industry updates, FITIS announcements, and technological advancements.
-          </motion.p>
+      {/* Global Top Bar */}
+      <PressRoomBar
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Latest News' }]}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      <div className="max-w-7xl mx-auto px-6 pt-12">
+
+        {/* Header & Filters */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 border-b border-slate-200 pb-6">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">
+            Latest News
+          </h1>
+
+          <div className="flex items-center gap-3">
+            <Filter size={20} className="text-slate-400" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setVisibleCount(10);
+              }}
+              className="bg-white border border-slate-300 text-slate-700 py-2 px-4 rounded-lg focus:outline-none focus:border-fitis-blue focus:ring-1 focus:ring-fitis-blue shadow-sm font-medium"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Loading / Error States */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-            <Loader className="animate-spin mb-4" size={32} />
-            <p>Loading latest news...</p>
+            <Loader className="animate-spin mb-4 text-fitis-blue" size={32} />
+            <p>Loading press room...</p>
           </div>
         )}
 
@@ -73,55 +110,62 @@ export const News = () => {
           </div>
         )}
 
-        {!isLoading && !error && newsList.length === 0 && (
-          <div className="text-center py-20 text-slate-500 bg-white rounded-xl shadow-sm">
-            <p>No published news articles available at the moment.</p>
+        {!isLoading && !error && displayedNews.length === 0 && (
+          <div className="text-center py-20 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
+            <p className="text-lg">No news articles found matching your criteria.</p>
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              className="mt-4 text-fitis-blue font-medium hover:underline"
+            >
+              Clear filters
+            </button>
           </div>
         )}
 
-        {/* News Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {newsList.map((news, idx) => (
+        {/* News Grid (2-column horizontal cards) */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {displayedNews.map((news, idx) => (
             <motion.div
               key={news.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group border border-slate-100"
+              className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col sm:flex-row group border border-slate-100 min-h-[220px]"
             >
-              {/* Banner */}
-              <div className="relative h-48 overflow-hidden bg-slate-100">
+              {/* Image Left Side */}
+              <div className="sm:w-2/5 relative overflow-hidden bg-slate-100 shrink-0 h-56 sm:h-auto">
                 <img 
-                  src={news.banner_image_url ? (news.banner_image_url.startsWith('http') ? news.banner_image_url : `${baseUrl}${news.banner_image_url}`) : 'https://picsum.photos/800/400'}
+                  src={news.banner_image_url ? (news.banner_image_url.startsWith('http') ? news.banner_image_url : `${baseUrl}${news.banner_image_url}`) : 'https://picsum.photos/400/400'}
                   alt={news.title}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-blue-600 uppercase tracking-wide flex items-center gap-1 shadow-sm">
-                  <Tag size={12} />
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-md text-xs font-bold text-fitis-blue uppercase tracking-wide flex items-center gap-1 shadow-sm">
                   {news.category}
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Content Right Side */}
               <div className="p-6 flex flex-col flex-1">
-                <div className="flex items-center gap-2 text-slate-400 text-sm mb-3">
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
                   <Calendar size={14} />
-                  <span>{news.publish_date ? new Date(news.publish_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
+                  <span>{news.publish_date ? new Date(news.publish_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-900 mb-3 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
-                  {news.title}
+                <h3 className="text-xl font-bold text-slate-900 mb-3 line-clamp-2 leading-snug group-hover:text-fitis-blue transition-colors">
+                  <Link to={`/Home/news/${news.slug}`}>
+                    {news.title}
+                  </Link>
                 </h3>
 
-                <p className="text-slate-600 text-sm mb-6 line-clamp-3 leading-relaxed flex-1">
+                <p className="text-slate-600 text-sm mb-6 line-clamp-2 leading-relaxed flex-1">
                   {news.excerpt}
                 </p>
 
-                <div className="mt-auto">
+                <div className="mt-auto flex justify-end">
                   <Link
                     to={`/Home/news/${news.slug}`}
-                    className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm hover:gap-3 transition-all"
+                    className="inline-flex items-center gap-2 text-white bg-fitis-blue hover:bg-blue-800 font-medium text-sm px-5 py-2 rounded-lg transition-all shadow-sm group-hover:shadow-md"
                   >
                     Read More <ArrowRight size={16} />
                   </Link>
@@ -130,6 +174,18 @@ export const News = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Pagination / Load More */}
+        {!isLoading && !error && filteredNews.length > visibleCount && (
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => setVisibleCount(prev => prev + 10)}
+              className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold py-3 px-8 rounded-xl shadow-sm transition-all"
+            >
+              Load More News
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

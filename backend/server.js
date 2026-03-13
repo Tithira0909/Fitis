@@ -652,7 +652,20 @@ app.get('/api/events', async (req, res) => {
 app.get('/api/news', async (req, res) => {
   try {
     const status = req.query.status || 'published';
-    const [rows] = await pool.execute('SELECT * FROM news WHERE status = ? ORDER BY publish_date DESC, created_at DESC', [status]);
+    const q = req.query.q;
+
+    let query = 'SELECT id, title, slug, excerpt, banner_image_url, category, publish_date FROM news WHERE status = ?';
+    let params = [status];
+
+    if (q) {
+      query += ' AND (title LIKE ? OR excerpt LIKE ? OR content LIKE ?)';
+      const searchParam = `%${q}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    query += ' ORDER BY publish_date DESC, created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching news:', error);
@@ -668,6 +681,35 @@ app.get('/api/news/:slug', async (req, res) => {
   } catch (error) {
     console.error('Error fetching news article:', error);
     res.status(500).json({ error: 'Failed to fetch news article' });
+  }
+});
+
+// Get related news
+app.get('/api/news/:slug/related', async (req, res) => {
+  try {
+    const [current] = await pool.execute('SELECT category FROM news WHERE slug = ?', [req.params.slug]);
+    if (current.length === 0) return res.status(404).json({ error: 'News article not found' });
+
+    const category = current[0].category;
+
+    const [rows] = await pool.execute(
+      'SELECT id, title, slug, excerpt, banner_image_url, category, publish_date FROM news WHERE status = ? AND slug != ? AND category = ? ORDER BY publish_date DESC, created_at DESC LIMIT 3',
+      ['published', req.params.slug, category]
+    );
+
+    if (rows.length < 3) {
+      const needed = 3 - rows.length;
+      const [moreRows] = await pool.execute(
+        'SELECT id, title, slug, excerpt, banner_image_url, category, publish_date FROM news WHERE status = ? AND slug != ? AND category != ? ORDER BY publish_date DESC, created_at DESC LIMIT ?',
+        ['published', req.params.slug, category, needed]
+      );
+      res.json([...rows, ...moreRows]);
+    } else {
+      res.json(rows);
+    }
+  } catch (error) {
+    console.error('Error fetching related news:', error);
+    res.status(500).json({ error: 'Failed to fetch related news' });
   }
 });
 
