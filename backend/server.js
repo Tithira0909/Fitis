@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
@@ -35,10 +35,10 @@ app.get('/api/health', async (req, res) => {
     const connection = await pool.getConnection();
     await connection.ping();
     connection.release();
-    res.json({ status: 'success', message: 'Connected to MySQL Database' });
+    res.json({ ok: true, status: 'success', message: 'Connected to MySQL Database' });
   } catch (error) {
     console.error('Database connection failed:', error);
-    res.status(500).json({ status: 'error', message: 'Database connection failed' });
+    res.status(500).json({ ok: false, status: 'error', message: 'Database connection failed' });
   }
 });
 
