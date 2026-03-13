@@ -100,7 +100,9 @@ export const GenericAdminCrud: React.FC<GenericAdminCrudProps> = ({ title, table
 
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(uploadUrl, {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const fullUrl = uploadUrl.startsWith('http') ? uploadUrl : `${baseUrl}${uploadUrl}`;
+      const res = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
