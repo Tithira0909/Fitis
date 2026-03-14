@@ -6,14 +6,9 @@ export const getImageUrl = (url?: string | null, cacheBuster?: string | number):
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    if (url.startsWith('/uploads')) {
-      finalUrl = `${baseUrl}${url}`;
-    } else if (!url.startsWith('/')) {
-      // Handle bare filenames
-      finalUrl = `${baseUrl}/${url}`;
-    } else {
-      finalUrl = `${baseUrl}${url}`;
-    }
+    // Ensure relative paths always have a leading slash
+    const formattedUrl = url.startsWith('/') ? url : `/${url}`;
+    finalUrl = `${baseUrl}${formattedUrl}`;
   }
 
   if (cacheBuster) {

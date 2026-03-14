@@ -138,6 +138,18 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
+    // Data Migration: Fix missing leading slashes in image URLs for programs
+    try {
+      await connection.execute(`
+        UPDATE programs
+        SET banner_image_url = CONCAT('/', banner_image_url)
+        WHERE banner_image_url IS NOT NULL AND banner_image_url NOT LIKE '/%' AND banner_image_url NOT LIKE 'http%'
+      `);
+      console.log('Executed data migration: Fixed missing leading slashes in programs.banner_image_url');
+    } catch (migErr) {
+      console.error('Migration error (programs.banner_image_url):', migErr.message);
+    }
+
     // Seed admin user
     const [rows] = await connection.execute('SELECT * FROM admin_users WHERE username = ?', ['admin']);
     if (rows.length === 0) {
