@@ -10,6 +10,7 @@ import { Gallery } from './pages/Gallery';
 import { Events } from './pages/Events';
 import { Chapters } from './pages/Chapters';
 import { ChapterDetail } from './pages/ChapterDetail';
+import { Contact } from './pages/Contact';
 
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -108,6 +109,7 @@ export default function App() {
               <Route path="/Home/events" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
               <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
+              <Route path="/Home/contact" element={<Contact />} />
             </Routes>
           </PublicLayout>
         } />

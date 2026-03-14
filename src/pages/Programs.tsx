@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Loader } from 'lucide-react';
-import { PressRoomBar } from '../components/PressRoomBar';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 import { getImageUrl } from '../utils/getImageUrl';
 
 interface ProgramItem {
@@ -48,7 +48,7 @@ export const Programs = () => {
     <div className="bg-slate-50 min-h-screen pb-20">
 
       {/* Global Top Bar */}
-      <PressRoomBar
+      <SubHeaderBar
         breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Projects & Programs' }]}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

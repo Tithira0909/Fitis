@@ -2,27 +2,17 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, ArrowRight, Info, Target, Eye, Activity, Globe } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 
 export const Introduction = () => {
   return (
-    <div className="bg-white min-h-screen pt-24">
-      {/* Page Top Section */}
-      <section className="py-12 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Breadcrumb */}
-          <nav className="flex mb-4 text-sm text-slate-400 font-medium">
-            <a href="/" className="hover:text-fitis-blue transition-colors">Home</a>
-            <span className="mx-2">/</span>
-            <span className="text-slate-600">Introduction</span>
-          </nav>
+    <div className="bg-white min-h-screen pb-20">
 
-          {/* Title & Subtitle */}
-          <h1 className="text-4xl md:text-5xl font-bold text-fitis-blue mb-4">Introduction</h1>
-          <p className="text-lg text-slate-600 max-w-2xl">
-            About FITIS and our role in Sri Lanka’s digital ecosystem.
-          </p>
-        </div>
-      </section>
+      <SubHeaderBar
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Introduction' }]}
+        title="INTRODUCTION"
+        showSearch={false}
+      />
 
       {/* Content Section */}
       <section className="py-20">

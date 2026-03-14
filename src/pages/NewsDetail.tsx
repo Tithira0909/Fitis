@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Calendar, Tag, ArrowLeft, Facebook, Twitter, Linkedin, Link as LinkIcon, Download, FileText, Loader, ArrowRight } from 'lucide-react';
-import { PressRoomBar } from '../components/PressRoomBar';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 import { getImageUrl } from '../utils/getImageUrl';
 
 interface NewsItem {
@@ -73,14 +73,14 @@ export const NewsDetail = () => {
     <article className="min-h-screen bg-slate-50 pb-20">
 
       {/* Global Top Bar */}
-      <PressRoomBar
+      <SubHeaderBar
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'News', href: '/Home/news' },
           { label: news?.title || 'Loading...' }
         ]}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        title="FITIS PRESS ROOM"
+        showSearch={false}
       />
 
       {isLoading && (

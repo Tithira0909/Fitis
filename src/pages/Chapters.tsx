@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { chaptersData } from '../data/chapters';
+import { SubHeaderBar } from '../components/SubHeaderBar';
+import { useState } from 'react';
 
 const stats: { label: string; value: string; icon: LucideIcon }[] = [
   { label: "Total Chapters", value: "7+", icon: Layers },
@@ -24,25 +26,22 @@ const stats: { label: string; value: string; icon: LucideIcon }[] = [
 ];
 
 export const Chapters = () => {
-  return (
-    <div className="bg-white min-h-screen pt-24">
-      {/* Page Top Section */}
-      <section className="py-12 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Breadcrumb */}
-          <nav className="flex mb-4 text-sm text-slate-400 font-medium">
-            <Link to="/" className="hover:text-fitis-blue transition-colors">Home</Link>
-            <span className="mx-2">/</span>
-            <span className="text-slate-600">Chapters</span>
-          </nav>
+  const [searchQuery, setSearchQuery] = useState('');
 
-          {/* Title & Subtitle */}
-          <h1 className="text-4xl md:text-5xl font-bold text-fitis-blue mb-4">Chapters</h1>
-          <p className="text-lg text-slate-600 max-w-2xl">
-            Specialised chapters representing every facet of Sri Lanka’s ICT ecosystem.
-          </p>
-        </div>
-      </section>
+  const filteredChapters = chaptersData.filter(chapter =>
+    chapter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    chapter.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="bg-white min-h-screen pb-20">
+
+      <SubHeaderBar
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Chapters' }]}
+        title="FITIS CHAPTERS"
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       {/* Chapters Overview Section */}
       <section className="py-16 bg-slate-50/30">
@@ -79,8 +78,15 @@ export const Chapters = () => {
       {/* Chapters Grid */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
+
+          {filteredChapters.length === 0 && (
+            <div className="text-center py-20 text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-lg font-medium">No chapters found matching your search.</p>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {chaptersData.map((chapter, idx) => (
+            {filteredChapters.map((chapter, idx) => (
               <motion.div
                 key={chapter.slug}
                 initial={{ opacity: 0, y: 20 }}

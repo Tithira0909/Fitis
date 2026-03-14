@@ -12,6 +12,7 @@ import {
   MapPin 
 } from 'lucide-react';
 import { chaptersData } from '../data/chapters';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 
 export const ChapterDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,19 +25,21 @@ export const ChapterDetail = () => {
   const Icon = chapter.icon;
 
   return (
-    <div className="bg-white min-h-screen pt-24">
+    <div className="bg-white min-h-screen pb-20">
+
+      <SubHeaderBar
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Chapters', href: '/Chapter/chapters' },
+          { label: chapter.name }
+        ]}
+        title={chapter.name.toUpperCase()}
+        showSearch={false}
+      />
+
       {/* Page Top Section */}
       <section className="py-12 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Breadcrumb */}
-          <nav className="flex mb-4 text-sm text-slate-400 font-medium">
-            <Link to="/" className="hover:text-fitis-blue transition-colors">Home</Link>
-            <span className="mx-2">/</span>
-            <Link to="/Chapter/chapters" className="hover:text-fitis-blue transition-colors">Chapters</Link>
-            <span className="mx-2">/</span>
-            <span className="text-slate-600">{chapter.name}</span>
-          </nav>
-
           <Link 
             to="/Chapter/chapters" 
             className="inline-flex items-center gap-2 text-fitis-blue font-bold text-sm mb-6 hover:gap-3 transition-all"

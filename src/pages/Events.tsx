@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Share2, MapPin, Clock, Calendar, ExternalLink, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { getImageUrl } from '../utils/getImageUrl';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 
 interface EventItem {
   id: number;
@@ -24,6 +25,7 @@ interface EventItem {
 export const Events = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -48,28 +50,33 @@ export const Events = () => {
     return `${formattedHour}:${m} ${ampm}`;
   };
 
-  return (
-    <div className="bg-slate-50 min-h-screen pt-24 pb-20">
-      <div className="max-w-5xl mx-auto px-6">
-        {/* Page Title */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-fitis-blue uppercase tracking-tight">
-            Upcoming Events & Activities
-          </h1>
-          <div className="h-1.5 w-24 bg-fitis-gold mx-auto mt-6 rounded-full"></div>
-        </div>
+  const filteredEvents = events.filter(e =>
+    e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (e.short_description && e.short_description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
+  return (
+    <div className="bg-slate-50 min-h-screen pb-20">
+
+      <SubHeaderBar
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Events' }]}
+        title="UPCOMING EVENTS & ACTIVITIES"
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      <div className="max-w-5xl mx-auto px-6 pt-12">
         {/* Events List */}
         {loading ? (
           <div className="text-center text-slate-500 py-12">Loading events...</div>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center bg-white p-12 rounded-3xl border border-slate-200 text-slate-500 shadow-sm">
             <Calendar className="mx-auto h-12 w-12 text-slate-300 mb-4" />
             <p className="text-xl font-medium">No upcoming events scheduled at the moment.</p>
           </div>
         ) : (
           <div className="space-y-12">
-            {events.map((event, idx) => (
+            {filteredEvents.map((event, idx) => (
               <motion.div
                 key={event.id}
                 initial={{ opacity: 0, y: 30 }}

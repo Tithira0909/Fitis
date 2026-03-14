@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '../utils/getImageUrl';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 
 interface GalleryImage {
   id: number;
@@ -22,6 +23,7 @@ export const Gallery = () => {
   const [posts, setPosts] = useState<GalleryPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
   const [selectedPost, setSelectedPost] = useState<GalleryPost | null>(null);
@@ -79,32 +81,23 @@ export const Gallery = () => {
     }
   };
 
-  return (
-    <div className="bg-white min-h-screen">
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (post.description && post.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-      {/* Hero Header */}
-      <section className="pt-32 pb-16 px-6 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-display font-bold text-[#0F172A] mb-6 tracking-tight"
-          >
-            Gallery
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-[#64748B] max-w-3xl mx-auto font-light leading-relaxed"
-          >
-            Explore the memorable moments, industry events, and technological milestones from the Federation of Information Technology Industry Sri Lanka.
-          </motion.p>
-        </div>
-      </section>
+  return (
+    <div className="bg-white min-h-screen pb-20">
+
+      <SubHeaderBar
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Gallery' }]}
+        title="GALLERY"
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       {/* Main Content */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 pt-12">
         <div className="max-w-7xl mx-auto">
 
           {isLoading && (
@@ -120,15 +113,15 @@ export const Gallery = () => {
             </div>
           )}
 
-          {!isLoading && !error && posts.length === 0 && (
+          {!isLoading && !error && filteredPosts.length === 0 && (
             <div className="text-center py-20 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-100">
-              <p>No gallery items available at the moment.</p>
+              <p>No gallery items found.</p>
             </div>
           )}
 
           {/* Detailed Full-Section Layout Per Post */}
           <div className="flex flex-col gap-16">
-            {posts.map((post, idx) => (
+            {filteredPosts.map((post, idx) => (
               <motion.div
                 key={post.id}
                 initial={{ opacity: 0, y: 20 }}

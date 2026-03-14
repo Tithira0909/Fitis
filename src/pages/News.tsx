@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, Tag, ArrowRight, Loader, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PressRoomBar } from '../components/PressRoomBar';
+import { SubHeaderBar } from '../components/SubHeaderBar';
 import { getImageUrl } from '../utils/getImageUrl';
 
 interface NewsItem {
@@ -66,10 +66,12 @@ export const News = () => {
     <div className="bg-slate-50 min-h-screen pb-20">
 
       {/* Global Top Bar */}
-      <PressRoomBar
+      <SubHeaderBar
         breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Latest News' }]}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        title="FITIS PRESS ROOM"
+        onSearchSubmit={(q) => { window.location.href = `/Home/news?q=${encodeURIComponent(q.trim())}`; }}
       />
 
       <div className="max-w-7xl mx-auto px-6 pt-12">
