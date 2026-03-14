@@ -4,6 +4,12 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { Introduction } from './pages/Introduction';
+
+import { LeadershipTeam } from './pages/LeadershipTeam';
+import { ChairmanMessage } from './pages/ChairmanMessage';
+import { CodeOfConduct } from './pages/CodeOfConduct';
+import { PastLeaders } from './pages/PastLeaders';
+
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
@@ -102,6 +108,10 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/Home/introduction" element={<Introduction />} />
+              <Route path="/Home/leadership-team" element={<LeadershipTeam />} />
+              <Route path="/Home/chairman-message" element={<ChairmanMessage />} />
+              <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
+              <Route path="/Home/past-leaders" element={<PastLeaders />} />
               <Route path="/Home/programs" element={<Programs />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />

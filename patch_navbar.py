@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { cn } from '../lib/utils';
+import re
 
-export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
-  const location = useLocation();
+with open('src/components/Navbar.tsx', 'r') as f:
+    content = f.read()
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+nav_links_search = """
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Introduction', href: '/Home/introduction' },
+    { name: 'News', href: '/Home/news' },
+    { name: 'Events', href: '/Home/events' },
+    { name: 'Programs', href: '/Home/programs' },
+    { name: 'Chapters', href: '/Chapter/chapters' },
+    { name: 'Gallery', href: '/Home/gallery' },
+  ];
+"""
 
+nav_links_replace = """
   const navLinks = [
     { name: 'Home', href: '/' },
     {
@@ -24,7 +24,7 @@ export const Navbar = () => {
       submenu: [
         { name: 'Introduction', href: '/Home/introduction' },
         { name: 'Leadership Team', href: '/Home/leadership-team' },
-        { name: 'Chairman\'s Message', href: '/Home/chairman-message' },
+        { name: 'Chairman\\'s Message', href: '/Home/chairman-message' },
         { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
         { name: 'Past Leaders', href: '/Home/past-leaders' },
       ]
@@ -35,26 +35,47 @@ export const Navbar = () => {
     { name: 'Chapters', href: '/Chapter/chapters' },
     { name: 'Gallery', href: '/Home/gallery' },
   ];
+"""
 
-  const isActive = (href: string) => {
-    if (href === '/') return location.pathname === '/';
-    return location.pathname.startsWith(href);
-  };
+content = content.replace(nav_links_search.strip(), nav_links_replace.strip())
 
-  return (
-    <nav className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-4",
-      isScrolled || location.pathname !== '/' ? "bg-white/90 backdrop-blur-md shadow-sm py-3" : "bg-transparent"
-    )}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-fitis-blue rounded-lg flex items-center justify-center text-white font-bold text-xl">F</div>
-          <span className={cn(
-            "font-display font-bold text-2xl tracking-tighter",
-            isScrolled || location.pathname !== '/' ? "text-fitis-blue" : "text-white"
-          )}>FITIS</span>
-        </Link>
+# Need to add state for introduction dropdown
+state_imports_search = """import { Menu, X } from 'lucide-react';"""
+state_imports_replace = """import { Menu, X, ChevronDown } from 'lucide-react';"""
+content = content.replace(state_imports_search, state_imports_replace)
 
+states_search = """
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+"""
+states_replace = """
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isIntroOpen, setIsIntroOpen] = useState(false);
+"""
+content = content.replace(states_search.strip(), states_replace.strip())
+
+# Replace the mapping in desktop nav
+desktop_nav_search = """
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                isScrolled || location.pathname !== '/'
+                  ? (isActive(link.href) ? "text-fitis-blue" : "text-slate-600 hover:text-fitis-blue")
+                  : "text-white/80 hover:text-white"
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
+"""
+
+desktop_nav_replace = """
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
@@ -109,30 +130,41 @@ export const Navbar = () => {
               )}
             </div>
           ))}
-          <button className={cn(
-            "px-5 py-2 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg active:scale-95",
-            isScrolled || location.pathname !== '/' ? "bg-fitis-blue text-white hover:bg-fitis-blue-light" : "bg-white text-fitis-blue hover:bg-white/90"
-          )}>
-            Join Now
-          </button>
-        </div>
+"""
 
-        {/* Mobile Toggle */}
-        <button 
-          className={cn(
-            "md:hidden",
-            isScrolled || location.pathname !== '/' ? "text-fitis-blue" : "text-white"
-          )}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
+content = content.replace(desktop_nav_search.strip(), desktop_nav_replace.strip())
 
+# Replace the mapping in mobile nav
+mobile_nav_search = """
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div 
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-full left-0 right-0 bg-white shadow-xl border-t border-slate-100 p-6 flex flex-col gap-4 md:hidden"
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  "text-lg font-medium transition-colors",
+                  isActive(link.href) ? "text-fitis-blue" : "text-slate-600 hover:text-fitis-blue"
+                )}
+              >
+                {link.name}
+              </Link>
+            ))}
+"""
+
+mobile_nav_replace = """
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -194,12 +226,11 @@ export const Navbar = () => {
                 )}
               </div>
             ))}
-            <button className="w-full bg-fitis-blue text-white py-3 rounded-xl font-semibold">
-              Join Now
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
-  );
-};
+"""
+
+content = content.replace(mobile_nav_search.strip(), mobile_nav_replace.strip())
+
+with open('src/components/Navbar.tsx', 'w') as f:
+    f.write(content)
+
+print("Navbar updated")
