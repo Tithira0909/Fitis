@@ -579,6 +579,7 @@ app.put('/api/admin/gallery/:id/images/reorder', authenticateToken, async (req, 
 
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return; // Handled explicitly above
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -591,8 +592,78 @@ app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// CODE OF CONDUCT ROUTES (Must be before generic routes)
+// ==========================================
+
+// Admin GET Code of Conduct
+app.get('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (admin):', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Admin PUT Code of Conduct
+app.put('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  const { page_title, last_updated, status, sections } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Update main page info
+    let updateQuery = 'UPDATE code_of_conduct_page SET page_title = ?, status = ?';
+    let updateParams = [page_title, status];
+
+    if (last_updated) {
+      updateQuery += ', last_updated = ?';
+      updateParams.push(last_updated);
+    }
+    updateQuery += ' WHERE id = 1';
+
+    await connection.query(updateQuery, updateParams);
+
+    // Delete existing sections to easily handle reordering/removals
+    await connection.query('DELETE FROM code_of_conduct_sections WHERE page_id = 1');
+
+    // Insert new sections
+    if (sections && Array.isArray(sections)) {
+      for (const section of sections) {
+        await connection.query(
+          `INSERT INTO code_of_conduct_sections
+          (page_id, section_slug, section_title, section_html, sort_order)
+          VALUES (1, ?, ?, ?, ?)`,
+          [section.section_slug || '', section.section_title || '', section.section_html || '', section.sort_order || 0]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: 'Code of Conduct updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error updating code of conduct:', err);
+    res.status(500).json({ error: 'Database update failed' });
+  } finally {
+    connection.release();
+  }
+});
+
 // Generic GET single item
 app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -607,6 +678,7 @@ app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
 // Generic POST create item
 app.post('/api/admin/:table', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -645,6 +717,7 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
 
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -684,6 +757,7 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
 // Generic DELETE item
 app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -804,6 +878,95 @@ app.get('/api/news/:slug/related', async (req, res) => {
   } catch (error) {
     console.error('Error fetching related news:', error);
     res.status(500).json({ error: 'Failed to fetch related news' });
+  }
+});
+
+// ==========================================
+// CODE OF CONDUCT ROUTES
+// ==========================================
+
+// Admin GET Code of Conduct
+app.get('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (admin):', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Admin PUT Code of Conduct
+app.put('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  const { page_title, last_updated, status, sections } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Update main page info
+    let updateQuery = 'UPDATE code_of_conduct_page SET page_title = ?, status = ?';
+    let updateParams = [page_title, status];
+
+    if (last_updated) {
+      updateQuery += ', last_updated = ?';
+      updateParams.push(last_updated);
+    }
+    updateQuery += ' WHERE id = 1';
+
+    await connection.query(updateQuery, updateParams);
+
+    // Delete existing sections to easily handle reordering/removals
+    await connection.query('DELETE FROM code_of_conduct_sections WHERE page_id = 1');
+
+    // Insert new sections
+    if (sections && Array.isArray(sections)) {
+      for (const section of sections) {
+        await connection.query(
+          `INSERT INTO code_of_conduct_sections
+          (page_id, section_slug, section_title, section_html, sort_order)
+          VALUES (1, ?, ?, ?, ?)`,
+          [section.section_slug || '', section.section_title || '', section.section_html || '', section.sort_order || 0]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: 'Code of Conduct updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error updating code of conduct:', err);
+    res.status(500).json({ error: 'Database update failed' });
+  } finally {
+    connection.release();
+  }
+});
+
+// Public GET Code of Conduct
+app.get('/api/code-of-conduct', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1 AND status = "Published"');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found or not published' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (public):', err);
+    res.status(500).json({ error: 'Database query failed' });
   }
 });
 

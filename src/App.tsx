@@ -31,6 +31,7 @@ import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
+import { AdminCodeOfConduct } from './pages/admin/AdminCodeOfConduct';
 import { AdminGallery } from './pages/admin/AdminGallery';
 
 const ScrollToTop = () => {
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
           <Route path="chairman-message" element={<AdminChairmanMessage />} />
+          <Route path="code-of-conduct" element={<AdminCodeOfConduct />} />
         </Route>
 
         {/* Public Routes */}

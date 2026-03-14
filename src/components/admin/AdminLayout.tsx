@@ -98,6 +98,15 @@ export const AdminLayout: React.FC = () => {
                   <MessageSquare size={16} />
                   <span className="text-sm">Chairman Message</span>
                 </Link>
+                <Link
+                  to="/admin/code-of-conduct"
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/admin/code-of-conduct' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <FolderGit2 size={16} />
+                  <span className="text-sm">Code of Conduct</span>
+                </Link>
               </div>
             )}
           </div>
