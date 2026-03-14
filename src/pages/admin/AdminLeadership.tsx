@@ -189,7 +189,7 @@ export const AdminLeadership: React.FC = () => {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     {item.image_url ? (
-                      <img src={getImageUrl(item.image_url)} alt={item.name} className="w-10 h-10 rounded-full object-cover" />
+                      <img src={getImageUrl(item.image_url)} alt={item.name} className="w-10 h-10 rounded-full object-cover bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff'; }} />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
                         {item.name.charAt(0)}
@@ -335,7 +335,7 @@ export const AdminLeadership: React.FC = () => {
                 />
                 {formData.image_url && (
                   <div className="mt-2">
-                    <img src={getImageUrl(formData.image_url)} alt="Preview" className="w-16 h-16 rounded-full object-cover border" />
+                    <img src={getImageUrl(formData.image_url)} alt="Preview" className="w-16 h-16 rounded-full object-cover border bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff'; }} />
                   </div>
                 )}
               </div>

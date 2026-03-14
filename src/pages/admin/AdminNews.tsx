@@ -173,7 +173,7 @@ export const AdminNews: React.FC = () => {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     {item.banner_image_url ? (
-                      <img src={getImageUrl(item.banner_image_url)} alt="Banner" className="w-16 h-10 object-cover rounded" />
+                      <img src={getImageUrl(item.banner_image_url)} alt="Banner" className="w-16 h-10 object-cover rounded bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/100'; }} />
                     ) : (
                       <div className="w-16 h-10 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">None</div>
                     )}
@@ -267,7 +267,7 @@ export const AdminNews: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image (Required)</label>
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => handleFileUpload(e, 'banner')} className="w-full text-sm mb-2" disabled={isLoading} />
                 {formData.banner_image_url && (
-                  <img src={getImageUrl(formData.banner_image_url)} alt="Preview" className="h-20 object-cover rounded border" />
+                  <img src={getImageUrl(formData.banner_image_url)} alt="Preview" className="h-20 object-cover rounded border bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/100'; }} />
                 )}
               </div>
 

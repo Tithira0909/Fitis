@@ -8,7 +8,12 @@ export const AdminPrograms: React.FC = () => {
       key: 'banner_image_url',
       label: 'Banner Image',
       render: (val: string) => (
-        <img src={getImageUrl(val)} alt="Banner" className="w-16 h-16 object-cover rounded shadow-sm" />
+        <img
+          src={getImageUrl(val)}
+          alt="Banner"
+          className="w-16 h-16 object-cover rounded shadow-sm bg-slate-100"
+          onError={(e) => { e.currentTarget.src = 'https://picsum.photos/100/100'; }}
+        />
       )
     },
     { key: 'title', label: 'Title' },

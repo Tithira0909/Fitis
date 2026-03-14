@@ -7,7 +7,7 @@ export const AdminEvents: React.FC = () => {
     {
       key: 'flyer_image_url',
       label: 'Flyer',
-      render: (val) => val ? <img src={getImageUrl(val)} alt="flyer" className="w-16 h-16 object-cover rounded" /> : 'No image'
+      render: (val) => val ? <img src={getImageUrl(val)} alt="flyer" className="w-16 h-16 object-cover rounded bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/100/100'; }} /> : 'No image'
     },
     { key: 'title', label: 'Event Title' },
     { key: 'event_date', label: 'Date', render: (val) => new Date(val).toLocaleDateString() },
