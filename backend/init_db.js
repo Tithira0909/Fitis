@@ -118,6 +118,18 @@ const initializeDB = async () => {
         hero_url VARCHAR(500),
         favicon_url VARCHAR(500),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS programs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        description TEXT NOT NULL,
+        banner_image_url VARCHAR(600) NOT NULL,
+        read_more_url VARCHAR(600) NOT NULL,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
 

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated, logout } from '../../lib/auth';
-import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, Settings, LogOut, Image as ImageIcon } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, Settings, LogOut, Image as ImageIcon, FolderGit2 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ export const AdminLayout: React.FC = () => {
 
   const menuItems = [
     { path: '/admin', label: 'Overview', icon: <LayoutDashboard size={20} /> },
+    { path: '/admin/programs', label: 'Projects & Programs', icon: <FolderGit2 size={20} /> },
     { path: '/admin/news', label: 'News', icon: <Newspaper size={20} /> },
     { path: '/admin/events', label: 'Events', icon: <Calendar size={20} /> },
     { path: '/admin/chapters', label: 'Chapters', icon: <Users size={20} /> },

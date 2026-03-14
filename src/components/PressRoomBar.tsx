@@ -6,9 +6,11 @@ interface PressRoomBarProps {
   breadcrumbs: { label: string; href?: string }[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  title?: string;
+  onSearchSubmit?: (query: string) => void;
 }
 
-export const PressRoomBar: React.FC<PressRoomBarProps> = ({ breadcrumbs, searchQuery, onSearchChange }) => {
+export const PressRoomBar: React.FC<PressRoomBarProps> = ({ breadcrumbs, searchQuery, onSearchChange, title = "FITIS PRESS ROOM", onSearchSubmit }) => {
   return (
     <div className="bg-[#0b1a30] text-white py-3 px-6 mt-20 z-40 relative">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -31,7 +33,7 @@ export const PressRoomBar: React.FC<PressRoomBarProps> = ({ breadcrumbs, searchQ
 
         {/* Center Title */}
         <div className="text-center font-display font-bold text-sm tracking-widest w-full md:w-1/3 uppercase text-slate-100">
-          FITIS PRESS ROOM
+          {title}
         </div>
 
         {/* Search Input */}
@@ -46,7 +48,11 @@ export const PressRoomBar: React.FC<PressRoomBarProps> = ({ breadcrumbs, searchQ
                 if (e.key === 'Enter') {
                   const val = (e.target as HTMLInputElement).value;
                   if (val.trim()) {
-                    window.location.href = `/Home/news?q=${encodeURIComponent(val.trim())}`;
+                    if (onSearchSubmit) {
+                       onSearchSubmit(val.trim());
+                    } else {
+                       window.location.href = `/Home/news?q=${encodeURIComponent(val.trim())}`;
+                    }
                   }
                 }
               }}

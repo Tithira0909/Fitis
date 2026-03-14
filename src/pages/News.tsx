@@ -115,7 +115,7 @@ export const News = () => {
           <div className="text-center py-20 text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
             <p className="text-lg">No news articles found matching your criteria.</p>
             <button
-              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              onClick={() => { window.location.href = '/Home/news'; }}
               className="mt-4 text-fitis-blue font-medium hover:underline"
             >
               Clear filters

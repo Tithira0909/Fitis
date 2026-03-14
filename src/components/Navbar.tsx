@@ -19,7 +19,8 @@ export const Navbar = () => {
     { name: 'Home', href: '/' },
     { name: 'Introduction', href: '/Home/introduction' },
     { name: 'News', href: '/Home/news' },
-    { name: 'Events', href: '/Home/event_homenow' },
+    { name: 'Events', href: '/Home/events' },
+    { name: 'Programs', href: '/Home/programs' },
     { name: 'Chapters', href: '/Chapter/chapters' },
     { name: 'Gallery', href: '/Home/gallery' },
   ];

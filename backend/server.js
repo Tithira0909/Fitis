@@ -41,6 +41,8 @@ const storage = multer.diskStorage({
       dest += 'gallery';
     } else if (req.path.includes('/upload/event-flyer')) {
       dest += 'events';
+    } else if (req.path.includes('/upload/program-banner')) {
+      dest += 'programs';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
@@ -118,6 +120,16 @@ const uploadEventFlyer = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for event flyer'));
+  }
+});
+
+const uploadProgramBanner = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for program banner'));
   }
 });
 
@@ -202,7 +214,8 @@ const TABLE_COLUMNS = {
   chapters: ['name', 'head', 'member_count'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
   partners: ['company_name', 'tier', 'contact_person'],
-  newsletter_subscribers: ['email']
+  newsletter_subscribers: ['email'],
+  programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -289,6 +302,12 @@ app.post('/api/admin/upload/news-pdf', authenticateToken, uploadNewsPdf.single('
 app.post('/api/admin/upload/event-flyer', authenticateToken, uploadEventFlyer.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
   const relativeUrl = `/uploads/events/${req.file.filename}`;
+  res.json({ url: relativeUrl });
+});
+
+app.post('/api/admin/upload/program-banner', authenticateToken, uploadProgramBanner.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const relativeUrl = `/uploads/programs/${req.file.filename}`;
   res.json({ url: relativeUrl });
 });
 
@@ -544,6 +563,11 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
     }
   }
 
+  // Auto-generate slug if missing
+  if (allowedColumns.includes('slug') && !safeData.slug && safeData.title) {
+    safeData.slug = safeData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
+  }
+
   if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
 
   const columns = Object.keys(safeData).join(', ');
@@ -575,6 +599,11 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
     if (allowedColumns.includes(key)) {
       safeData[key] = data[key];
     }
+  }
+
+  // Auto-generate slug if missing
+  if (allowedColumns.includes('slug') && !safeData.slug && safeData.title) {
+    safeData.slug = safeData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
   }
 
   if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
@@ -665,6 +694,28 @@ app.get('/api/news/:slug', async (req, res) => {
   } catch (error) {
     console.error('Error fetching news article:', error);
     res.status(500).json({ error: 'Failed to fetch news article' });
+  }
+});
+
+// Public Programs API
+app.get('/api/programs', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM programs WHERE status = "published" ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching programs:', error);
+    res.status(500).json({ error: 'Failed to fetch programs' });
+  }
+});
+
+app.get('/api/programs/:slug', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM programs WHERE slug = ? AND status = "published"', [req.params.slug]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Program not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching program:', error);
+    res.status(500).json({ error: 'Failed to fetch program' });
   }
 });
 

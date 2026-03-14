@@ -15,6 +15,8 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminNews } from './pages/admin/AdminNews';
+import { AdminPrograms } from './pages/admin/AdminPrograms';
+import { Programs } from './pages/Programs';
 import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminChapters } from './pages/admin/AdminChapters';
 import { AdminLeadership } from './pages/admin/AdminLeadership';
@@ -82,6 +84,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminOverview />} />
+          <Route path="programs" element={<AdminPrograms />} />
           <Route path="news" element={<AdminNews />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="chapters" element={<AdminChapters />} />
@@ -98,6 +101,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/Home/introduction" element={<Introduction />} />
+              <Route path="/Home/programs" element={<Programs />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
               <Route path="/Home/gallery" element={<Gallery />} />
