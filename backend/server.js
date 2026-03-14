@@ -269,6 +269,65 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
 });
 
 // File Uploads (Protected)
+
+// Chairman's Message APIs
+app.get('/api/chairman-message', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1 AND status = "published"');
+    if (rows.length === 0) return res.status(404).json({ error: 'No published chairman message found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch chairman message' });
+  }
+});
+
+app.get('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Chairman message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching admin chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch admin chairman message' });
+  }
+});
+
+app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  const { name, designation, company, photo_url, message_title, message_body, status } = req.body;
+  try {
+    await pool.execute(
+      `UPDATE chairman_message SET
+        name = ?, designation = ?, company = ?, photo_url = ?,
+        message_title = ?, message_body = ?, status = ?
+      WHERE id = 1`,
+      [name, designation, company, photo_url, message_title, message_body, status]
+    );
+    res.json({ message: 'Chairman message updated successfully' });
+  } catch (error) {
+    console.error('Error updating chairman message:', error);
+    res.status(500).json({ error: 'Failed to update chairman message' });
+  }
+});
+
+const uploadChairman = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chairman photo'));
+  }
+});
+
+app.post('/api/admin/upload/chairman-photo', authenticateToken, uploadChairman.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const relativeUrl = `/uploads/chairman/${req.file.filename}`;
+  res.json({ url: relativeUrl });
+});
+
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
   const relativeUrl = `/uploads/hero/${req.file.filename}`;

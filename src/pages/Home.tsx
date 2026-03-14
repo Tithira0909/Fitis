@@ -14,8 +14,26 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
+import { fetchApi } from '../lib/api';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const ChairmanMessage = () => {
+  const [chairmanData, setChairmanData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchChairman = async () => {
+      try {
+        const res = await fetchApi('/api/chairman-message');
+        if (res && !res.error) setChairmanData(res);
+      } catch (err) {
+        console.error("Failed to load chairman message");
+      }
+    };
+    fetchChairman();
+  }, []);
+
+  if (!chairmanData) return null;
+
   return (
     <section id="about" className="py-16 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
@@ -32,12 +50,13 @@ const ChairmanMessage = () => {
               className="md:col-span-4 lg:col-span-3"
             >
               <div className="relative group">
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white bg-slate-200">
                   <img 
-                    src="https://picsum.photos/seed/chairman_fitis/600/600" 
-                    alt="Dr. Indika De Zoysa" 
+                    src={chairmanData.photo_url ? getImageUrl(chairmanData.photo_url) : 'https://picsum.photos/seed/chairman_fitis/600/600'}
+                    alt={chairmanData.name}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"
+                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600?text=Chairman'; }}
                   />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-fitis-gold rounded-full flex items-center justify-center shadow-lg border-4 border-white">
@@ -56,19 +75,19 @@ const ChairmanMessage = () => {
               <div className="mb-6">
                 <h2 className="text-sm font-bold text-fitis-blue uppercase tracking-[0.3em] mb-2">Chairman's Message</h2>
                 <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                  Steering Sri Lanka Towards a <span className="text-fitis-blue">Resilient Digital Economy</span>
+                  {chairmanData.message_title}
                 </h3>
               </div>
               
-              <p className="text-slate-600 text-base md:text-lg leading-relaxed mb-6 max-w-3xl">
-                "At FITIS, we are the architects of a digital ecosystem that empowers every citizen and business in Sri Lanka. Our focus remains on fostering innovation, enhancing global competitiveness, and ensuring that our digital infrastructure is robust enough to support the future."
+              <p className="text-slate-600 text-base md:text-lg leading-relaxed mb-6 max-w-3xl whitespace-pre-wrap">
+                "{chairmanData.message_body}"
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center gap-4">
                   <div>
-                    <p className="text-lg font-bold text-slate-900 leading-none">Dr. Indika De Zoysa</p>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Chairman, FITIS</p>
+                    <p className="text-lg font-bold text-slate-900 leading-none">{chairmanData.name}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{chairmanData.designation}{chairmanData.company ? `, ${chairmanData.company}` : ''}</p>
                   </div>
                 </div>
                 <button className="text-fitis-blue font-bold flex items-center gap-2 hover:gap-3 transition-all group">

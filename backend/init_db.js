@@ -130,6 +130,17 @@ const initializeDB = async () => {
         sort_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS chairman_message (
+        id INT PRIMARY KEY DEFAULT 1,
+        name VARCHAR(255),
+        designation VARCHAR(255),
+        company VARCHAR(255),
+        photo_url VARCHAR(500),
+        message_title VARCHAR(255),
+        message_body TEXT,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
 
@@ -173,6 +184,18 @@ const initializeDB = async () => {
       console.log('Seeded default site settings.');
     } else {
       console.log('Site settings already exist.');
+    }
+
+    // Seed default chairman message
+    const [chairmanRows] = await connection.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (chairmanRows.length === 0) {
+        await connection.execute(`
+          INSERT INTO chairman_message (id, name, designation, message_title, message_body)
+          VALUES (1, 'John Doe', 'Chairman', 'Welcome to FITIS', 'Our mission is to lead.')
+        `);
+        console.log('Seeded default chairman message.');
+    } else {
+        console.log('Chairman message already exists.');
     }
 
     console.log('Database initialization complete.');
