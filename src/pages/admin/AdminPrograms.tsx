@@ -58,7 +58,7 @@ export const AdminPrograms: React.FC = () => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <GenericAdminCrud
-        endpoint="/api/admin/programs"
+        tableName="programs"
         title="Projects & Programs"
         columns={columns}
         fields={fields}

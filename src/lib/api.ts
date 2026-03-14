@@ -1,4 +1,9 @@
 export const fetchApi = async (url: string, options: RequestInit = {}) => {
+  if (url.includes('undefined')) {
+    console.error(`Attempted to fetch invalid URL: ${url}`);
+    throw new Error('Missing table name or invalid API endpoint');
+  }
+
   const token = localStorage.getItem('adminToken');
   const headers = {
     'Content-Type': 'application/json',

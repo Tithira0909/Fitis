@@ -5,10 +5,17 @@ export const getImageUrl = (url?: string | null): string => {
     return url;
   }
 
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   if (url.startsWith('/uploads')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     return `${baseUrl}${url}`;
   }
 
-  return url;
+  // Handle bare filenames (assuming they are in root or just missing the slash)
+  // But if it's some other relative path, prefix it with a slash just in case
+  if (!url.startsWith('/')) {
+    return `${baseUrl}/${url}`;
+  }
+
+  return `${baseUrl}${url}`;
 };
