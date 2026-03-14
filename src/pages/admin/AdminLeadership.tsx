@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Link as LinkIcon } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 interface LeadershipMember {
   id: number;
@@ -188,7 +189,7 @@ export const AdminLeadership: React.FC = () => {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     {item.image_url ? (
-                      <img src={item.image_url.startsWith('http') ? item.image_url : `${baseUrl}${item.image_url}`} alt={item.name} className="w-10 h-10 rounded-full object-cover" />
+                      <img src={getImageUrl(item.image_url)} alt={item.name} className="w-10 h-10 rounded-full object-cover" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
                         {item.name.charAt(0)}
@@ -334,7 +335,7 @@ export const AdminLeadership: React.FC = () => {
                 />
                 {formData.image_url && (
                   <div className="mt-2">
-                    <img src={formData.image_url.startsWith('http') ? formData.image_url : `${baseUrl}${formData.image_url}`} alt="Preview" className="w-16 h-16 rounded-full object-cover border" />
+                    <img src={getImageUrl(formData.image_url)} alt="Preview" className="w-16 h-16 rounded-full object-cover border" />
                   </div>
                 )}
               </div>

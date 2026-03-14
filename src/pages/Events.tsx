@@ -30,7 +30,7 @@ export const Events = () => {
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const data = await fetchApi('/api/events');
+        const data = await fetchApi(`/api/events?t=${new Date().getTime()}`);
         setEvents(data);
       } catch (error) {
         console.error('Failed to load events:', error);

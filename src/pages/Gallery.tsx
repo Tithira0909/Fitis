@@ -54,7 +54,7 @@ export const Gallery = () => {
     setCurrentImageIndex(0);
     setIsModalLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/api/gallery/${post.id}`);
+      const res = await fetch(`${baseUrl}/api/gallery/${post.id}?t=${new Date().getTime()}`);
       if (!res.ok) throw new Error('Failed to load images');
       const data = await res.json();
       setSelectedPost(data);

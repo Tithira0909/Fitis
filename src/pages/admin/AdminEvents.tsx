@@ -1,12 +1,13 @@
 import React from 'react';
 import { GenericAdminCrud, ColumnDef, FieldDef } from '../../components/admin/GenericAdminCrud';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 export const AdminEvents: React.FC = () => {
   const columns: ColumnDef[] = [
     {
       key: 'flyer_image_url',
       label: 'Flyer',
-      render: (val) => val ? <img src={val} alt="flyer" className="w-16 h-16 object-cover rounded" /> : 'No image'
+      render: (val) => val ? <img src={getImageUrl(val)} alt="flyer" className="w-16 h-16 object-cover rounded" /> : 'No image'
     },
     { key: 'title', label: 'Event Title' },
     { key: 'event_date', label: 'Date', render: (val) => new Date(val).toLocaleDateString() },

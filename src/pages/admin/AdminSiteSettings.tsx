@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchApi } from '../../lib/api';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 interface SiteSettingsData {
   site_email: string;
@@ -173,7 +174,7 @@ export const AdminSiteSettings: React.FC = () => {
               {data.favicon_url && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                  <img src={data.favicon_url.startsWith('http') ? data.favicon_url : `${baseUrl}${data.favicon_url}`} alt="Favicon preview" className="w-8 h-8 border rounded shadow-sm bg-white" />
+                  <img src={getImageUrl(data.favicon_url)} alt="Favicon preview" className="w-8 h-8 border rounded shadow-sm bg-white" />
                 </div>
               )}
             </div>
@@ -193,9 +194,9 @@ export const AdminSiteSettings: React.FC = () => {
                   <p className="text-xs text-gray-500 mb-1">Preview ({data.hero_type}):</p>
                   <div className="relative w-full max-w-md aspect-video bg-black rounded-lg overflow-hidden shadow-sm">
                     {data.hero_type === 'video' ? (
-                      <video src={data.hero_url.startsWith('http') ? data.hero_url : `${baseUrl}${data.hero_url}`} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+                      <video src={getImageUrl(data.hero_url)} autoPlay muted loop playsInline className="w-full h-full object-cover" />
                     ) : (
-                      <img src={data.hero_url.startsWith('http') ? data.hero_url : `${baseUrl}${data.hero_url}`} alt="Hero preview" className="w-full h-full object-cover" />
+                      <img src={getImageUrl(data.hero_url)} alt="Hero preview" className="w-full h-full object-cover" />
                     )}
                   </div>
                 </div>
