@@ -177,7 +177,7 @@ export const Gallery = () => {
                         onClick={() => openModal(post)}
                       >
                         <img
-                          src={getImageUrl(img.image_url)}
+                          src={getImageUrl(img.image_url, img.id)}
                           alt={`Thumbnail ${imgIdx + 1}`}
                           loading="lazy"
                           onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
@@ -242,7 +242,7 @@ export const Gallery = () => {
                     <>
                       <img
                         key={selectedPost.images[currentImageIndex].id}
-                        src={getImageUrl(selectedPost.images[currentImageIndex].image_url)}
+                        src={getImageUrl(selectedPost.images[currentImageIndex].image_url, selectedPost.images[currentImageIndex].id)}
                         alt={selectedPost.title}
                         onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
                         className="w-full h-full object-cover"

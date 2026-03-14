@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // Expose uploads directory statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -482,7 +482,7 @@ app.post('/api/admin/gallery/:id/images', authenticateToken, uploadGallery.array
       });
     }
 
-    res.status(201).json(uploadedImages);
+    res.status(201).json({ urls: uploadedImages.map(img => img.image_url), images: uploadedImages });
   } catch (error) {
     console.error('Error uploading gallery images:', error);
     res.status(500).json({ error: 'Failed to save uploaded images' });
