@@ -20,6 +20,7 @@ interface EventItem {
   facebook_url: string;
   twitter_url: string;
   linkedin_url: string;
+  updated_at?: string;
 }
 
 export const Events = () => {
@@ -89,7 +90,7 @@ export const Events = () => {
                 <div className="md:w-[45%] relative border-b md:border-b-0 md:border-r border-slate-100 overflow-hidden bg-slate-100 flex-shrink-0">
                   {event.flyer_image_url ? (
                     <img 
-                      src={getImageUrl(event.flyer_image_url)}
+                      src={getImageUrl(event.flyer_image_url, event.updated_at ? new Date(event.updated_at).getTime() : undefined)}
                       alt={event.title}
                       loading="lazy"
                       onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/500'; }}

@@ -12,6 +12,7 @@ interface LeadershipMember {
   linkedin_url: string;
   hierarchy_level: number;
   seat: number;
+  updated_at?: string;
 }
 
 const SkeletonCard = () => (
@@ -29,7 +30,7 @@ const MemberCard = ({ member }: { member: LeadershipMember }) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  const imgUrl = getImageUrl(member.image_url);
+  const imgUrl = getImageUrl(member.image_url, member.updated_at ? new Date(member.updated_at).getTime() : undefined);
 
   return (
     <motion.div

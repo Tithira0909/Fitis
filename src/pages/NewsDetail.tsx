@@ -16,6 +16,7 @@ interface NewsItem {
   category: string;
   publish_date: string;
   author: string;
+  updated_at?: string;
 }
 
 export const NewsDetail = () => {
@@ -66,8 +67,8 @@ export const NewsDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const bannerUrl = news?.banner_image_url ? getImageUrl(news.banner_image_url) : 'https://picsum.photos/1200/600';
-  const pdfUrl = news?.pdf_url ? getImageUrl(news.pdf_url) : null;
+  const bannerUrl = news?.banner_image_url ? getImageUrl(news.banner_image_url, news.updated_at ? new Date(news.updated_at).getTime() : undefined) : 'https://picsum.photos/1200/600';
+  const pdfUrl = news?.pdf_url ? getImageUrl(news.pdf_url, news.updated_at ? new Date(news.updated_at).getTime() : undefined) : null;
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20">
@@ -217,7 +218,7 @@ export const NewsDetail = () => {
                     >
                       <Link to={`/Home/news/${item.slug}`} className="block relative h-48 overflow-hidden">
                         <img
-                          src={item.banner_image_url ? getImageUrl(item.banner_image_url) : 'https://picsum.photos/400/300'}
+                          src={item.banner_image_url ? getImageUrl(item.banner_image_url, item.updated_at ? new Date(item.updated_at).getTime() : undefined) : 'https://picsum.photos/400/300'}
                           alt={item.title}
                           loading="lazy"
                           onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}

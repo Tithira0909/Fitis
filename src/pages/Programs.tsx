@@ -12,6 +12,7 @@ interface ProgramItem {
   banner_image_url: string;
   read_more_url: string;
   sort_order: number;
+  updated_at?: string;
 }
 
 export const Programs = () => {
@@ -118,7 +119,7 @@ export const Programs = () => {
               {/* Image Left Side */}
               <div className="sm:w-2/5 relative overflow-hidden bg-slate-100 shrink-0 h-48 sm:h-auto border-r border-slate-100">
                 <img
-                  src={program.banner_image_url ? getImageUrl(program.banner_image_url) : 'https://picsum.photos/400/400'}
+                  src={program.banner_image_url ? getImageUrl(program.banner_image_url, program.updated_at ? new Date(program.updated_at).getTime() : undefined) : 'https://picsum.photos/400/400'}
                   alt={program.title}
                   loading="lazy"
                   onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/400'; }}

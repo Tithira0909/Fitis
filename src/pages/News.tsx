@@ -13,6 +13,7 @@ interface NewsItem {
   banner_image_url: string;
   category: string;
   publish_date: string;
+  updated_at?: string;
 }
 
 export const News = () => {
@@ -138,7 +139,7 @@ export const News = () => {
               {/* Image Left Side */}
               <div className="sm:w-2/5 relative overflow-hidden bg-slate-100 shrink-0 h-56 sm:h-auto">
                 <img 
-                  src={news.banner_image_url ? getImageUrl(news.banner_image_url) : 'https://picsum.photos/400/400'}
+                  src={news.banner_image_url ? getImageUrl(news.banner_image_url, news.updated_at ? new Date(news.updated_at).getTime() : undefined) : 'https://picsum.photos/400/400'}
                   alt={news.title}
                   loading="lazy"
                   onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/400'; }}

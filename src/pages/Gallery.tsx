@@ -17,6 +17,7 @@ interface GalleryPost {
   event_date: string;
   cover_image?: string;
   images?: GalleryImage[]; // Fetched dynamically on detail view
+  updated_at?: string;
 }
 
 export const Gallery = () => {
@@ -153,7 +154,7 @@ export const Gallery = () => {
                     onClick={() => openModal(post)}
                   >
                     <img
-                      src={post.cover_image ? getImageUrl(post.cover_image) : 'https://picsum.photos/1200/800'}
+                      src={post.cover_image ? getImageUrl(post.cover_image, post.updated_at ? new Date(post.updated_at).getTime() : undefined) : 'https://picsum.photos/1200/800'}
                       alt={post.title}
                       loading="lazy"
                       onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
@@ -196,7 +197,7 @@ export const Gallery = () => {
                         onClick={() => openModal(post)}
                       >
                          <img
-                          src={getImageUrl(post.cover_image)}
+                          src={getImageUrl(post.cover_image, post.updated_at ? new Date(post.updated_at).getTime() : undefined)}
                           alt="Thumbnail 1"
                           loading="lazy"
                           onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
