@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
       dest += 'news-banner';
     } else if (req.path.includes('/upload/news-pdf')) {
       dest += 'news-pdf';
-    } else if (req.path.includes('/upload/gallery')) {
+    } else if (req.path.includes('/gallery') || req.path.includes('/upload/gallery')) {
       dest += 'gallery';
     } else if (req.path.includes('/upload/event-flyer')) {
       dest += 'events';
@@ -45,8 +45,8 @@ const storage = multer.diskStorage({
       dest += 'programs';
     }
     // Ensure directory exists
-    fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
-    cb(null, path.join(__dirname, dest));
+    fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
+    cb(null, path.join(process.cwd(), dest));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

@@ -135,6 +135,13 @@ export const AdminGallery: React.FC = () => {
       });
 
       if (!response.ok) throw new Error('Upload failed');
+      const responseData = await response.json();
+
+      // Update local state directly to immediately show previews, then reload for accurate sort state
+      if (responseData.images) {
+         setImages(prev => [...prev, ...responseData.images]);
+      }
+
       // Reload images from server to get accurate state
       await loadPostDetails(editingPost.id);
       showToast('Images uploaded successfully');
@@ -344,7 +351,7 @@ export const AdminGallery: React.FC = () => {
                               <button onClick={() => moveImage(index, 'up')} disabled={index === 0} className="p-1 hover:bg-slate-100 rounded text-slate-400 disabled:opacity-30"><ArrowUp size={14} /></button>
                               <button onClick={() => moveImage(index, 'down')} disabled={index === images.length - 1} className="p-1 hover:bg-slate-100 rounded text-slate-400 disabled:opacity-30"><ArrowDown size={14} /></button>
                             </div>
-                            <img src={getImageUrl(img.image_url)} alt="Gallery thumbnail" className="w-16 h-12 object-cover rounded bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/120'; }} />
+                            <img src={getImageUrl(img.image_url, img.id)} alt="Gallery thumbnail" className="w-16 h-12 object-cover rounded bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/120'; }} />
                             <div className="flex-1 text-xs text-slate-400">Sort: {img.sort_order}</div>
                             <button onClick={() => handleDeleteImage(img.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                               <Trash2 size={16} />

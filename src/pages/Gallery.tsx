@@ -154,7 +154,7 @@ export const Gallery = () => {
                     onClick={() => openModal(post)}
                   >
                     <img
-                      src={post.cover_image ? getImageUrl(post.cover_image, post.updated_at ? new Date(post.updated_at).getTime() : undefined) : 'https://picsum.photos/1200/800'}
+                      src={getImageUrl(post.cover_image, post.id)}
                       alt={post.title}
                       loading="lazy"
                       onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
@@ -197,7 +197,7 @@ export const Gallery = () => {
                         onClick={() => openModal(post)}
                       >
                          <img
-                          src={getImageUrl(post.cover_image, post.updated_at ? new Date(post.updated_at).getTime() : undefined)}
+                          src={getImageUrl(post.cover_image, post.id)}
                           alt="Thumbnail 1"
                           loading="lazy"
                           onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
