@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Share2, MapPin, Clock, Calendar, ExternalLink, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { fetchApi } from '../lib/api';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface EventItem {
   id: number;
@@ -81,8 +82,10 @@ export const Events = () => {
                 <div className="md:w-[45%] relative border-b md:border-b-0 md:border-r border-slate-100 overflow-hidden bg-slate-100 flex-shrink-0">
                   {event.flyer_image_url ? (
                     <img 
-                      src={event.flyer_image_url}
+                      src={getImageUrl(event.flyer_image_url)}
                       alt={event.title}
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/500'; }}
                       className="w-full h-full object-cover aspect-[4/5] md:aspect-auto md:absolute inset-0 transition-transform duration-700 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />

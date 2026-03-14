@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // Expose uploads directory statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -258,51 +258,38 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
 // File Uploads (Protected)
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  // Ensure we get the correct host even if behind a proxy
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/hero/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/hero/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 app.post('/api/admin/upload/favicon', authenticateToken, uploadFavicon.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/favicon/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/favicon/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 app.post('/api/admin/upload/leadership', authenticateToken, uploadLeadership.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/leadership/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/leadership/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 app.post('/api/admin/upload/news-banner', authenticateToken, uploadNewsBanner.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/news-banner/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/news-banner/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 app.post('/api/admin/upload/news-pdf', authenticateToken, uploadNewsPdf.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/news-pdf/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/news-pdf/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 app.post('/api/admin/upload/event-flyer', authenticateToken, uploadEventFlyer.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const fullUrl = `${protocol}://${host}/uploads/events/${req.file.filename}`;
-  res.json({ url: fullUrl });
+  const relativeUrl = `/uploads/events/${req.file.filename}`;
+  res.json({ url: relativeUrl });
 });
 
 // Dashboard Stats
@@ -457,24 +444,21 @@ app.post('/api/admin/gallery/:id/images', authenticateToken, uploadGallery.array
     const [rows] = await pool.execute('SELECT MAX(sort_order) as maxOrder FROM gallery_images WHERE post_id = ?', [id]);
     let currentMax = rows[0].maxOrder || 0;
 
-    const protocol = req.protocol;
-    const host = req.get('host');
-
     const uploadedImages = [];
 
     for (const file of files) {
       currentMax += 1;
-      const fullUrl = `${protocol}://${host}/uploads/gallery/${file.filename}`;
+      const relativeUrl = `/uploads/gallery/${file.filename}`;
 
       const [result] = await pool.execute(
         'INSERT INTO gallery_images (post_id, image_url, sort_order) VALUES (?, ?, ?)',
-        [id, fullUrl, currentMax]
+        [id, relativeUrl, currentMax]
       );
 
       uploadedImages.push({
         id: result.insertId,
         post_id: id,
-        image_url: fullUrl,
+        image_url: relativeUrl,
         sort_order: currentMax
       });
     }

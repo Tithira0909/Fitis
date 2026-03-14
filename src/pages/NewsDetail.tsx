@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Calendar, Tag, ArrowLeft, Facebook, Twitter, Linkedin, Link as LinkIcon, Download, FileText, Loader, ArrowRight } from 'lucide-react';
 import { PressRoomBar } from '../components/PressRoomBar';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface NewsItem {
   id: number;
@@ -65,8 +66,8 @@ export const NewsDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const bannerUrl = news?.banner_image_url ? (news.banner_image_url.startsWith('http') ? news.banner_image_url : `${baseUrl}${news.banner_image_url}`) : 'https://picsum.photos/1200/600';
-  const pdfUrl = news?.pdf_url ? (news.pdf_url.startsWith('http') ? news.pdf_url : `${baseUrl}${news.pdf_url}`) : null;
+  const bannerUrl = news?.banner_image_url ? getImageUrl(news.banner_image_url) : 'https://picsum.photos/1200/600';
+  const pdfUrl = news?.pdf_url ? getImageUrl(news.pdf_url) : null;
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20">
@@ -156,7 +157,7 @@ export const NewsDetail = () => {
 
               {/* Full Banner Image */}
               <div className="w-full h-[40vh] md:h-[50vh] bg-slate-100">
-                <img src={bannerUrl} alt={news.title} className="w-full h-full object-cover" />
+                <img src={bannerUrl} alt={news.title} loading="lazy" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/600'; }} className="w-full h-full object-cover" />
               </div>
 
               <div className="p-8 md:p-12">
@@ -216,8 +217,10 @@ export const NewsDetail = () => {
                     >
                       <Link to={`/Home/news/${item.slug}`} className="block relative h-48 overflow-hidden">
                         <img
-                          src={item.banner_image_url ? (item.banner_image_url.startsWith('http') ? item.banner_image_url : `${baseUrl}${item.banner_image_url}`) : 'https://picsum.photos/400/300'}
+                          src={item.banner_image_url ? getImageUrl(item.banner_image_url) : 'https://picsum.photos/400/300'}
                           alt={item.title}
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded text-[10px] font-bold text-fitis-blue uppercase tracking-wider">

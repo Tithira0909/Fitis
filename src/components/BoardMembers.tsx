@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Linkedin } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface LeadershipMember {
   id: number;
@@ -23,15 +24,12 @@ const SkeletonCard = () => (
 
 const MemberCard = ({ member }: { member: LeadershipMember }) => {
   const [imgError, setImgError] = useState(false);
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  const imgUrl = member.image_url
-    ? (member.image_url.startsWith('http') ? member.image_url : `${baseUrl}${member.image_url}`)
-    : '';
+  const imgUrl = getImageUrl(member.image_url);
 
   return (
     <motion.div

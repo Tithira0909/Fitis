@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchApi } from '../../lib/api';
 import { Trash2, Edit } from 'lucide-react';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 export interface ColumnDef {
   key: string;
@@ -244,7 +245,7 @@ export const GenericAdminCrud: React.FC<GenericAdminCrudProps> = ({ title, table
                   ) : field.type === 'image' ? (
                     <div className="space-y-2">
                       {formData[field.name] && (
-                        <img src={formData[field.name]} alt="Preview" className="w-32 h-32 object-cover border rounded" />
+                        <img src={getImageUrl(formData[field.name])} alt="Preview" className="w-32 h-32 object-cover border rounded" />
                       )}
                       <input
                         type="file"

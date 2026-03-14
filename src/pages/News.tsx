@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Calendar, Tag, ArrowRight, Loader, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PressRoomBar } from '../components/PressRoomBar';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface NewsItem {
   id: number;
@@ -135,9 +136,10 @@ export const News = () => {
               {/* Image Left Side */}
               <div className="sm:w-2/5 relative overflow-hidden bg-slate-100 shrink-0 h-56 sm:h-auto">
                 <img 
-                  src={news.banner_image_url ? (news.banner_image_url.startsWith('http') ? news.banner_image_url : `${baseUrl}${news.banner_image_url}`) : 'https://picsum.photos/400/400'}
+                  src={news.banner_image_url ? getImageUrl(news.banner_image_url) : 'https://picsum.photos/400/400'}
                   alt={news.title}
                   loading="lazy"
+                  onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/400'; }}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-md text-xs font-bold text-fitis-blue uppercase tracking-wide flex items-center gap-1 shadow-sm">

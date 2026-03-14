@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface GalleryImage {
   id: number;
@@ -159,9 +160,10 @@ export const Gallery = () => {
                     onClick={() => openModal(post)}
                   >
                     <img
-                      src={post.cover_image ? (post.cover_image.startsWith('http') ? post.cover_image : `${baseUrl}${post.cover_image}`) : 'https://picsum.photos/1200/800'}
+                      src={post.cover_image ? getImageUrl(post.cover_image) : 'https://picsum.photos/1200/800'}
                       alt={post.title}
                       loading="lazy"
+                      onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
                       className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500"
                     />
                     {post.images && post.images.length > 1 && (
@@ -181,9 +183,10 @@ export const Gallery = () => {
                         onClick={() => openModal(post)}
                       >
                         <img
-                          src={img.image_url.startsWith('http') ? img.image_url : `${baseUrl}${img.image_url}`}
+                          src={getImageUrl(img.image_url)}
                           alt={`Thumbnail ${imgIdx + 1}`}
                           loading="lazy"
+                          onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                         {/* Overlay for the 4th image if there are more */}
@@ -200,9 +203,10 @@ export const Gallery = () => {
                         onClick={() => openModal(post)}
                       >
                          <img
-                          src={post.cover_image.startsWith('http') ? post.cover_image : `${baseUrl}${post.cover_image}`}
+                          src={getImageUrl(post.cover_image)}
                           alt="Thumbnail 1"
                           loading="lazy"
+                          onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/300'; }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       </div>
@@ -244,8 +248,9 @@ export const Gallery = () => {
                     <>
                       <img
                         key={selectedPost.images[currentImageIndex].id}
-                        src={selectedPost.images[currentImageIndex].image_url.startsWith('http') ? selectedPost.images[currentImageIndex].image_url : `${baseUrl}${selectedPost.images[currentImageIndex].image_url}`}
+                        src={getImageUrl(selectedPost.images[currentImageIndex].image_url)}
                         alt={selectedPost.title}
+                        onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
                         className="w-full h-full object-cover"
                       />
 
