@@ -33,8 +33,7 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
         <div>
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-fitis-blue rounded-lg flex items-center justify-center text-white font-bold text-xl">F</div>
-            <span className="font-display font-bold text-2xl tracking-tighter">FITIS</span>
+            <img src="/fitis-logo.png" alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
           </div>
           <p className="text-slate-400 leading-relaxed mb-8">
             The Federation of Information Technology Industry Sri Lanka is the apex body of the ICT industry in Sri Lanka.
