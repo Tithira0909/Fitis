@@ -86,10 +86,14 @@ const initializeDB = async () => {
       )`,
       `CREATE TABLE IF NOT EXISTS partners (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        company_name VARCHAR(255) NOT NULL,
-        tier ENUM('Platinum', 'Gold', 'Silver', 'Bronze') NOT NULL,
-        contact_person VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        name VARCHAR(150) NOT NULL,
+        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+        logo_url VARCHAR(600) NOT NULL,
+        website_url VARCHAR(600) NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -216,6 +220,31 @@ const initializeDB = async () => {
       } else {
         console.error('Migration error (leadership_members columns):', migErr.message);
       }
+    }
+
+    // Data Migration: Update partners table schema if it's the old one
+    try {
+      // Check if old column exists
+      const [cols] = await connection.execute("SHOW COLUMNS FROM partners LIKE 'company_name'");
+      if (cols.length > 0) {
+        await connection.execute("DROP TABLE partners");
+        await connection.execute(`
+          CREATE TABLE partners (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(150) NOT NULL,
+            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+            logo_url VARCHAR(600) NOT NULL,
+            website_url VARCHAR(600) NULL,
+            sort_order INT DEFAULT 0,
+            status ENUM('draft', 'published') DEFAULT 'published',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('Executed data migration: Recreated partners table with new schema');
+      }
+    } catch (migErr) {
+      console.error('Migration error (partners table):', migErr.message);
     }
 
     // Data Migration: Fix missing leading slashes in image URLs for programs

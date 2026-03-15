@@ -47,6 +47,8 @@ const storage = multer.diskStorage({
       dest += 'chairman';
     } else if (req.path.includes('/upload/secretariat-photo')) {
       dest += 'secretariat';
+    } else if (req.path.includes('/upload/partner-logo')) {
+      dest += 'partners';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -157,6 +159,16 @@ const uploadSecretariatPhoto = multer({
   }
 });
 
+const uploadPartnerLogo = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for partner logo'));
+  }
+});
+
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -237,7 +249,7 @@ const TABLE_COLUMNS = {
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
   chapters: ['name', 'head', 'member_count'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
-  partners: ['company_name', 'tier', 'contact_person'],
+  partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
   secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status']
@@ -826,6 +838,13 @@ app.post('/api/admin/upload/secretariat-photo', authenticateToken, uploadSecreta
   res.json({ url: relativePath });
 });
 
+// Upload Partner Logo
+app.post('/api/admin/upload/partner-logo', authenticateToken, uploadPartnerLogo.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/partners/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
@@ -877,6 +896,17 @@ app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(`Error deleting from ${table}:`, error);
     res.status(500).json({ error: `Failed to delete item from ${table}` });
+  }
+});
+
+// Public Partners
+app.get('/api/partners', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM partners WHERE status = "published" ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    res.status(500).json({ error: 'Failed to fetch partners' });
   }
 });
 

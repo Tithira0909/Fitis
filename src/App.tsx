@@ -10,6 +10,7 @@ import { ChairmanMessage } from './pages/ChairmanMessage';
 import { SecretariatTeam } from './pages/SecretariatTeam';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { Disclaimer } from './pages/Disclaimer';
+import { Partners } from './pages/Partners';
 import { CodeOfConduct } from './pages/CodeOfConduct';
 import { CodeOfEthics } from './pages/CodeOfEthics';
 import { PastLeaders } from './pages/PastLeaders';
@@ -121,6 +122,7 @@ export default function App() {
               <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
               <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
+              <Route path="/Home/partnerships" element={<Partners />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
               <Route path="/Home/past-leaders" element={<PastLeaders />} />
