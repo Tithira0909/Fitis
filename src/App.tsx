@@ -8,6 +8,7 @@ import { Introduction } from './pages/Introduction';
 import { LeadershipTeam } from './pages/LeadershipTeam';
 import { ChairmanMessage } from './pages/ChairmanMessage';
 import { CodeOfConduct } from './pages/CodeOfConduct';
+import { CodeOfEthics } from './pages/CodeOfEthics';
 import { PastLeaders } from './pages/PastLeaders';
 
 import { News } from './pages/News';
@@ -111,6 +112,7 @@ export default function App() {
               <Route path="/Home/leadership-team" element={<LeadershipTeam />} />
               <Route path="/Home/chairman-message" element={<ChairmanMessage />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
+              <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
               <Route path="/Home/past-leaders" element={<PastLeaders />} />
               <Route path="/Home/programs" element={<Programs />} />
               <Route path="/Home/news" element={<News />} />
