@@ -32,6 +32,7 @@ import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 import { AdminGallery } from './pages/admin/AdminGallery';
+import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -100,6 +101,7 @@ export default function App() {
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="gallery" element={<AdminGallery />} />
+          <Route path="chairman-message" element={<AdminChairmanMessage />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
         </Route>
 

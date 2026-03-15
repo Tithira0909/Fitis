@@ -43,6 +43,8 @@ const storage = multer.diskStorage({
       dest += 'events';
     } else if (req.path.includes('/upload/program-banner')) {
       dest += 'programs';
+    } else if (req.path.includes('/upload/chairman-photo')) {
+      dest += 'chairman';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -130,6 +132,16 @@ const uploadProgramBanner = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for program banner'));
+  }
+});
+
+const uploadChairmanPhoto = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chairman photo'));
   }
 });
 
@@ -267,6 +279,57 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
+// Chairman Message Public
+app.get('/api/chairman-message', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1 AND status = "published"');
+    if (rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+// Admin Chairman Message (Protected)
+app.get('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  const { name, designation, subtitle, photo_url, message_title, message_body, focus_cards, status } = req.body;
+  try {
+    const [existing] = await pool.execute('SELECT id FROM chairman_message WHERE id = 1');
+    const focusCardsStr = focus_cards ? JSON.stringify(focus_cards) : null;
+
+    if (existing.length === 0) {
+      await pool.execute(
+        `INSERT INTO chairman_message (id, name, designation, subtitle, photo_url, message_title, message_body, focus_cards, status)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, designation, subtitle, photo_url, message_title, message_body, focusCardsStr, status || 'published']
+      );
+    } else {
+      await pool.execute(
+        `UPDATE chairman_message
+         SET name=?, designation=?, subtitle=?, photo_url=?, message_title=?, message_body=?, focus_cards=?, status=?
+         WHERE id=1`,
+        [name, designation, subtitle, photo_url, message_title, message_body, focusCardsStr, status || 'published']
+      );
+    }
+    res.json({ message: 'Chairman message updated successfully' });
+  } catch (error) {
+    console.error('Error updating chairman message:', error);
+    res.status(500).json({ error: 'Failed to update message' });
+  }
+});
+
 
 // File Uploads (Protected)
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
@@ -582,6 +645,13 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
     console.error(`Error creating in ${table}:`, error);
     res.status(500).json({ error: `Failed to create item in ${table}` });
   }
+});
+
+// Upload Chairman Photo
+app.post('/api/admin/upload/chairman-photo', authenticateToken, uploadChairmanPhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chairman/${req.file.filename}`;
+  res.json({ url: relativePath });
 });
 
 // Generic PUT update item
