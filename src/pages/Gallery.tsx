@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '../utils/getImageUrl';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 
 interface GalleryImage {
   id: number;
@@ -100,6 +101,7 @@ export const Gallery = () => {
       {/* Main Content */}
       <section className="py-16 px-6 pt-12">
         <div className="max-w-7xl mx-auto">
+          <SectionHeader title="Media Gallery" />
 
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20 text-slate-500">

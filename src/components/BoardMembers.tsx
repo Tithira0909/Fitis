@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Linkedin } from 'lucide-react';
 import { getImageUrl } from '../utils/getImageUrl';
+import { SectionHeader } from './SectionHeader';
 
 interface LeadershipMember {
   id: number;
@@ -147,9 +148,10 @@ export const BoardMembers = () => {
           </div>
 
           <div className="flex-2 text-center mb-4 md:mb-0">
-            <h2 className="text-2xl md:text-4xl font-display font-bold text-white tracking-widest uppercase">
-              Board Members
-            </h2>
+             <SectionHeader
+               title="Board Members"
+               className="mb-0 [&>h2]:text-white [&>h2]:text-2xl md:[&>h2]:text-4xl [&>h2]:tracking-widest [&>div]:mb-0 [&>p]:hidden"
+             />
           </div>
 
           <div className="flex-1 flex justify-end">

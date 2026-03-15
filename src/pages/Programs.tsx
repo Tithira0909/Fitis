@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Loader } from 'lucide-react';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
 
 interface ProgramItem {
@@ -58,23 +59,11 @@ export const Programs = () => {
       />
 
       <div className="max-w-6xl mx-auto px-6 pt-12">
-        <div className="text-center mb-12 border-b border-slate-200 pb-8">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-display font-extrabold text-fitis-blue tracking-tight uppercase"
-          >
-            Projects & Programs
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-slate-500 mt-4 text-lg font-medium max-w-2xl mx-auto"
-          >
-            Explore our initiatives and projects shaping the future of the industry.
-          </motion.p>
-        </div>
+        <SectionHeader
+          title="Projects & Programs"
+          subtitle="Explore our initiatives and projects shaping the future of the industry."
+          className="mb-12 border-b border-slate-200 pb-8"
+        />
 
         {/* Loading / Error States */}
         {isLoading && (

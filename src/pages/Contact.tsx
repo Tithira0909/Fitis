@@ -1,5 +1,6 @@
 import React from 'react';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 export const Contact = () => {
@@ -13,7 +14,7 @@ export const Contact = () => {
 
       <div className="max-w-4xl mx-auto px-6 pt-16">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 md:p-12 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8">Get in Touch</h2>
+          <SectionHeader title="Get in Touch" className="mb-8" />
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 text-slate-600">
             <div className="flex flex-col items-center gap-3">

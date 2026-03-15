@@ -4,6 +4,7 @@ import { Share2, MapPin, Clock, Calendar, ExternalLink, Facebook, Twitter, Linke
 import { fetchApi } from '../lib/api';
 import { getImageUrl } from '../utils/getImageUrl';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 
 interface EventItem {
   id: number;
@@ -67,6 +68,7 @@ export const Events = () => {
       />
 
       <div className="max-w-5xl mx-auto px-6 pt-12">
+        <SectionHeader title="Events" />
         {/* Events List */}
         {loading ? (
           <div className="text-center text-slate-500 py-12">Loading events...</div>
