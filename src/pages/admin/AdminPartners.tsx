@@ -147,7 +147,7 @@ export const AdminPartners: React.FC = () => {
   };
 
   const filteredMembers = members.filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (m.name || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'all' || m.category === filterCategory;
     return matchesSearch && matchesCategory;
   }).sort((a, b) => a.sort_order - b.sort_order);
