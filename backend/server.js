@@ -292,6 +292,82 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
+// Privacy Policy Public
+app.get('/api/privacy-policy', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM privacy_policy_page WHERE id = 1 AND status = "published"');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Privacy Policy not found or not published' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM privacy_policy_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching privacy policy:', error);
+    res.status(500).json({ error: 'Failed to fetch privacy policy' });
+  }
+});
+
+// Admin Privacy Policy (Protected)
+app.get('/api/admin/privacy-policy', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM privacy_policy_page WHERE id = 1');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Privacy Policy not found' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM privacy_policy_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching privacy policy:', error);
+    res.status(500).json({ error: 'Failed to fetch privacy policy' });
+  }
+});
+
+app.put('/api/admin/privacy-policy', authenticateToken, async (req, res) => {
+  const { page_title, effective_date, status, sections } = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const [existing] = await dbConnection.execute('SELECT id FROM privacy_policy_page WHERE id = 1');
+    const effDate = effective_date ? new Date(effective_date).toISOString().split('T')[0] : null;
+
+    if (existing.length === 0) {
+      await dbConnection.execute(
+        `INSERT INTO privacy_policy_page (id, page_title, effective_date, status) VALUES (1, ?, ?, ?)`,
+        [page_title || 'PRIVACY POLICY', effDate, status || 'published']
+      );
+    } else {
+      await dbConnection.execute(
+        `UPDATE privacy_policy_page SET page_title=?, effective_date=?, status=? WHERE id=1`,
+        [page_title || 'PRIVACY POLICY', effDate, status || 'published']
+      );
+    }
+
+    // Replace sections
+    await dbConnection.execute('DELETE FROM privacy_policy_sections WHERE page_id = 1');
+
+    if (sections && Array.isArray(sections) && sections.length > 0) {
+      for (let i = 0; i < sections.length; i++) {
+        const sec = sections[i];
+        if (!sec.section_title || !sec.section_html) continue;
+        const slug = sec.section_slug || sec.section_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        await dbConnection.execute(
+          `INSERT INTO privacy_policy_sections (page_id, section_slug, section_title, section_html, sort_order) VALUES (1, ?, ?, ?, ?)`,
+          [slug, sec.section_title, sec.section_html, sec.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.json({ message: 'Privacy policy updated successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error updating privacy policy:', error);
+    res.status(500).json({ error: 'Failed to update privacy policy' });
+  } finally {
+    dbConnection.release();
+  }
+});
+
 // Chairman Message Public
 app.get('/api/chairman-message', async (req, res) => {
   try {
@@ -747,7 +823,7 @@ app.get('/api/leadership-members', async (req, res) => {
     let params = [];
 
     if (type === 'past') {
-      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC';
+      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC, sort_order ASC';
     } else if (type === 'current') {
       query += ' WHERE type = "current" AND status = "published" ORDER BY hierarchy_level ASC, seat ASC';
     } else {

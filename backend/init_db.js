@@ -147,6 +147,24 @@ const initializeDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
+      `CREATE TABLE IF NOT EXISTS privacy_policy_page (
+        id INT PRIMARY KEY DEFAULT 1,
+        page_title VARCHAR(255) DEFAULT 'PRIVACY POLICY',
+        effective_date DATE,
+        status ENUM('draft','published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS privacy_policy_sections (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        page_id INT DEFAULT 1,
+        section_slug VARCHAR(255) NOT NULL,
+        section_title VARCHAR(255) NOT NULL,
+        section_html LONGTEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (page_id) REFERENCES privacy_policy_page(id) ON DELETE CASCADE
+      )`,
       `CREATE TABLE IF NOT EXISTS programs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -229,6 +247,18 @@ const initializeDB = async () => {
       console.log('Seeded default chairman message.');
     } else {
       console.log('Chairman message already exists.');
+    }
+
+    // Seed default privacy policy
+    const [privacyRows] = await connection.execute('SELECT * FROM privacy_policy_page WHERE id = 1');
+    if (privacyRows.length === 0) {
+      await connection.execute(
+        'INSERT INTO privacy_policy_page (id, page_title, effective_date) VALUES (1, ?, ?)',
+        ['PRIVACY POLICY', '2021-03-01']
+      );
+      console.log('Seeded default privacy policy page.');
+    } else {
+      console.log('Privacy policy page already exists.');
     }
 
     console.log('Database initialization complete.');
