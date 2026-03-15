@@ -28,6 +28,7 @@ export const Navbar = () => {
         { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
         { name: 'Code of Ethics', href: '/Home/code-of-ethics' },
         { name: 'Past Leaders', href: '/Home/past-leaders' },
+        { name: 'Secretariat Team', href: '/Home/secretariat-team' },
       ]
     },
     { name: 'News', href: '/Home/news' },

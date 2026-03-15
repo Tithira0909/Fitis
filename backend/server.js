@@ -45,6 +45,8 @@ const storage = multer.diskStorage({
       dest += 'programs';
     } else if (req.path.includes('/upload/chairman-photo')) {
       dest += 'chairman';
+    } else if (req.path.includes('/upload/secretariat-photo')) {
+      dest += 'secretariat';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -145,6 +147,16 @@ const uploadChairmanPhoto = multer({
   }
 });
 
+const uploadSecretariatPhoto = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for secretariat photo'));
+  }
+});
+
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -227,7 +239,8 @@ const TABLE_COLUMNS = {
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['company_name', 'tier', 'contact_person'],
   newsletter_subscribers: ['email'],
-  programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order']
+  programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
+  secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -654,6 +667,13 @@ app.post('/api/admin/upload/chairman-photo', authenticateToken, uploadChairmanPh
   res.json({ url: relativePath });
 });
 
+// Upload Secretariat Photo
+app.post('/api/admin/upload/secretariat-photo', authenticateToken, uploadSecretariatPhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/secretariat/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
@@ -705,6 +725,17 @@ app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(`Error deleting from ${table}:`, error);
     res.status(500).json({ error: `Failed to delete item from ${table}` });
+  }
+});
+
+// Public Secretariat Team
+app.get('/api/secretariat-team', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM secretariat_team WHERE status = "published" ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching secretariat team:', error);
+    res.status(500).json({ error: 'Failed to fetch secretariat team' });
   }
 });
 

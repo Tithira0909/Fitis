@@ -7,6 +7,7 @@ import { Introduction } from './pages/Introduction';
 
 import { LeadershipTeam } from './pages/LeadershipTeam';
 import { ChairmanMessage } from './pages/ChairmanMessage';
+import { SecretariatTeam } from './pages/SecretariatTeam';
 import { CodeOfConduct } from './pages/CodeOfConduct';
 import { CodeOfEthics } from './pages/CodeOfEthics';
 import { PastLeaders } from './pages/PastLeaders';
@@ -33,6 +34,7 @@ import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 import { AdminGallery } from './pages/admin/AdminGallery';
 import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
+import { AdminSecretariat } from './pages/admin/AdminSecretariat';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -102,6 +104,7 @@ export default function App() {
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="chairman-message" element={<AdminChairmanMessage />} />
+          <Route path="secretariat-team" element={<AdminSecretariat />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
         </Route>
 
@@ -113,6 +116,7 @@ export default function App() {
               <Route path="/Home/introduction" element={<Introduction />} />
               <Route path="/Home/leadership-team" element={<LeadershipTeam />} />
               <Route path="/Home/chairman-message" element={<ChairmanMessage />} />
+              <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
               <Route path="/Home/past-leaders" element={<PastLeaders />} />

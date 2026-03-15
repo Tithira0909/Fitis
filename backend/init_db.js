@@ -135,6 +135,18 @@ const initializeDB = async () => {
         status ENUM('draft', 'published') DEFAULT 'published',
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
+      `CREATE TABLE IF NOT EXISTS secretariat_team (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        role VARCHAR(150) NOT NULL,
+        photo_url VARCHAR(600) NULL,
+        linkedin_url VARCHAR(600) NULL,
+        facebook_url VARCHAR(600) NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft','published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
       `CREATE TABLE IF NOT EXISTS programs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
