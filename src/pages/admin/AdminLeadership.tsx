@@ -12,6 +12,10 @@ interface LeadershipMember {
   linkedin_url: string;
   hierarchy_level: number;
   seat: number;
+  year_start?: number;
+  year_end?: number;
+  sort_order?: number;
+  status?: 'draft' | 'published';
 }
 
 export const AdminLeadership: React.FC = () => {
@@ -132,10 +136,20 @@ export const AdminLeadership: React.FC = () => {
   const filteredMembers = members
     .filter(m => m.type === activeTab)
     .sort((a, b) => {
-      if (a.hierarchy_level !== b.hierarchy_level) {
-        return a.hierarchy_level - b.hierarchy_level;
+      if (activeTab === 'past') {
+        if (a.year_end !== b.year_end) {
+          return (b.year_end || 0) - (a.year_end || 0); // DESC
+        }
+        if (a.year_start !== b.year_start) {
+          return (b.year_start || 0) - (a.year_start || 0); // DESC
+        }
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      } else {
+        if (a.hierarchy_level !== b.hierarchy_level) {
+          return a.hierarchy_level - b.hierarchy_level;
+        }
+        return a.seat - b.seat;
       }
-      return a.seat - b.seat;
     });
 
   return (
@@ -179,8 +193,17 @@ export const AdminLeadership: React.FC = () => {
                 <th className="p-4 text-sm font-semibold text-gray-600">Photo</th>
                 <th className="p-4 text-sm font-semibold text-gray-600">Name</th>
                 <th className="p-4 text-sm font-semibold text-gray-600">Designation</th>
-                <th className="p-4 text-sm font-semibold text-gray-600">Hierarchy</th>
-                <th className="p-4 text-sm font-semibold text-gray-600">Seat</th>
+                {activeTab === 'current' ? (
+                  <>
+                    <th className="p-4 text-sm font-semibold text-gray-600">Hierarchy</th>
+                    <th className="p-4 text-sm font-semibold text-gray-600">Seat</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="p-4 text-sm font-semibold text-gray-600">Term</th>
+                    <th className="p-4 text-sm font-semibold text-gray-600">Status</th>
+                  </>
+                )}
                 <th className="p-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
               </tr>
             </thead>
@@ -207,8 +230,17 @@ export const AdminLeadership: React.FC = () => {
                     </div>
                   </td>
                   <td className="p-4 text-gray-600">{item.designation}</td>
-                  <td className="p-4 text-gray-600">Level {item.hierarchy_level}</td>
-                  <td className="p-4 text-gray-600">{item.seat}</td>
+                  {activeTab === 'current' ? (
+                    <>
+                      <td className="p-4 text-gray-600">Level {item.hierarchy_level}</td>
+                      <td className="p-4 text-gray-600">{item.seat}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="p-4 text-gray-600">{item.year_start} - {item.year_end}</td>
+                      <td className="p-4 text-gray-600 capitalize">{item.status || 'published'}</td>
+                    </>
+                  )}
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => handleOpenModal(item)}
@@ -296,33 +328,91 @@ export const AdminLeadership: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hierarchy Level</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
-                    name="hierarchy_level"
-                    value={formData.hierarchy_level || 1}
+                    name="status"
+                    value={formData.status || 'published'}
                     onChange={handleInputChange}
                     className="w-full border rounded-lg p-2"
                   >
-                    {[1, 2, 3, 4, 5].map(level => (
-                      <option key={level} value={level}>{level}</option>
-                    ))}
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
                   </select>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Seat Number (1-10)</label>
-                <input
-                  type="number"
-                  name="seat"
-                  min="1"
-                  max="10"
-                  value={formData.seat || 1}
-                  onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
-                  required
-                />
-              </div>
+              {formData.type === 'current' ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Hierarchy Level</label>
+                      <select
+                        name="hierarchy_level"
+                        value={formData.hierarchy_level || 1}
+                        onChange={handleInputChange}
+                        className="w-full border rounded-lg p-2"
+                      >
+                        {[1, 2, 3, 4, 5].map(level => (
+                          <option key={level} value={level}>{level}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Seat Number (1-10)</label>
+                      <input
+                        type="number"
+                        name="seat"
+                        min="1"
+                        max="10"
+                        value={formData.seat || 1}
+                        onChange={handleInputChange}
+                        className="w-full border rounded-lg p-2"
+                        required={formData.type === 'current'}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year Start</label>
+                      <input
+                        type="number"
+                        name="year_start"
+                        value={formData.year_start || ''}
+                        onChange={handleInputChange}
+                        className="w-full border rounded-lg p-2"
+                        placeholder="e.g. 2021"
+                        required={formData.type === 'past'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year End</label>
+                      <input
+                        type="number"
+                        name="year_end"
+                        value={formData.year_end || ''}
+                        onChange={handleInputChange}
+                        className="w-full border rounded-lg p-2"
+                        placeholder="e.g. 2023"
+                        required={formData.type === 'past'}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order (Optional)</label>
+                    <input
+                      type="number"
+                      name="sort_order"
+                      value={formData.sort_order || 0}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg p-2"
+                      placeholder="e.g. 1"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>

@@ -224,7 +224,7 @@ const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
   chapters: ['name', 'head', 'member_count'],
-  leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
+  leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['company_name', 'tier', 'contact_person'],
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order']
@@ -711,7 +711,19 @@ app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 // Public Leadership Members
 app.get('/api/leadership-members', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM leadership_members ORDER BY hierarchy_level ASC, seat ASC');
+    const type = req.query.type;
+    let query = 'SELECT * FROM leadership_members';
+    let params = [];
+
+    if (type === 'past') {
+      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC';
+    } else if (type === 'current') {
+      query += ' WHERE type = "current" AND status = "published" ORDER BY hierarchy_level ASC, seat ASC';
+    } else {
+      query += ' WHERE status = "published" ORDER BY type ASC, hierarchy_level ASC, seat ASC';
+    }
+
+    const [rows] = await pool.execute(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching leadership members:', error);

@@ -77,6 +77,10 @@ const initializeDB = async () => {
         linkedin_url VARCHAR(500),
         hierarchy_level INT DEFAULT 1,
         seat INT DEFAULT 1,
+        year_start INT,
+        year_end INT,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
@@ -148,6 +152,22 @@ const initializeDB = async () => {
     for (const query of tables) {
       await connection.execute(query);
       console.log('Executed query:', query.substring(0, 50) + '...');
+    }
+
+
+    // Update leadership_members table if it already exists
+    try {
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN year_start INT");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN year_end INT");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN sort_order INT DEFAULT 0");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN status ENUM('draft', 'published') DEFAULT 'published'");
+      console.log('Executed data migration: Added year_start, year_end, sort_order, status to leadership_members');
+    } catch (migErr) {
+      if (migErr.code === 'ER_DUP_FIELDNAME') {
+        console.log('Migration skipped: columns already exist in leadership_members');
+      } else {
+        console.error('Migration error (leadership_members columns):', migErr.message);
+      }
     }
 
     // Data Migration: Fix missing leading slashes in image URLs for programs
