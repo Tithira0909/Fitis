@@ -368,6 +368,82 @@ app.put('/api/admin/privacy-policy', authenticateToken, async (req, res) => {
   }
 });
 
+// Disclaimer Public
+app.get('/api/disclaimer', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM disclaimer_page WHERE id = 1 AND status = "published"');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Disclaimer not found or not published' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM disclaimer_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching disclaimer:', error);
+    res.status(500).json({ error: 'Failed to fetch disclaimer' });
+  }
+});
+
+// Admin Disclaimer (Protected)
+app.get('/api/admin/disclaimer', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM disclaimer_page WHERE id = 1');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Disclaimer not found' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM disclaimer_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching disclaimer:', error);
+    res.status(500).json({ error: 'Failed to fetch disclaimer' });
+  }
+});
+
+app.put('/api/admin/disclaimer', authenticateToken, async (req, res) => {
+  const { page_title, effective_date, status, sections } = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const [existing] = await dbConnection.execute('SELECT id FROM disclaimer_page WHERE id = 1');
+    const effDate = effective_date ? new Date(effective_date).toISOString().split('T')[0] : null;
+
+    if (existing.length === 0) {
+      await dbConnection.execute(
+        `INSERT INTO disclaimer_page (id, page_title, effective_date, status) VALUES (1, ?, ?, ?)`,
+        [page_title || 'DISCLAIMER', effDate, status || 'published']
+      );
+    } else {
+      await dbConnection.execute(
+        `UPDATE disclaimer_page SET page_title=?, effective_date=?, status=? WHERE id=1`,
+        [page_title || 'DISCLAIMER', effDate, status || 'published']
+      );
+    }
+
+    // Replace sections
+    await dbConnection.execute('DELETE FROM disclaimer_sections WHERE page_id = 1');
+
+    if (sections && Array.isArray(sections) && sections.length > 0) {
+      for (let i = 0; i < sections.length; i++) {
+        const sec = sections[i];
+        if (!sec.section_title || !sec.section_html) continue;
+        const slug = sec.section_slug || sec.section_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        await dbConnection.execute(
+          `INSERT INTO disclaimer_sections (page_id, section_slug, section_title, section_html, sort_order) VALUES (1, ?, ?, ?, ?)`,
+          [slug, sec.section_title, sec.section_html, sec.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.json({ message: 'Disclaimer updated successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error updating disclaimer:', error);
+    res.status(500).json({ error: 'Failed to update disclaimer' });
+  } finally {
+    dbConnection.release();
+  }
+});
+
 // Chairman Message Public
 app.get('/api/chairman-message', async (req, res) => {
   try {
