@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
+import { SectionHeader } from '../components/SectionHeader';
 
 const ChairmanMessage = () => {
   return (
@@ -302,10 +303,7 @@ const ServicesSection = () => {
   return (
     <section id="services" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="section-heading">
-          <h2>Services Offered</h2>
-          <div className="divider" />
-        </div>
+        <SectionHeader title="Services Offered" />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, idx) => (
@@ -346,8 +344,11 @@ const MembershipCTA = () => {
           
           <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Become a Member of the Apex Body</h2>
-              <p className="text-white/80 text-lg mb-8 leading-relaxed">
+              <SectionHeader
+                title="Become a Member of the Apex Body"
+                className="text-left [&>h2]:text-white [&>h2]:text-3xl md:[&>h2]:text-4xl mb-6 [&>div]:mx-0"
+              />
+              <p className="text-white/80 text-lg mb-8 leading-relaxed mt-4">
                 Join the most influential network of ICT professionals and organizations in Sri Lanka. Gain access to exclusive resources, networking events, and policy advocacy.
               </p>
               <div className="space-y-4 mb-10">
@@ -406,10 +407,7 @@ const PartnersSection = () => {
   return (
     <section id="partners" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="section-heading">
-          <h2>Partnerships & Affiliations</h2>
-          <div className="divider" />
-        </div>
+        <SectionHeader title="Partnerships & Affiliations" />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
           {partners.map((partner, idx) => (
@@ -437,8 +435,8 @@ const Newsletter = () => {
         <div className="w-20 h-20 bg-fitis-blue/10 rounded-full flex items-center justify-center mx-auto mb-8">
           <Mail className="text-fitis-blue" size={32} />
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Stay Updated with the ICT Ecosystem</h2>
-        <p className="text-slate-600 mb-10 text-lg">
+        <SectionHeader title="Stay Updated with the ICT Ecosystem" className="mb-6" />
+        <p className="text-slate-600 mb-10 text-lg mt-4">
           Subscribe to our monthly newsletter for industry insights, policy updates, and upcoming event announcements.
         </p>
         <form className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto">

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Calendar, Tag, ArrowRight, Loader, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
 
 interface NewsItem {
@@ -77,11 +78,12 @@ export const News = () => {
 
       <div className="max-w-7xl mx-auto px-6 pt-12">
 
+        <SectionHeader title="Latest News" className="mb-8" />
+
         {/* Header & Filters */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 border-b border-slate-200 pb-6">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">
-            Latest News
-          </h1>
+          {/* Replaced heading with SectionHeader above, but leaving filter layout intact. If needed, can keep h1 visually hidden for SEO or remove it. Let's just remove the h1 text as SectionHeader handles it. */}
+          <div className="w-full md:w-auto text-3xl md:text-4xl font-display font-bold text-slate-900 hidden"></div>
 
           <div className="flex items-center gap-3">
             <Filter size={20} className="text-slate-400" />

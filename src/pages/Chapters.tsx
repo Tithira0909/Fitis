@@ -17,6 +17,7 @@ import {
 import { Link } from 'react-router-dom';
 import { chaptersData } from '../data/chapters';
 import { SubHeaderBar } from '../components/SubHeaderBar';
+import { SectionHeader } from '../components/SectionHeader';
 import { useState } from 'react';
 
 const stats: { label: string; value: string; icon: LucideIcon }[] = [
@@ -46,10 +47,10 @@ export const Chapters = () => {
       {/* Chapters Overview Section */}
       <section className="py-16 bg-slate-50/30">
         <div className="max-w-7xl mx-auto px-6">
+          <SectionHeader title="Driving Industry Growth" className="text-left md:text-left [&>div]:mx-0" />
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">Driving Industry Growth</h2>
-              <p className="text-slate-600 leading-relaxed text-lg">
+              <p className="text-slate-600 leading-relaxed text-lg mt-0">
                 FITIS operates through specialised chapters to drive industry growth, collaboration, standards, and national digital priorities. Each chapter serves as a dedicated forum for stakeholders within a specific sector to address challenges, share knowledge, and influence policy decisions that shape the future of technology in Sri Lanka.
               </p>
             </div>
@@ -134,10 +135,11 @@ export const Chapters = () => {
             </div>
 
             <div className="relative z-10 max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Want to contribute to a chapter?</h2>
-              <p className="text-white/80 text-lg mb-10">
-                Join our specialized chapters and play a key role in driving Sri Lanka's digital transformation.
-              </p>
+              <SectionHeader
+                title="Want to contribute to a chapter?"
+                subtitle="Join our specialized chapters and play a key role in driving Sri Lanka's digital transformation."
+                className="mb-10 [&>h2]:text-white [&>h2]:text-3xl md:[&>h2]:text-4xl [&>p]:text-white/80"
+              />
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button className="w-full sm:w-auto px-10 py-4 bg-white text-fitis-blue rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl active:scale-95">
                   Become a Member

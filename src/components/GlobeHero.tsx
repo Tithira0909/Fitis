@@ -1,5 +1,6 @@
 import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { getImageUrl } from '../utils/getImageUrl';
 import { 
   PerspectiveCamera, 
   Float, 
@@ -345,17 +346,35 @@ export const GlobeHero = () => {
 
   // Use custom media if configured
   if (settings?.hero_url) {
-    // If the URL is already absolute, use it directly. Otherwise, prepend the API URL.
-    const mediaUrl = settings.hero_url.startsWith('http')
-      ? settings.hero_url
-      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.hero_url}`;
+    const mediaUrl = getImageUrl(settings.hero_url, settings.updated_at ? new Date(settings.updated_at).getTime() : undefined);
+
     return (
       <section className="relative h-screen w-full bg-[#000d1a] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-60 z-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-60 z-10 pointer-events-none" />
         {settings.hero_type === 'video' ? (
-           <video src={mediaUrl} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-[-1]" />
+           <video
+             src={mediaUrl}
+             autoPlay
+             muted
+             loop
+             playsInline
+             className="absolute inset-0 w-full h-full object-cover z-0"
+             onError={(e) => {
+               // Fallback to static background color/image if video fails to load
+               e.currentTarget.style.display = 'none';
+               const parent = e.currentTarget.parentElement;
+               if (parent) {
+                 parent.style.backgroundImage = "url('https://picsum.photos/seed/tech/1920/1080?blur=10')";
+                 parent.style.backgroundSize = "cover";
+                 parent.style.backgroundPosition = "center";
+               }
+             }}
+           />
         ) : (
-           <div className="absolute inset-0 bg-cover bg-center z-[-1]" style={{ backgroundImage: `url(${mediaUrl})` }} />
+           <div
+             className="absolute inset-0 bg-cover bg-center z-0"
+             style={{ backgroundImage: `url(${mediaUrl})` }}
+           />
         )}
         <HeroOverlay />
       </section>
