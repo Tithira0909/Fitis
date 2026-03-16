@@ -16,6 +16,8 @@ import {
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
 import { SectionHeader } from '../components/SectionHeader';
+import { getImageUrl } from '../utils/getImageUrl';
+import { useEffect, useState } from 'react';
 
 const ChairmanMessage = () => {
   return (
@@ -383,10 +385,31 @@ const MembershipCTA = () => {
   );
 };
 
+interface Partner {
+  id: number;
+  name: string;
+  logo_url?: string;
+  website_url?: string;
+}
+
 const PartnersSection = () => {
-  const partners = [
-    "Ministry of Technology", "ICTA", "SLASSCOM", "CSSL", "BCS", "Export Development Board", "TRCSL", "LankaPay"
-  ];
+  const [partners, setPartners] = useState<Partner[]>([]);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/partners`);
+        if (res.ok) {
+          const data = await res.json();
+          setPartners(data);
+        }
+      } catch (error) {
+        console.error('Failed to load partners', error);
+      }
+    };
+    fetchPartners();
+  }, []);
 
   return (
     <section id="partners" className="py-24 bg-white">
@@ -394,18 +417,43 @@ const PartnersSection = () => {
         <SectionHeader title="Partnerships & Affiliations" />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-          {partners.map((partner, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.05 }}
-              className="h-24 bg-slate-50 rounded-2xl flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all border border-slate-100 group"
-            >
-              <span className="text-slate-400 font-bold text-sm text-center group-hover:text-fitis-blue transition-colors uppercase tracking-widest">{partner}</span>
-            </motion.div>
-          ))}
+          {partners.map((partner, idx) => {
+            const innerContent = (
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.05 }}
+                className="h-24 bg-slate-50 rounded-2xl flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all border border-slate-100 group hover:shadow-md cursor-pointer overflow-hidden"
+              >
+                {partner.logo_url ? (
+                  <img
+                    src={getImageUrl(partner.logo_url)}
+                    alt={partner.name}
+                    className="max-w-full max-h-full object-contain"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="text-slate-400 font-bold text-sm text-center group-hover:text-fitis-blue transition-colors uppercase tracking-widest">{partner.name}</span>
+                )}
+              </motion.div>
+            );
+
+            return partner.website_url ? (
+              <a
+                key={partner.id}
+                href={partner.website_url.startsWith('http') ? partner.website_url : `https://${partner.website_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {innerContent}
+              </a>
+            ) : (
+              <div key={partner.id}>
+                {innerContent}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
