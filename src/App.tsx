@@ -24,6 +24,9 @@ import { ChapterDetail } from './pages/ChapterDetail';
 import { Contact } from './pages/Contact';
 
 import { AdminLayout } from './components/admin/AdminLayout';
+import { BecomeAMember } from './pages/BecomeAMember';
+import { AdminMembers } from './pages/admin/AdminMembers';
+
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminNews } from './pages/admin/AdminNews';
@@ -103,6 +106,7 @@ export default function App() {
           <Route path="events" element={<AdminEvents />} />
           <Route path="chapters" element={<AdminChapters />} />
           <Route path="leadership" element={<AdminLeadership />} />
+          <Route path="members" element={<AdminMembers />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="gallery" element={<AdminGallery />} />
@@ -122,6 +126,7 @@ export default function App() {
               <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
               <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
+                                      <Route path="/Home/become-a-member" element={<BecomeAMember />} />
               <Route path="/Home/partnerships" element={<Partners />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />

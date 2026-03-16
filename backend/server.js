@@ -208,6 +208,65 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Admin Login
+
+// POST /api/membership/apply - Public endpoint for new member applications
+app.post('/api/membership/apply', multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(process.cwd(), 'uploads', 'memberships');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+  })
+}).fields([
+  { name: 'business_registration', maxCount: 1 },
+  { name: 'audited_accounts', maxCount: 1 },
+  { name: 'company_profile', maxCount: 1 },
+  { name: 'other_documents', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const data = req.body;
+
+    const fileUrl = (fieldname) => {
+      if (req.files && req.files[fieldname] && req.files[fieldname][0]) {
+        return `/uploads/memberships/${req.files[fieldname][0].filename}`;
+      }
+      return null;
+    };
+
+    const br_url = fileUrl('business_registration');
+    const aa_url = fileUrl('audited_accounts');
+    const cp_url = fileUrl('company_profile');
+    const od_url = fileUrl('other_documents');
+
+    const sql = `
+      INSERT INTO member_applications (
+        primary_chapter, chapters_applied, company_name, membership_category, ceo_name, company_address,
+        phone, fax, website, email, br_number, year_incorporation, boi_no, ownership_local, ownership_foreign,
+        business_activities, industry_focus, revenue_local, revenue_foreign, employees_count,
+        primary_nominee, secondary_nominee, business_registration, audited_accounts, company_profile, other_documents,
+        declaration_applicant_name, declaration_applicant_designation, declaration_date, agree_checkbox, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+    `;
+
+    const values = [
+      data.primary_chapter, data.chapters_applied_json, data.company_name, data.membership_category, data.ceo_name, data.company_address,
+      data.phone, data.fax, data.website, data.email, data.br_number, data.year_incorporation, data.boi_no, data.ownership_local, data.ownership_foreign,
+      data.business_activities, data.industry_focus_json, data.revenue_local, data.revenue_foreign, data.employees_count,
+      data.primary_nominee_json, data.secondary_nominee_json,
+      br_url, aa_url, cp_url, od_url,
+      data.declaration_applicant_name, data.declaration_applicant_designation, data.declaration_date, data.agree_checkbox === 'true' ? 1 : 0
+    ];
+
+    await pool.query(sql, values);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Membership application error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -252,7 +311,8 @@ const TABLE_COLUMNS = {
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
-  secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status']
+    secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
+  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 

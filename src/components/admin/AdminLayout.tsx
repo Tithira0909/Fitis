@@ -35,6 +35,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/newsletter', label: 'Newsletter', icon: <Mail size={20} /> },
     { path: '/admin/gallery', label: 'Gallery', icon: <ImageIcon size={20} /> },
     { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },
+    { path: '/admin/members', label: 'Member Apps', icon: <Contact size={20} /> },
   ];
 
   return (

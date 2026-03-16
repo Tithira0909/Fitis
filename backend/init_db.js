@@ -21,6 +21,43 @@ const initializeDB = async () => {
 
     // Create tables
     const tables = [
+      `CREATE TABLE IF NOT EXISTS member_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    primary_chapter VARCHAR(150),
+    chapters_applied JSON,
+    company_name VARCHAR(255),
+    membership_category VARCHAR(150),
+    ceo_name VARCHAR(255),
+    company_address TEXT,
+    phone VARCHAR(50),
+    fax VARCHAR(50),
+    website VARCHAR(255),
+    email VARCHAR(150),
+    br_number VARCHAR(150),
+    year_incorporation VARCHAR(50),
+    boi_no VARCHAR(150),
+    ownership_local VARCHAR(50),
+    ownership_foreign VARCHAR(50),
+    business_activities TEXT,
+    industry_focus JSON,
+    revenue_local VARCHAR(50),
+    revenue_foreign VARCHAR(50),
+    employees_count VARCHAR(50),
+    primary_nominee JSON,
+    secondary_nominee JSON,
+    business_registration VARCHAR(600),
+    audited_accounts VARCHAR(600),
+    company_profile VARCHAR(600),
+    other_documents VARCHAR(600),
+    declaration_applicant_name VARCHAR(255),
+    declaration_applicant_designation VARCHAR(255),
+    declaration_date DATE,
+    agree_checkbox BOOLEAN,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )`,
+
       `CREATE TABLE IF NOT EXISTS admin_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,

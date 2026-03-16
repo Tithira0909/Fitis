@@ -36,6 +36,13 @@ export const Navbar = () => {
     { name: 'Programs', href: '/Home/programs' },
     { name: 'Chapters', href: '/Chapter/chapters' },
     { name: 'Partnerships', href: '/Home/partnerships' },
+    {
+      name: 'Members',
+      href: '#',
+      submenu: [
+        { name: 'Become a Member', href: '/Home/become-a-member' }
+      ]
+    },
     { name: 'Gallery', href: '/Home/gallery' },
   ];
 
