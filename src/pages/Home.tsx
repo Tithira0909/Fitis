@@ -1,5 +1,6 @@
 import { BoardMembers } from '../components/BoardMembers';
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Users, 
@@ -20,7 +21,7 @@ const ChairmanMessage = () => {
   return (
     <section id="about" className="py-16 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm relative overflow-hidden">
+        <Link to="/Home/chairman-message" className="block bg-slate-50 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group cursor-pointer">
           {/* Decorative element */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-fitis-blue/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           
@@ -72,13 +73,13 @@ const ChairmanMessage = () => {
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Chairman, FITIS</p>
                   </div>
                 </div>
-                <button className="text-fitis-blue font-bold flex items-center gap-2 hover:gap-3 transition-all group">
+                <span className="text-fitis-blue font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
                   Read Full Message <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </span>
               </div>
             </motion.div>
           </div>
-        </div>
+        </Link>
       </div>
     </section>
   );
