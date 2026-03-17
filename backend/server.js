@@ -53,6 +53,8 @@ const storage = multer.diskStorage({
       dest += 'secretariat';
     } else if (req.path.includes('/upload/partner-logo')) {
       dest += 'partners';
+    } else if (req.path.includes('/upload/member-benefit-logo')) {
+      dest += 'benefits';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -170,6 +172,16 @@ const uploadPartnerLogo = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for partner logo'));
+  }
+});
+
+const uploadBenefitLogo = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for benefit logo'));
   }
 });
 
@@ -316,7 +328,8 @@ const TABLE_COLUMNS = {
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
     secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
-  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status']
+  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
+  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -922,6 +935,13 @@ app.post('/api/admin/upload/partner-logo', authenticateToken, uploadPartnerLogo.
   res.json({ url: relativePath });
 });
 
+// Upload Member Benefit Logo
+app.post('/api/admin/upload/member-benefit-logo', authenticateToken, uploadBenefitLogo.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/benefits/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
@@ -1018,6 +1038,37 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public Member Benefits
+app.get('/api/member-benefits', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const category = req.query.category;
+    const search = req.query.search;
+
+    let query = 'SELECT * FROM member_benefits WHERE status = ?';
+    let params = [status];
+
+    if (category && category !== 'All') {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+
+    if (search) {
+      query += ' AND (brand_name LIKE ? OR benefit_title LIKE ? OR description LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    query += ' ORDER BY sort_order ASC, created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member benefits:', error);
+    res.status(500).json({ error: 'Failed to fetch member benefits' });
   }
 });
 

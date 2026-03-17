@@ -40,7 +40,8 @@ export const Navbar = () => {
       name: 'Members',
       href: '#',
       submenu: [
-        { name: 'Become a Member', href: '/Home/become-a-member' }
+        { name: 'Become a Member', href: '/Home/become-a-member' },
+        { name: 'Member Benefits', href: '/Home/member-benefits' }
       ]
     },
     { name: 'Gallery', href: '/Home/gallery' },

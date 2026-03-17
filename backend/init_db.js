@@ -21,6 +21,22 @@ const initializeDB = async () => {
 
     // Create tables
     const tables = [
+      `CREATE TABLE IF NOT EXISTS member_benefits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        brand_name VARCHAR(255) NOT NULL,
+        benefit_title VARCHAR(255) NOT NULL,
+        category VARCHAR(150) NOT NULL,
+        offer_text VARCHAR(150) NOT NULL,
+        description TEXT,
+        terms LONGTEXT,
+        link_url VARCHAR(600),
+        logo_url VARCHAR(600) NOT NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft','published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+
       `CREATE TABLE IF NOT EXISTS member_applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     primary_chapter VARCHAR(150),

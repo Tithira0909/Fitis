@@ -25,7 +25,9 @@ import { Contact } from './pages/Contact';
 
 import { AdminLayout } from './components/admin/AdminLayout';
 import { BecomeAMember } from './pages/BecomeAMember';
+import { MemberBenefits } from './pages/MemberBenefits';
 import { AdminMembers } from './pages/admin/AdminMembers';
+import { AdminMemberBenefits } from './pages/admin/AdminMemberBenefits';
 
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminOverview } from './pages/admin/AdminOverview';
@@ -107,6 +109,7 @@ export default function App() {
           <Route path="chapters" element={<AdminChapters />} />
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="members" element={<AdminMembers />} />
+          <Route path="member-benefits" element={<AdminMemberBenefits />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="gallery" element={<AdminGallery />} />
@@ -127,6 +130,7 @@ export default function App() {
               <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
                                       <Route path="/Home/become-a-member" element={<BecomeAMember />} />
+              <Route path="/Home/member-benefits" element={<MemberBenefits />} />
               <Route path="/Home/partnerships" element={<Partners />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
