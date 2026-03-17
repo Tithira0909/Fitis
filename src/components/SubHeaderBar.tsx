@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 
 interface SubHeaderBarProps {
-  breadcrumbs: { label: string; href?: string }[];
+  breadcrumbs?: { label: string; href?: string }[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   title?: string;
@@ -19,13 +19,15 @@ export const SubHeaderBar: React.FC<SubHeaderBarProps> = ({
   onSearchSubmit,
   showSearch = true
 }) => {
+  const crumbs = breadcrumbs ?? [];
+
   return (
     <div className="bg-[#0b1a30] text-white py-3 px-6 mt-20 z-40 relative">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
 
         {/* Breadcrumbs */}
         <div className="text-[10px] md:text-xs font-semibold tracking-wider flex flex-wrap items-center gap-1.5 md:gap-2 w-full md:w-1/3">
-          {breadcrumbs.map((crumb, idx) => (
+          {crumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
               {idx > 0 && <span className="text-slate-400">&gt;</span>}
               {crumb.href ? (

@@ -69,8 +69,8 @@ export const MemberBenefits = () => {
     <div className="bg-slate-50 min-h-screen pb-20">
       <SubHeaderBar
         title="MEMBER BENEFITS"
-        breadcrumb={[
-          { label: 'HOME', path: '/' },
+        breadcrumbs={[
+          { label: 'HOME', href: '/' },
           { label: 'MEMBERS' },
           { label: 'MEMBER BENEFITS' }
         ]}
