@@ -16,6 +16,7 @@ interface ChairmanMessageData {
   message_title: string;
   message_body: string;
   focus_cards: FocusCard[];
+  updated_at: string;
 }
 
 const getIconComponent = (iconName: string) => {
@@ -79,7 +80,7 @@ export const ChairmanMessage = () => {
               <div className="w-full md:w-1/3 flex-shrink-0">
                 <div className="relative rounded-lg overflow-hidden shadow-lg group">
                   <img
-                    src={getImageUrl(data.photo_url)}
+                    src={`${getImageUrl(data.photo_url)}?v=${data.updated_at || ''}`}
                     alt={data.name}
                     className="w-full h-auto object-cover aspect-[3/4]"
                     onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x533'; }}
