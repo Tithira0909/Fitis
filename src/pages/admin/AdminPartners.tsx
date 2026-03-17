@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   industry: 'Industry Partners',
   international: 'International Bodies',
   premium_corporate: 'Premium Corporate Partners',
-  corporate: 'Corporate Partners',
+  corporate: 'FITIS Corporate Partners',
   supporting: 'Supporting Partners',
 };
 

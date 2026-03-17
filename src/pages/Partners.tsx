@@ -25,7 +25,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   industry: 'INDUSTRY PARTNERS',
   international: 'INTERNATIONAL BODIES',
   premium_corporate: 'PREMIUM CORPORATE PARTNERS',
-  corporate: 'CORPORATE PARTNERS',
+  corporate: 'FITIS CORPORATE PARTNERS',
   supporting: 'SUPPORTING PARTNERS',
 };
 
@@ -78,23 +78,25 @@ export const Partners = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fitis-blue"></div>
             </div>
           ) : partners.length > 0 ? (
-            <div className="space-y-20 md:space-y-28">
-              {CATEGORY_ORDER.map((catKey, index) => {
+            <div className="space-y-16 md:space-y-20">
+              {CATEGORY_ORDER.map((catKey) => {
                 const group = groupedPartners[catKey];
                 if (!group || group.length === 0) return null;
 
+                // Adjust spacing for single items (like EDB)
+                const isSingle = group.length === 1;
+
                 return (
                   <div key={catKey} className="relative">
-                    {index > 0 && <hr className="absolute -top-10 md:-top-14 left-0 right-0 border-t border-slate-200" />}
-
-                    <h3 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-10 md:mb-14 uppercase tracking-widest">
+                    <h3 className="text-xl md:text-2xl font-bold text-slate-800 text-center uppercase tracking-widest mb-4">
                       {CATEGORY_LABELS[catKey]}
                     </h3>
+                    <div className="w-full h-px bg-slate-200 mb-8 md:mb-12"></div>
 
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16 items-center">
+                    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10 md:gap-x-10 md:gap-y-14 items-center justify-items-center ${isSingle ? '!flex !justify-center' : ''}`}>
                       {group.map((partner) => {
                         const content = (
-                          <div className="w-32 md:w-48 h-24 md:h-32 flex items-center justify-center p-4 bg-white hover:bg-slate-50 rounded-xl transition-all duration-300 filter grayscale hover:grayscale-0 hover:scale-105 hover:shadow-lg border border-transparent hover:border-slate-100">
+                          <div className={`flex items-center justify-center p-2 transition-transform duration-300 hover:scale-105 hover:opacity-90 ${isSingle ? 'w-48 h-32 md:w-64 md:h-40 lg:h-48 lg:w-72' : 'w-32 h-20 sm:w-36 sm:h-24 md:w-40 md:h-28 lg:w-48 lg:h-32'}`}>
                             {partner.logo_url ? (
                               <img
                                 src={getImageUrl(partner.logo_url)}
@@ -104,7 +106,7 @@ export const Partners = () => {
                                 title={partner.name}
                               />
                             ) : (
-                              <span className="text-center text-sm font-bold text-slate-400">{partner.name}</span>
+                              <span className="text-center text-sm font-bold text-slate-400 uppercase tracking-wide">{partner.name}</span>
                             )}
                           </div>
                         );
