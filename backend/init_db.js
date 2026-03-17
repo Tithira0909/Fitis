@@ -162,6 +162,11 @@ const initializeDB = async () => {
         hero_type ENUM('image', 'video') DEFAULT 'image',
         hero_url VARCHAR(500),
         favicon_url VARCHAR(500),
+        facebook_url VARCHAR(500),
+        instagram_url VARCHAR(500),
+        linkedin_url VARCHAR(500),
+        twitter_url VARCHAR(500),
+        youtube_url VARCHAR(500),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
             `CREATE TABLE IF NOT EXISTS chairman_message (

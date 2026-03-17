@@ -63,6 +63,7 @@ export const AdminMembers = () => {
 
       if (response.status === 401) {
         localStorage.removeItem('adminToken');
+        alert('Please login again');
         navigate('/admin/login');
         return;
       }

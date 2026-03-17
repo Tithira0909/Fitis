@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
+import { ContactQuickBar } from '../components/ContactQuickBar';
 import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
 import { useEffect, useState } from 'react';
@@ -489,9 +490,38 @@ const Newsletter = () => {
 };
 
 export const Home = () => {
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/site-settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (error) {
+        console.error('Failed to load site settings', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <>
       <GlobeHero />
+      {siteSettings && (
+        <ContactQuickBar
+          site_phone={siteSettings.site_phone}
+          site_email={siteSettings.site_email}
+          facebook_url={siteSettings.facebook_url}
+          instagram_url={siteSettings.instagram_url}
+          linkedin_url={siteSettings.linkedin_url}
+          twitter_url={siteSettings.twitter_url}
+          youtube_url={siteSettings.youtube_url}
+        />
+      )}
       <ChairmanMessage />
       <BoardMembers />
       <ServicesSection />
