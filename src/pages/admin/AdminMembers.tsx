@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { Eye, Trash2, X, Download, FileText } from 'lucide-react';
 
@@ -45,6 +46,8 @@ export const AdminMembers = () => {
   const [selectedApp, setSelectedApp] = useState<MemberApplication | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const navigate = useNavigate();
+
   const fetchApplications = async () => {
     try {
       setLoading(true);
@@ -59,7 +62,9 @@ export const AdminMembers = () => {
       });
 
       if (response.status === 401) {
-        throw new Error('Please login again');
+        localStorage.removeItem('adminToken');
+        navigate('/admin/login');
+        return;
       }
 
       if (!response.ok) {

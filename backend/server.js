@@ -838,35 +838,35 @@ app.get('/api/admin/member_applications', authenticateToken, async (req, res) =>
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [rows] = await pool.execute(`SELECT * FROM ${table} ORDER BY created_at DESC`);
     res.json(rows);
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
-    res.status(500).json({ error: `Failed to fetch ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic GET single item
 app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [rows] = await pool.execute(`SELECT * FROM ${table} WHERE id = ?`, [id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Item not found' });
+    if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch item from ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic POST create item
 app.post('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   const data = req.body;
   if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
@@ -897,7 +897,7 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
     res.status(201).json(newItem[0]);
   } catch (error) {
     console.error(`Error creating in ${table}:`, error);
-    res.status(500).json({ error: `Failed to create item in ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -925,7 +925,7 @@ app.post('/api/admin/upload/partner-logo', authenticateToken, uploadPartnerLogo.
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   const data = req.body;
   if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
@@ -951,28 +951,28 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
   try {
     const [result] = await pool.execute(`UPDATE ${table} SET ${updates} WHERE id = ?`, values);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Item not found' });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
 
     const [updatedItem] = await pool.execute(`SELECT * FROM ${table} WHERE id = ?`, [id]);
     res.json(updatedItem[0]);
   } catch (error) {
     console.error(`Error updating ${table}:`, error);
-    res.status(500).json({ error: `Failed to update item in ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic DELETE item
 app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [result] = await pool.execute(`DELETE FROM ${table} WHERE id = ?`, [id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Item not found' });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error(`Error deleting from ${table}:`, error);
-    res.status(500).json({ error: `Failed to delete item from ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
