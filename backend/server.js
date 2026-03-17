@@ -17,7 +17,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:3005'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Expose uploads directory statically
@@ -198,10 +202,10 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (token == null) return res.status(401).json({ error: 'Unauthorized' });
+  if (token == null) return res.status(401).json({ message: 'Unauthorized' });
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Forbidden' });
+    if (err) return res.status(401).json({ message: 'Unauthorized' });
     req.user = user;
     next();
   });
@@ -817,6 +821,19 @@ app.put('/api/admin/gallery/:id/images/reorder', authenticateToken, async (req, 
   }
 });
 
+
+app.get('/api/admin/member_applications', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_applications ORDER BY created_at DESC');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching member_applications:', error);
+    if (error.code === 'ER_NO_SUCH_TABLE') {
+      return res.status(500).json({ message: 'DB table missing' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {

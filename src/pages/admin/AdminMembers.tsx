@@ -48,12 +48,30 @@ export const AdminMembers = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('adminToken');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await fetch(`${baseUrl}/api/admin/member_applications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      if (!response.ok) throw new Error('Failed to fetch applications');
+
+      if (response.status === 401) {
+        throw new Error('Please login again');
+      }
+
+      if (!response.ok) {
+        let msg = 'Failed to fetch applications';
+        try {
+          const errData = await response.json();
+          if (errData.message) msg = errData.message;
+          else if (errData.error) msg = errData.error;
+        } catch (e) {}
+        throw new Error(msg);
+      }
+
       const data = await response.json();
       setApplications(data);
     } catch (err: any) {
