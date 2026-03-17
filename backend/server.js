@@ -848,6 +848,96 @@ app.get('/api/admin/member_applications', authenticateToken, async (req, res) =>
   }
 });
 
+// Member Benefits specific routes (mapping 'member-benefits' to 'member_benefits' table)
+app.get('/api/admin/member-benefits', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_benefits ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/api/admin/member-benefits', authenticateToken, async (req, res) => {
+  const data = req.body;
+  if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
+
+  const allowedColumns = TABLE_COLUMNS['member_benefits'];
+  const safeData = {};
+  for (const key of Object.keys(data)) {
+    if (allowedColumns.includes(key)) {
+      safeData[key] = data[key];
+    }
+  }
+
+  if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
+
+  const columns = Object.keys(safeData).join(', ');
+  const placeholders = Object.keys(safeData).map(() => '?').join(', ');
+  const values = Object.values(safeData);
+
+  try {
+    const [result] = await pool.execute(`INSERT INTO member_benefits (${columns}) VALUES (${placeholders})`, values);
+    const [newItem] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [result.insertId]);
+    res.status(201).json(newItem[0]);
+  } catch (error) {
+    console.error('Error creating member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+  if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
+
+  const allowedColumns = TABLE_COLUMNS['member_benefits'];
+  const safeData = {};
+  for (const key of Object.keys(data)) {
+    if (allowedColumns.includes(key)) {
+      safeData[key] = data[key];
+    }
+  }
+
+  if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
+
+  const updates = Object.keys(safeData).map(key => `${key} = ?`).join(', ');
+  const values = [...Object.values(safeData), id];
+
+  try {
+    const [result] = await pool.execute(`UPDATE member_benefits SET ${updates} WHERE id = ?`, values);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
+
+    const [updatedItem] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [id]);
+    res.json(updatedItem[0]);
+  } catch (error) {
+    console.error('Error updating member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.execute('DELETE FROM member_benefits WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;

@@ -77,7 +77,7 @@ export const AdminMemberBenefits: React.FC = () => {
   return (
     <GenericAdminCrud
       title="Member Benefits"
-      tableName="member_benefits"
+      tableName="member-benefits"
       columns={columns}
       fields={fields}
     />
