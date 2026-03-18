@@ -55,7 +55,7 @@ const storage = multer.diskStorage({
       dest += 'partners';
     } else if (req.path.includes('/upload/member-benefit-logo')) {
       dest += 'benefits';
-    } else if (req.path.includes('/upload/chapter-icon')) {
+    } else if (req.path.includes('/upload/chapter-icon') || req.path.includes('/upload/chapter-banner') || req.path.includes('/upload/committee-photo')) {
       dest += 'chapters';
     }
     // Ensure directory exists
@@ -334,7 +334,7 @@ app.post('/api/auth/login', async (req, res) => {
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
-  chapters: ['name', 'slug', 'icon_name', 'icon_url', 'summary', 'objectives_json', 'description_html', 'chair_name', 'chair_title', 'contact_email', 'contact_phone', 'sort_order', 'status'],
+  chapters: ['name', 'slug', 'icon_name', 'icon_url', 'banner_image_url', 'summary', 'objectives_json', 'description_html', 'about_html', 'chair_name', 'chair_title', 'contact_email', 'contact_phone', 'chairman_name', 'chairman_designation', 'chairman_message_html', 'chairman_photo_url', 'has_committee', 'sort_order', 'status'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
@@ -950,6 +950,163 @@ app.delete('/api/admin/member-benefits/:id', authenticateToken, async (req, res)
   }
 });
 
+// ---------------- CUSTOM CHAPTERS API ----------------
+app.get('/api/admin/custom-chapters', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chapters ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/admin/custom-chapters/:id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Chapter not found' });
+
+    const chapter = rows[0];
+
+    if (chapter.has_committee) {
+      const [committeeRows] = await pool.execute('SELECT * FROM chapter_committee_members WHERE chapter_id = ? ORDER BY sort_order ASC', [chapter.id]);
+      chapter.committee = committeeRows;
+    } else {
+      chapter.committee = [];
+    }
+
+    res.json(chapter);
+  } catch (error) {
+    console.error('Error fetching chapter:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/api/admin/custom-chapters', authenticateToken, async (req, res) => {
+  const data = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const chapterData = { ...data };
+    delete chapterData.committee;
+
+    const allowedColumns = TABLE_COLUMNS['chapters'];
+    const safeData = {};
+    for (const key of Object.keys(chapterData)) {
+      if (allowedColumns.includes(key)) {
+        safeData[key] = chapterData[key];
+      }
+    }
+
+    if (allowedColumns.includes('slug') && !safeData.slug && safeData.name) {
+      safeData.slug = safeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
+    }
+
+    if (Object.keys(safeData).length === 0) {
+      dbConnection.release();
+      return res.status(400).json({ error: 'No valid data provided' });
+    }
+
+    const columns = Object.keys(safeData).join(', ');
+    const placeholders = Object.keys(safeData).map(() => '?').join(', ');
+    const values = Object.values(safeData);
+
+    const [result] = await dbConnection.execute(`INSERT INTO chapters (${columns}) VALUES (${placeholders})`, values);
+    const chapterId = result.insertId;
+
+    if (safeData.has_committee && data.committee && Array.isArray(data.committee)) {
+      for (let i = 0; i < data.committee.length; i++) {
+        const member = data.committee[i];
+        if (!member.name) continue;
+        await dbConnection.execute(
+          `INSERT INTO chapter_committee_members (chapter_id, name, designation, company, role_badge, photo_url, linkedin_url, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [chapterId, member.name, member.designation || null, member.company || null, member.role_badge || null, member.photo_url || null, member.linkedin_url || null, member.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.status(201).json({ id: chapterId, message: 'Chapter created successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error creating chapter:', error);
+    res.status(500).json({ message: error.message });
+  } finally {
+    dbConnection.release();
+  }
+});
+
+app.put('/api/admin/custom-chapters/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const chapterData = { ...data };
+    delete chapterData.committee;
+    delete chapterData.id;
+
+    const allowedColumns = TABLE_COLUMNS['chapters'];
+    const safeData = {};
+    for (const key of Object.keys(chapterData)) {
+      if (allowedColumns.includes(key)) {
+        safeData[key] = chapterData[key];
+      }
+    }
+
+    if (Object.keys(safeData).length === 0) {
+      dbConnection.release();
+      return res.status(400).json({ error: 'No valid data provided' });
+    }
+
+    const updates = Object.keys(safeData).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(safeData), id];
+
+    const [result] = await dbConnection.execute(`UPDATE chapters SET ${updates} WHERE id = ?`, values);
+    if (result.affectedRows === 0) {
+      dbConnection.release();
+      return res.status(404).json({ message: 'Chapter not found' });
+    }
+
+    await dbConnection.execute('DELETE FROM chapter_committee_members WHERE chapter_id = ?', [id]);
+
+    if (safeData.has_committee && data.committee && Array.isArray(data.committee)) {
+      for (let i = 0; i < data.committee.length; i++) {
+        const member = data.committee[i];
+        if (!member.name) continue;
+        await dbConnection.execute(
+          `INSERT INTO chapter_committee_members (chapter_id, name, designation, company, role_badge, photo_url, linkedin_url, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, member.name, member.designation || null, member.company || null, member.role_badge || null, member.photo_url || null, member.linkedin_url || null, member.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.json({ message: 'Chapter updated successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error updating chapter:', error);
+    res.status(500).json({ message: error.message });
+  } finally {
+    dbConnection.release();
+  }
+});
+
+app.delete('/api/admin/custom-chapters/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.execute('DELETE FROM chapters WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Chapter not found' });
+    res.json({ message: 'Chapter deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting chapter:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
@@ -1046,6 +1203,20 @@ app.post('/api/admin/upload/member-benefit-logo', authenticateToken, uploadBenef
 
 // Upload Chapter Icon
 app.post('/api/admin/upload/chapter-icon', authenticateToken, uploadChapterIcon.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Chapter Banner
+app.post('/api/admin/upload/chapter-banner', authenticateToken, uploadChapterIcon.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Committee Photo
+app.post('/api/admin/upload/committee-photo', authenticateToken, uploadChapterIcon.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const relativePath = `/uploads/chapters/${req.file.filename}`;
   res.json({ url: relativePath });
@@ -1170,6 +1341,24 @@ app.get('/api/chapters/:slug', async (req, res) => {
   } catch (error) {
     console.error('Error fetching chapter:', error);
     res.status(500).json({ error: 'Failed to fetch chapter' });
+  }
+});
+
+app.get('/api/chapters/:slug/committee', async (req, res) => {
+  try {
+    const [chapterRows] = await pool.execute('SELECT id, has_committee FROM chapters WHERE slug = ? AND status = "published"', [req.params.slug]);
+    if (chapterRows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+
+    if (!chapterRows[0].has_committee) {
+      return res.json([]);
+    }
+
+    const chapterId = chapterRows[0].id;
+    const [committeeRows] = await pool.execute('SELECT * FROM chapter_committee_members WHERE chapter_id = ? ORDER BY sort_order ASC', [chapterId]);
+    res.json(committeeRows);
+  } catch (error) {
+    console.error('Error fetching chapter committee:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter committee' });
   }
 });
 

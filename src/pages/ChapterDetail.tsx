@@ -28,19 +28,20 @@ interface ChapterData {
   slug: string;
   icon_name: string;
   icon_url: string;
+  banner_image_url: string;
   summary: string;
   objectives_json: string;
   description_html: string;
+  about_html: string;
   chair_name: string;
   chair_title: string;
   contact_email: string;
   contact_phone: string;
-  about_html: string;
-  president_name: string;
-  president_title: string;
-  president_company: string;
-  president_photo_url: string;
-  president_message_html: string;
+  chairman_name: string;
+  chairman_designation: string;
+  chairman_message_html: string;
+  chairman_photo_url: string;
+  has_committee: boolean;
   member_count_manual: number;
   member_count_text: string;
   member_count_link: string;
@@ -81,10 +82,12 @@ export const ChapterDetail = () => {
         setChapter(chapterData);
 
         // 2. Fetch Committee
-        const resCommittee = await fetch(`${import.meta.env.VITE_API_URL}/api/chapters/${slug}/committee`);
-        if (resCommittee.ok) {
-          const committeeData = await resCommittee.json();
-          setCommittee(committeeData);
+        if (chapterData.has_committee) {
+          const resCommittee = await fetch(`${import.meta.env.VITE_API_URL}/api/chapters/${slug}/committee`);
+          if (resCommittee.ok) {
+            const committeeData = await resCommittee.json();
+            setCommittee(committeeData);
+          }
         }
       } catch (err: any) {
         setError(err.message);
@@ -179,39 +182,38 @@ export const ChapterDetail = () => {
       </section>
 
       {/* CHAPTER PRESIDENT'S MESSAGE Section */}
-      {(chapter.president_message_html || chapter.president_photo_url) && (
+      {(chapter.chairman_message_html || chapter.chairman_photo_url) && (
         <section className="py-0 mb-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="bg-[#0f2c4a] text-white py-3 px-6 mb-8 shadow-sm">
-              <h3 className="text-lg font-bold tracking-wide">CHAPTER PRESIDENT'S MESSAGE</h3>
+              <h3 className="text-lg font-bold tracking-wide">CHAIRMAN'S MESSAGE</h3>
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
-              {chapter.president_photo_url && (
+              {chapter.chairman_photo_url && (
                 <div className="flex-shrink-0 w-full md:w-64 lg:w-80">
                   <img
-                    src={getImageUrl(chapter.president_photo_url)}
-                    alt={chapter.president_name || 'President'}
+                    src={getImageUrl(chapter.chairman_photo_url)}
+                    alt={chapter.chairman_name || chapter.chair_name || 'Chairman'}
                     className="w-full h-auto rounded shadow-sm object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
-                  {chapter.president_name && (
+                  {(chapter.chairman_name || chapter.chair_name) && (
                     <div className="text-center mt-4">
-                      <p className="font-bold text-slate-800 text-lg">{chapter.president_name}</p>
-                      <p className="text-slate-500 text-sm">{chapter.president_title}</p>
-                      <p className="text-slate-500 text-xs">{chapter.president_company}</p>
+                      <p className="font-bold text-slate-800 text-lg">{chapter.chairman_name || chapter.chair_name}</p>
+                      <p className="text-slate-500 text-sm">{chapter.chairman_designation || chapter.chair_title}</p>
                     </div>
                   )}
                 </div>
               )}
 
               <div className="flex-1">
-                {chapter.president_message_html ? (
+                {chapter.chairman_message_html ? (
                   <div
                     className="text-slate-700 leading-relaxed text-[15px] prose max-w-none prose-p:mb-6"
-                    dangerouslySetInnerHTML={{ __html: chapter.president_message_html }}
+                    dangerouslySetInnerHTML={{ __html: chapter.chairman_message_html }}
                   />
                 ) : (
                   <p className="text-slate-500 italic">Message coming soon.</p>
@@ -265,7 +267,7 @@ export const ChapterDetail = () => {
       )}
 
       {/* Chapter Executive Committee Section */}
-      {committee && committee.length > 0 && (
+      {chapter.has_committee && committee && committee.length > 0 && (
         <section className="py-20 bg-slate-50">
           <div className="max-w-7xl mx-auto px-6">
             <h2 className="text-3xl font-light text-slate-800 text-center mb-16 uppercase tracking-wide">
