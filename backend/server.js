@@ -17,7 +17,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:3005'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Expose uploads directory statically
@@ -49,6 +53,10 @@ const storage = multer.diskStorage({
       dest += 'secretariat';
     } else if (req.path.includes('/upload/partner-logo')) {
       dest += 'partners';
+    } else if (req.path.includes('/upload/member-benefit-logo')) {
+      dest += 'benefits';
+    } else if (req.path.includes('/upload/chapter-icon')) {
+      dest += 'chapters';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -169,6 +177,26 @@ const uploadPartnerLogo = multer({
   }
 });
 
+const uploadBenefitLogo = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for benefit logo'));
+  }
+});
+
+const uploadChapterIcon = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chapter icon'));
+  }
+});
+
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -198,10 +226,10 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (token == null) return res.status(401).json({ error: 'Unauthorized' });
+  if (token == null) return res.status(401).json({ message: 'Unauthorized' });
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Forbidden' });
+    if (err) return res.status(401).json({ message: 'Unauthorized' });
     req.user = user;
     next();
   });
@@ -306,13 +334,14 @@ app.post('/api/auth/login', async (req, res) => {
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
-  chapters: ['name', 'head', 'member_count'],
+  chapters: ['name', 'slug', 'icon_name', 'icon_url', 'summary', 'objectives_json', 'description_html', 'chair_name', 'chair_title', 'contact_email', 'contact_phone', 'sort_order', 'status'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
     secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
-  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status']
+  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
+  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -341,21 +370,21 @@ app.get('/api/admin/site-settings', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
-  const { site_email, site_phone, site_location, hero_type, hero_url, favicon_url } = req.body;
+  const { site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url } = req.body;
   try {
     const [existing] = await pool.execute('SELECT id FROM site_settings WHERE id = 1');
     if (existing.length === 0) {
       await pool.execute(
-        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, favicon_url)
-         VALUES (1, ?, ?, ?, ?, ?, ?)`,
-        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
+        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
       );
     } else {
       await pool.execute(
         `UPDATE site_settings
-         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?
+         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?, facebook_url=?, instagram_url=?, linkedin_url=?, twitter_url=?, youtube_url=?
          WHERE id=1`,
-        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url]
+        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
       );
     }
     res.json({ message: 'Settings updated successfully' });
@@ -818,38 +847,141 @@ app.put('/api/admin/gallery/:id/images/reorder', authenticateToken, async (req, 
 });
 
 
+app.get('/api/admin/member_applications', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_applications ORDER BY created_at DESC');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching member_applications:', error);
+    if (error.code === 'ER_NO_SUCH_TABLE') {
+      return res.status(500).json({ message: 'DB table missing' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Member Benefits specific routes (mapping 'member-benefits' to 'member_benefits' table)
+app.get('/api/admin/member-benefits', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_benefits ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/api/admin/member-benefits', authenticateToken, async (req, res) => {
+  const data = req.body;
+  if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
+
+  const allowedColumns = TABLE_COLUMNS['member_benefits'];
+  const safeData = {};
+  for (const key of Object.keys(data)) {
+    if (allowedColumns.includes(key)) {
+      safeData[key] = data[key];
+    }
+  }
+
+  if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
+
+  const columns = Object.keys(safeData).join(', ');
+  const placeholders = Object.keys(safeData).map(() => '?').join(', ');
+  const values = Object.values(safeData);
+
+  try {
+    const [result] = await pool.execute(`INSERT INTO member_benefits (${columns}) VALUES (${placeholders})`, values);
+    const [newItem] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [result.insertId]);
+    res.status(201).json(newItem[0]);
+  } catch (error) {
+    console.error('Error creating member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+  if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
+
+  const allowedColumns = TABLE_COLUMNS['member_benefits'];
+  const safeData = {};
+  for (const key of Object.keys(data)) {
+    if (allowedColumns.includes(key)) {
+      safeData[key] = data[key];
+    }
+  }
+
+  if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
+
+  const updates = Object.keys(safeData).map(key => `${key} = ?`).join(', ');
+  const values = [...Object.values(safeData), id];
+
+  try {
+    const [result] = await pool.execute(`UPDATE member_benefits SET ${updates} WHERE id = ?`, values);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
+
+    const [updatedItem] = await pool.execute('SELECT * FROM member_benefits WHERE id = ?', [id]);
+    res.json(updatedItem[0]);
+  } catch (error) {
+    console.error('Error updating member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/api/admin/member-benefits/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.execute('DELETE FROM member_benefits WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting member_benefits:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [rows] = await pool.execute(`SELECT * FROM ${table} ORDER BY created_at DESC`);
     res.json(rows);
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
-    res.status(500).json({ error: `Failed to fetch ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic GET single item
 app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [rows] = await pool.execute(`SELECT * FROM ${table} WHERE id = ?`, [id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Item not found' });
+    if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch item from ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic POST create item
 app.post('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   const data = req.body;
   if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
@@ -880,7 +1012,7 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
     res.status(201).json(newItem[0]);
   } catch (error) {
     console.error(`Error creating in ${table}:`, error);
-    res.status(500).json({ error: `Failed to create item in ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -905,10 +1037,24 @@ app.post('/api/admin/upload/partner-logo', authenticateToken, uploadPartnerLogo.
   res.json({ url: relativePath });
 });
 
+// Upload Member Benefit Logo
+app.post('/api/admin/upload/member-benefit-logo', authenticateToken, uploadBenefitLogo.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/benefits/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Chapter Icon
+app.post('/api/admin/upload/chapter-icon', authenticateToken, uploadChapterIcon.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   const data = req.body;
   if (!data || Object.keys(data).length === 0) return res.status(400).json({ error: 'No data provided' });
@@ -934,28 +1080,28 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
   try {
     const [result] = await pool.execute(`UPDATE ${table} SET ${updates} WHERE id = ?`, values);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Item not found' });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
 
     const [updatedItem] = await pool.execute(`SELECT * FROM ${table} WHERE id = ?`, [id]);
     res.json(updatedItem[0]);
   } catch (error) {
     console.error(`Error updating ${table}:`, error);
-    res.status(500).json({ error: `Failed to update item in ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Generic DELETE item
 app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
-  if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+  if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
     const [result] = await pool.execute(`DELETE FROM ${table} WHERE id = ?`, [id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Item not found' });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Item not found' });
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error(`Error deleting from ${table}:`, error);
-    res.status(500).json({ error: `Failed to delete item from ${table}` });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -1001,6 +1147,60 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public Chapters API
+app.get('/api/chapters', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE status = ? ORDER BY sort_order ASC, created_at DESC', [status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
+});
+
+app.get('/api/chapters/:slug', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = "published"', [req.params.slug]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chapter:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter' });
+  }
+});
+
+// Public Member Benefits
+app.get('/api/member-benefits', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const category = req.query.category;
+    const search = req.query.search;
+
+    let query = 'SELECT * FROM member_benefits WHERE status = ?';
+    let params = [status];
+
+    if (category && category !== 'All') {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+
+    if (search) {
+      query += ' AND (brand_name LIKE ? OR benefit_title LIKE ? OR description LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
+    }
+
+    query += ' ORDER BY sort_order ASC, created_at DESC';
+
+    const [rows] = await pool.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member benefits:', error);
+    res.status(500).json({ error: 'Failed to fetch member benefits' });
   }
 });
 

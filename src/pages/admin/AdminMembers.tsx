@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { Eye, Trash2, X, Download, FileText } from 'lucide-react';
 
@@ -45,15 +46,38 @@ export const AdminMembers = () => {
   const [selectedApp, setSelectedApp] = useState<MemberApplication | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const navigate = useNavigate();
+
   const fetchApplications = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('adminToken');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await fetch(`${baseUrl}/api/admin/member_applications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      if (!response.ok) throw new Error('Failed to fetch applications');
+
+      if (response.status === 401) {
+        localStorage.removeItem('adminToken');
+        alert('Please login again');
+        navigate('/admin/login');
+        return;
+      }
+
+      if (!response.ok) {
+        let msg = 'Failed to fetch applications';
+        try {
+          const errData = await response.json();
+          if (errData.message) msg = errData.message;
+          else if (errData.error) msg = errData.error;
+        } catch (e) {}
+        throw new Error(msg);
+      }
+
       const data = await response.json();
       setApplications(data);
     } catch (err: any) {

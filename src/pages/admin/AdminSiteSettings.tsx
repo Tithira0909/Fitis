@@ -24,6 +24,11 @@ interface SiteSettingsData {
   hero_type: 'image' | 'video';
   hero_url: string;
   favicon_url: string;
+  facebook_url: string;
+  instagram_url: string;
+  linkedin_url: string;
+  twitter_url: string;
+  youtube_url: string;
 }
 
 export const AdminSiteSettings: React.FC = () => {
@@ -33,7 +38,12 @@ export const AdminSiteSettings: React.FC = () => {
     site_location: '',
     hero_type: 'image',
     hero_url: '',
-    favicon_url: ''
+    favicon_url: '',
+    facebook_url: '',
+    instagram_url: '',
+    linkedin_url: '',
+    twitter_url: '',
+    youtube_url: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -351,6 +361,32 @@ export const AdminSiteSettings: React.FC = () => {
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 required
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Social Media Links</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Facebook URL</label>
+                  <input type="url" name="facebook_url" value={data.facebook_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://facebook.com/..." />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Instagram URL</label>
+                  <input type="url" name="instagram_url" value={data.instagram_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://instagram.com/..." />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">LinkedIn URL</label>
+                  <input type="url" name="linkedin_url" value={data.linkedin_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://linkedin.com/..." />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Twitter/X URL</label>
+                  <input type="url" name="twitter_url" value={data.twitter_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://twitter.com/..." />
+                </div>
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">YouTube URL</label>
+                  <input type="url" name="youtube_url" value={data.youtube_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://youtube.com/..." />
+                </div>
+              </div>
             </div>
           </div>
 

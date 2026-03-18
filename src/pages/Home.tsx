@@ -15,11 +15,39 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
+import { ContactQuickBar } from '../components/ContactQuickBar';
 import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
 import { useEffect, useState } from 'react';
 
 const ChairmanMessage = () => {
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/chairman-message`);
+        if (res.ok) {
+          const json = await res.json();
+          setData(json);
+        }
+      } catch (err) {
+        console.error('Failed to load chairman message', err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (!data) return null;
+
+  const truncate = (str: string, max: number) => {
+    if (!str) return '';
+    // Strip simple HTML tags for the excerpt just in case, though it's mostly plain text
+    const plainText = str.replace(/<[^>]+>/g, '');
+    return plainText.length > max ? plainText.substring(0, max) + '...' : plainText;
+  };
+
   return (
     <section id="about" className="py-16 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
@@ -38,10 +66,11 @@ const ChairmanMessage = () => {
               <div className="relative group">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white">
                   <img 
-                    src="https://picsum.photos/seed/chairman_fitis/600/600" 
-                    alt="Dr. Indika De Zoysa" 
+                    src={`${getImageUrl(data.photo_url)}?v=${data.updated_at || ''}`}
+                    alt={data.name}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"
+                    onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/600x600?text=No+Photo'; }}
                   />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-fitis-gold rounded-full flex items-center justify-center shadow-lg border-4 border-white">
@@ -58,21 +87,21 @@ const ChairmanMessage = () => {
               className="md:col-span-8 lg:col-span-9"
             >
               <div className="mb-6">
-                <h2 className="text-sm font-bold text-fitis-blue uppercase tracking-[0.3em] mb-2">Chairman's Message</h2>
+                <h2 className="text-sm font-bold text-fitis-blue uppercase tracking-[0.3em] mb-2">CHAIRMAN'S MESSAGE</h2>
                 <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                  Steering Sri Lanka Towards a <span className="text-fitis-blue">Resilient Digital Economy</span>
+                  {data.message_title}
                 </h3>
               </div>
               
               <p className="text-slate-600 text-base md:text-lg leading-relaxed mb-6 max-w-3xl">
-                "At FITIS, we are the architects of a digital ecosystem that empowers every citizen and business in Sri Lanka. Our focus remains on fostering innovation, enhancing global competitiveness, and ensuring that our digital infrastructure is robust enough to support the future."
+                {truncate(data.message_body, 200)}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center gap-4">
                   <div>
-                    <p className="text-lg font-bold text-slate-900 leading-none">Dr. Indika De Zoysa</p>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Chairman, FITIS</p>
+                    <p className="text-lg font-bold text-slate-900 leading-none">{data.name}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{data.designation}</p>
                   </div>
                 </div>
                 <span className="text-fitis-blue font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
@@ -489,9 +518,38 @@ const Newsletter = () => {
 };
 
 export const Home = () => {
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/site-settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (error) {
+        console.error('Failed to load site settings', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <>
       <GlobeHero />
+      {siteSettings && (
+        <ContactQuickBar
+          site_phone={siteSettings.site_phone}
+          site_email={siteSettings.site_email}
+          facebook_url={siteSettings.facebook_url}
+          instagram_url={siteSettings.instagram_url}
+          linkedin_url={siteSettings.linkedin_url}
+          twitter_url={siteSettings.twitter_url}
+          youtube_url={siteSettings.youtube_url}
+        />
+      )}
       <ChairmanMessage />
       <BoardMembers />
       <ServicesSection />

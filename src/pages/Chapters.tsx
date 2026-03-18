@@ -1,47 +1,82 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
-  Server, 
-  Code, 
-  Smartphone, 
-  Radio, 
+  Globe,
+  Monitor,
   GraduationCap, 
-  Cpu, 
-  Briefcase, 
+  Phone,
+  Settings,
+  Archive,
+  User,
   ArrowRight, 
   Users, 
   Layers, 
   Calendar,
-  LucideIcon
+  LucideIcon,
+  HelpCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { chaptersData } from '../data/chapters';
 import { SubHeaderBar } from '../components/SubHeaderBar';
 import { SectionHeader } from '../components/SectionHeader';
-import { useState } from 'react';
+import { getImageUrl } from '../utils/getImageUrl';
+
+interface Chapter {
+  id: number;
+  name: string;
+  slug: string;
+  icon_name: string;
+  icon_url: string;
+  summary: string;
+}
 
 const stats: { label: string; value: string; icon: LucideIcon }[] = [
-  { label: "Total Chapters", value: "7+", icon: Layers },
+  { label: "Total Chapters", value: "8", icon: Layers },
   { label: "Working Groups", value: "15+", icon: Users },
   { label: "Programs/Year", value: "50+", icon: Calendar }
 ];
 
-export const Chapters = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+const getIconComponent = (iconName: string) => {
+  switch (iconName) {
+    case 'Globe': return <Globe size={48} className="text-white" />;
+    case 'Monitor': return <Monitor size={48} className="text-white" />;
+    case 'GraduationCap': return <GraduationCap size={48} className="text-white" />;
+    case 'Phone': return <Phone size={48} className="text-white" />;
+    case 'Settings': return <Settings size={48} className="text-white" />;
+    case 'Archive': return <Archive size={48} className="text-white" />;
+    case 'User': return <User size={48} className="text-white" />;
+    default: return <HelpCircle size={48} className="text-white" />;
+  }
+};
 
-  const filteredChapters = chaptersData.filter(chapter =>
-    chapter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chapter.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+export const Chapters = () => {
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/chapters`);
+        if (res.ok) {
+          const data = await res.json();
+          setChapters(data);
+        }
+      } catch (error) {
+        console.error('Failed to load chapters', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChapters();
+  }, []);
 
   return (
-    <div className="bg-white min-h-screen pb-20">
+    <div className="bg-slate-50 min-h-screen pb-20">
 
       <SubHeaderBar
         breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Chapters' }]}
         title="FITIS CHAPTERS"
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        showSearch={false}
       />
 
       {/* Chapters Overview Section */}
@@ -79,48 +114,49 @@ export const Chapters = () => {
       {/* Chapters Grid */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
-
-          {filteredChapters.length === 0 && (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fitis-blue"></div>
+            </div>
+          ) : chapters.length === 0 ? (
             <div className="text-center py-20 text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">
-              <p className="text-lg font-medium">No chapters found matching your search.</p>
+              <p className="text-lg font-medium">No chapters available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {chapters.map((chapter, idx) => (
+                <Link
+                  to={`/Chapter/${chapter.slug}`}
+                  key={chapter.slug}
+                  className="block"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group flex flex-col h-full border border-gray-100"
+                  >
+                    <div className="bg-[#00529B] h-48 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="transform group-hover:scale-110 transition-transform duration-300 z-10 text-white flex items-center justify-center">
+                        {chapter.icon_url ? (
+                          <img src={getImageUrl(chapter.icon_url)} alt="Icon" className="w-16 h-16 object-contain" />
+                        ) : (
+                          getIconComponent(chapter.icon_name)
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-5 flex-grow flex items-center justify-center bg-gray-50 border-t border-gray-100">
+                      <h3 className="text-sm font-bold text-gray-800 text-center uppercase tracking-wider group-hover:text-fitis-blue transition-colors">
+                        {chapter.name}
+                      </h3>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
             </div>
           )}
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredChapters.map((chapter, idx) => (
-              <motion.div
-                key={chapter.slug}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col h-full"
-              >
-                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-fitis-blue mb-6 group-hover:bg-fitis-blue group-hover:text-white transition-colors">
-                  <chapter.icon size={28} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-fitis-blue transition-colors">
-                  {chapter.name}
-                </h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow">
-                  {chapter.description}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {chapter.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-full uppercase tracking-wider border border-slate-100">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <Link 
-                  to={`/Chapter/chapters/${chapter.slug}`}
-                  className="w-full py-3 bg-slate-50 text-fitis-blue rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-fitis-blue hover:text-white transition-all group/btn"
-                >
-                  View Chapter <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 

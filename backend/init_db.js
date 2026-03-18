@@ -21,6 +21,22 @@ const initializeDB = async () => {
 
     // Create tables
     const tables = [
+      `CREATE TABLE IF NOT EXISTS member_benefits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        brand_name VARCHAR(255) NOT NULL,
+        benefit_title VARCHAR(255) NOT NULL,
+        category VARCHAR(150) NOT NULL,
+        offer_text VARCHAR(150) NOT NULL,
+        description TEXT,
+        terms LONGTEXT,
+        link_url VARCHAR(600),
+        logo_url VARCHAR(600) NOT NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft','published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+
       `CREATE TABLE IF NOT EXISTS member_applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     primary_chapter VARCHAR(150),
@@ -101,9 +117,20 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS chapters (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        head VARCHAR(255) NOT NULL,
-        member_count INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        icon_name VARCHAR(150),
+        icon_url VARCHAR(600),
+        summary TEXT,
+        objectives_json JSON,
+        description_html LONGTEXT,
+        chair_name VARCHAR(255),
+        chair_title VARCHAR(255),
+        contact_email VARCHAR(150),
+        contact_phone VARCHAR(50),
+        sort_order INT DEFAULT 0,
+        status ENUM('draft','published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -162,6 +189,11 @@ const initializeDB = async () => {
         hero_type ENUM('image', 'video') DEFAULT 'image',
         hero_url VARCHAR(500),
         favicon_url VARCHAR(500),
+        facebook_url VARCHAR(500),
+        instagram_url VARCHAR(500),
+        linkedin_url VARCHAR(500),
+        twitter_url VARCHAR(500),
+        youtube_url VARCHAR(500),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
             `CREATE TABLE IF NOT EXISTS chairman_message (
