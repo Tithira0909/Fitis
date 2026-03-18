@@ -23,7 +23,7 @@ export const AdminChapters: React.FC = () => {
       key: 'status',
       label: 'Status',
       render: (val: string) => (
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${val === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${val === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
           {val}
         </span>
       )
@@ -68,8 +68,8 @@ export const AdminChapters: React.FC = () => {
       label: 'Status',
       type: 'select',
       options: [
-        { value: 'published', label: 'Published' },
-        { value: 'draft', label: 'Draft' }
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' }
       ]
     }
   ];

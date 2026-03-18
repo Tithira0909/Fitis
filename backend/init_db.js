@@ -353,7 +353,17 @@ const initializeDB = async () => {
       console.log('Site settings already exist.');
     }
 
-        // Seed default chairman message
+    // Data Migration: Migrating chapters
+    try {
+        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive', 'draft', 'published') DEFAULT 'active'`);
+        await connection.execute(`UPDATE chapters SET status = 'active' WHERE status = 'published'`);
+        await connection.execute(`UPDATE chapters SET status = 'inactive' WHERE status = 'draft'`);
+        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive') DEFAULT 'active'`);
+    } catch (error) {
+        console.error("Chapter status Migration failed:", error);
+    }
+
+    // Seed default chairman message
     const [chairmanRows] = await connection.execute('SELECT * FROM chairman_message WHERE id = 1');
     if (chairmanRows.length === 0) {
       await connection.execute(

@@ -1153,7 +1153,7 @@ app.get('/api/leadership-members', async (req, res) => {
 // Public Chapters API
 app.get('/api/chapters', async (req, res) => {
   try {
-    const status = req.query.status || 'published';
+    const status = req.query.status || 'active';
     const [rows] = await pool.execute('SELECT * FROM chapters WHERE status = ? ORDER BY sort_order ASC, created_at DESC', [status]);
     res.json(rows);
   } catch (error) {
@@ -1164,7 +1164,7 @@ app.get('/api/chapters', async (req, res) => {
 
 app.get('/api/chapters/:slug', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = "published"', [req.params.slug]);
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = "active"', [req.params.slug]);
     if (rows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
     res.json(rows[0]);
   } catch (error) {
