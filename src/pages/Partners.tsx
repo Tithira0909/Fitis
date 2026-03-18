@@ -9,6 +9,7 @@ interface Partner {
   logo_url: string;
   website_url: string;
   sort_order: number;
+  status?: string;
 }
 
 const CATEGORY_ORDER = [
@@ -25,7 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   industry: 'INDUSTRY PARTNERS',
   international: 'INTERNATIONAL BODIES',
   premium_corporate: 'PREMIUM CORPORATE PARTNERS',
-  corporate: 'CORPORATE PARTNERS',
+  corporate: 'FITIS CORPORATE PARTNERS',
   supporting: 'SUPPORTING PARTNERS',
 };
 
@@ -52,7 +53,9 @@ export const Partners = () => {
   }, []);
 
   const groupedPartners = CATEGORY_ORDER.reduce((acc, cat) => {
-    acc[cat] = partners.filter(p => p.category === cat);
+    acc[cat] = partners
+      .filter(p => p.category === cat && (p.status === 'published' || p.status == null || p.status === ''))
+      .sort((a, b) => a.sort_order - b.sort_order);
     return acc;
   }, {} as Record<string, Partner[]>);
 
@@ -67,10 +70,9 @@ export const Partners = () => {
         <div className="max-w-7xl mx-auto px-6">
 
           <div className="text-center max-w-4xl mx-auto mb-16 md:mb-24">
-            <h2 className="text-3xl md:text-5xl font-black text-fitis-blue mb-4 uppercase tracking-wider">
+            <h2 className="text-3xl md:text-4xl font-normal text-[#00529b] mb-4 uppercase tracking-wider">
               PARTNERSHIPS AND AFFILIATIONS
             </h2>
-            <div className="w-24 h-1 bg-fitis-gold mx-auto mb-6"></div>
           </div>
 
           {isLoading ? (
@@ -84,28 +86,38 @@ export const Partners = () => {
                 if (!group || group.length === 0) return null;
 
                 return (
-                  <div key={catKey} className="relative">
-                    {index > 0 && <hr className="absolute -top-10 md:-top-14 left-0 right-0 border-t border-slate-200" />}
-
-                    <h3 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-10 md:mb-14 uppercase tracking-widest">
+                  <div key={catKey} className="relative mb-16 md:mb-20">
+                    <h3 className="text-lg md:text-xl font-medium text-slate-800 text-center mb-4 uppercase tracking-widest">
                       {CATEGORY_LABELS[catKey]}
                     </h3>
 
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16 items-center">
+                    <hr className="w-full border-t border-slate-300 mb-10" />
+
+                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 items-center">
                       {group.map((partner) => {
+                        const isSingle = group.length === 1;
+                        const sizeClasses = isSingle ? "h-24 md:h-32" : "h-16 md:h-20 lg:h-24";
+
                         const content = (
-                          <div className="w-32 md:w-48 h-24 md:h-32 flex items-center justify-center p-4 bg-white hover:bg-slate-50 rounded-xl transition-all duration-300 filter grayscale hover:grayscale-0 hover:scale-105 hover:shadow-lg border border-transparent hover:border-slate-100">
+                          <div className="flex items-center justify-center transition-transform duration-300 hover:scale-105 hover:opacity-90">
                             {partner.logo_url ? (
                               <img
                                 src={getImageUrl(partner.logo_url)}
                                 alt={partner.name}
-                                className="max-w-full max-h-full object-contain"
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                className={`w-auto ${sizeClasses} object-contain`}
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  if (target.nextElementSibling) {
+                                    (target.nextElementSibling as HTMLElement).style.display = 'block';
+                                  }
+                                }}
                                 title={partner.name}
                               />
-                            ) : (
-                              <span className="text-center text-sm font-bold text-slate-400">{partner.name}</span>
-                            )}
+                            ) : null}
+                            <span className="text-center text-sm font-bold text-slate-400" style={{ display: partner.logo_url ? 'none' : 'block' }}>
+                              {partner.name}
+                            </span>
                           </div>
                         );
 
