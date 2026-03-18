@@ -141,7 +141,7 @@ export default function App() {
               <Route path="/Home/gallery" element={<Gallery />} />
               <Route path="/Home/events" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
-              <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
+              <Route path="/Chapter/:slug" element={<ChapterDetail />} />
               <Route path="/Home/contact" element={<Contact />} />
             </Routes>
           </PublicLayout>

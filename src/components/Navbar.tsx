@@ -4,11 +4,74 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+const navLinks = [
+  { name: 'Home', href: '/' },
+  {
+    name: 'Introduction',
+    href: '/Home/introduction',
+    submenu: [
+      { name: 'Introduction', href: '/Home/introduction' },
+      { name: 'Leadership Team', href: '/Home/leadership-team' },
+      { name: 'Chairman\'s Message', href: '/Home/chairman-message' },
+      { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
+      { name: 'Code of Ethics', href: '/Home/code-of-ethics' },
+      { name: 'Past Leaders', href: '/Home/past-leaders' },
+      { name: 'Secretariat Team', href: '/Home/secretariat-team' },
+    ]
+  },
+  { name: 'News', href: '/Home/news' },
+  { name: 'Events', href: '/Home/events' },
+  { name: 'Programs', href: '/Home/programs' },
+  {
+    name: 'Chapters',
+    href: '/Chapter/chapters',
+    submenu: [] // Will be populated dynamically
+  },
+  { name: 'Partnerships', href: '/Home/partnerships' },
+  {
+    name: 'Members',
+    href: '#',
+    submenu: [
+      { name: 'Become a Member', href: '/Home/become-a-member' },
+      { name: 'Member Benefits', href: '/Home/member-benefits' }
+    ]
+  },
+  { name: 'Gallery', href: '/Home/gallery' },
+];
+
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isIntroOpen, setIsIntroOpen] = useState(false);
+  const [dynamicNavLinks, setDynamicNavLinks] = useState(navLinks);
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/chapters`);
+        if (res.ok) {
+          const chaptersData = await res.json();
+          const chapterSubmenu = [
+            { name: 'Chapters', href: '/Chapter/chapters' },
+            ...chaptersData.map((c: any) => ({
+              name: c.name,
+              href: `/Chapter/${c.slug}`
+            }))
+          ];
+
+          setDynamicNavLinks(prev => prev.map(link =>
+            link.name === 'Chapters' ? { ...link, submenu: chapterSubmenu } : link
+          ));
+        }
+      } catch (err) {
+        console.error('Failed to load chapters for nav', err);
+      }
+    };
+
+    fetchChapters();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -64,7 +127,7 @@ export const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {dynamicNavLinks.map((link) => (
             <div
               key={link.name}
               className="relative group"
@@ -145,7 +208,7 @@ export const Navbar = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 max-h-[calc(100vh-80px)] overflow-y-auto bg-white shadow-xl border-t border-slate-100 p-6 flex flex-col gap-4 md:hidden"
           >
-            {navLinks.map((link) => (
+            {dynamicNavLinks.map((link) => (
               <div key={link.name} className="flex flex-col">
                 <div className="flex items-center justify-between">
                   <Link

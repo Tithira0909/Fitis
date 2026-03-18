@@ -70,111 +70,91 @@ export const ChapterDetail = () => {
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-16">
-              {/* About */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
-                    <Target size={20} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900">About the Chapter</h2>
-                </div>
-                <p className="text-slate-600 leading-relaxed text-lg">
-                  {chapter.longDescription}
-                </p>
-              </div>
-
-              {/* Focus Areas */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Focus Areas</h2>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {chapter.focusAreas.map((area, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="mt-1 text-fitis-blue">
-                        <CheckCircle2 size={18} />
-                      </div>
-                      <span className="text-slate-700 font-medium">{area}</span>
+              {/* Objectives */}
+              {objectives.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
+                      <Target size={20} />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Activities */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
-                    <Activity size={20} />
+                    <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-wide">Objectives</h2>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Key Activities</h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {objectives.map((obj: string, idx: number) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className="flex items-start gap-3 bg-white p-5 rounded-xl shadow-sm border border-slate-200"
+                      >
+                        <CheckCircle2 size={20} className="text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-700 text-sm font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: obj }}></span>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <ul className="space-y-4">
-                  {chapter.activities.map((activity, idx) => (
-                    <li key={idx} className="flex items-center gap-4 text-slate-600">
-                      <div className="w-2 h-2 bg-fitis-blue rounded-full"></div>
-                      <span className="text-lg">{activity}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              )}
+
+              {/* Description */}
+              {chapter.description_html && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
+                      <Activity size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-wide">About</h2>
+                  </div>
+                  <div
+                    className="text-slate-600 leading-relaxed text-base prose max-w-none bg-white p-8 rounded-xl shadow-sm border border-slate-200"
+                    dangerouslySetInnerHTML={{ __html: chapter.description_html }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-8">
-              {/* Leadership Placeholder */}
-              <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-fitis-blue/10 rounded-xl flex items-center justify-center text-fitis-blue">
-                    <Users size={20} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900">Leadership</h3>
-                </div>
-                <div className="space-y-6">
-                  {[1, 2].map((_, idx) => (
-                    <div key={idx} className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full"></div>
-                      <div>
-                        <div className="font-bold text-slate-900">Chapter Leader {idx + 1}</div>
-                        <div className="text-sm text-slate-500">Position Title</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-6">
+              {/* Leadership / Contact Card */}
+              {(chapter.chair_name || chapter.contact_email || chapter.contact_phone) && (
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm sticky top-32">
+                  <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 uppercase tracking-wide">
+                    <Users size={20} className="text-fitis-blue" />
+                    Chapter Leadership
+                  </h3>
 
-              {/* Contact Sidebar */}
-              <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl">
-                <h3 className="text-xl font-bold mb-6">Get in Touch</h3>
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <Mail className="text-fitis-blue mt-1" size={20} />
-                    <div>
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Email</div>
-                      <div className="font-medium">chapters@fitis.lk</div>
+                  {chapter.chair_name && (
+                    <div className="mb-8">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full mb-4 flex items-center justify-center border border-slate-200 shadow-sm">
+                        <Users size={24} className="text-slate-400" />
+                      </div>
+                      <p className="font-bold text-slate-900 text-lg">{chapter.chair_name}</p>
+                      {chapter.chair_title && (
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">{chapter.chair_title}</p>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Phone className="text-fitis-blue mt-1" size={20} />
-                    <div>
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Phone</div>
-                      <div className="font-medium">+94 11 234 5678</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <MapPin className="text-fitis-blue mt-1" size={20} />
-                    <div>
-                      <div className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Address</div>
-                      <div className="font-medium">No. 123, Galle Road, Colombo 03, Sri Lanka.</div>
-                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {chapter.contact_email && (
+                      <a href={`mailto:${chapter.contact_email}`} className="flex items-center gap-3 text-sm text-slate-600 hover:text-fitis-blue transition-colors group">
+                        <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center group-hover:bg-fitis-blue/10 group-hover:border-fitis-blue/20 transition-all shadow-sm">
+                          <Mail size={16} className="group-hover:text-fitis-blue" />
+                        </div>
+                        <span className="font-medium">{chapter.contact_email}</span>
+                      </a>
+                    )}
+                    {chapter.contact_phone && (
+                      <a href={`tel:${chapter.contact_phone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-3 text-sm text-slate-600 hover:text-fitis-blue transition-colors group">
+                        <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center group-hover:bg-fitis-blue/10 group-hover:border-fitis-blue/20 transition-all shadow-sm">
+                          <Phone size={16} className="group-hover:text-fitis-blue" />
+                        </div>
+                        <span className="font-medium">{chapter.contact_phone}</span>
+                      </a>
+                    )}
                   </div>
                 </div>
-                <button className="w-full mt-8 py-4 bg-fitis-blue text-white rounded-xl font-bold hover:bg-fitis-blue-light transition-all active:scale-95">
-                  Contact Chapter
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>

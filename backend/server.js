@@ -55,6 +55,8 @@ const storage = multer.diskStorage({
       dest += 'partners';
     } else if (req.path.includes('/upload/member-benefit-logo')) {
       dest += 'benefits';
+    } else if (req.path.includes('/upload/chapter-icon')) {
+      dest += 'chapters';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -182,6 +184,16 @@ const uploadBenefitLogo = multer({
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for benefit logo'));
+  }
+});
+
+const uploadChapterIcon = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chapter icon'));
   }
 });
 
@@ -322,7 +334,7 @@ app.post('/api/auth/login', async (req, res) => {
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
-  chapters: ['name', 'head', 'member_count'],
+  chapters: ['name', 'slug', 'icon_name', 'icon_url', 'summary', 'objectives_json', 'description_html', 'chair_name', 'chair_title', 'contact_email', 'contact_phone', 'sort_order', 'status'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
@@ -1032,6 +1044,13 @@ app.post('/api/admin/upload/member-benefit-logo', authenticateToken, uploadBenef
   res.json({ url: relativePath });
 });
 
+// Upload Chapter Icon
+app.post('/api/admin/upload/chapter-icon', authenticateToken, uploadChapterIcon.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
@@ -1128,6 +1147,29 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public Chapters API
+app.get('/api/chapters', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE status = ? ORDER BY sort_order ASC, created_at DESC', [status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
+});
+
+app.get('/api/chapters/:slug', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = "published"', [req.params.slug]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chapter:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter' });
   }
 });
 
