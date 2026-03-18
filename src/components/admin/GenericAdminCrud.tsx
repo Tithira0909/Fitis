@@ -6,7 +6,7 @@ import { getImageUrl } from '../../utils/getImageUrl';
 export interface ColumnDef {
   key: string;
   label: string;
-  render?: (value: any) => React.ReactNode;
+  render?: (value: any, item?: any) => React.ReactNode;
 }
 
 export interface FieldDef {

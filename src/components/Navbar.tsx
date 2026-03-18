@@ -43,7 +43,7 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isIntroOpen, setIsIntroOpen] = useState(false);
-  const [dynamicNavLinks, setDynamicNavLinks] = useState(navLinks);
+  const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>(navLinks);
   const location = useLocation();
 
   useEffect(() => {
@@ -78,37 +78,6 @@ export const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    {
-      name: 'Introduction',
-      href: '/Home/introduction',
-      submenu: [
-        { name: 'Introduction', href: '/Home/introduction' },
-        { name: 'Leadership Team', href: '/Home/leadership-team' },
-        { name: 'Chairman\'s Message', href: '/Home/chairman-message' },
-        { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
-        { name: 'Code of Ethics', href: '/Home/code-of-ethics' },
-        { name: 'Past Leaders', href: '/Home/past-leaders' },
-        { name: 'Secretariat Team', href: '/Home/secretariat-team' },
-      ]
-    },
-    { name: 'News', href: '/Home/news' },
-    { name: 'Events', href: '/Home/events' },
-    { name: 'Programs', href: '/Home/programs' },
-    { name: 'Chapters', href: '/Chapter/chapters' },
-    { name: 'Partnerships', href: '/Home/partnerships' },
-    {
-      name: 'Members',
-      href: '#',
-      submenu: [
-        { name: 'Become a Member', href: '/Home/become-a-member' },
-        { name: 'Member Benefits', href: '/Home/member-benefits' }
-      ]
-    },
-    { name: 'Gallery', href: '/Home/gallery' },
-  ];
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';

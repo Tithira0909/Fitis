@@ -7,7 +7,7 @@ export const AdminChapters: React.FC = () => {
     {
       key: 'icon_url',
       label: 'Icon',
-      render: (val: string, item: any) => (
+      render: (val: any, item: any) => (
         val ? (
           <img src={getImageUrl(val)} alt="Icon" className="w-10 h-10 object-contain bg-gray-50 rounded" />
         ) : (
