@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { fetchApi } from '../../lib/api';
 import { Edit, Trash2, ArrowLeft, Plus } from 'lucide-react';
 import { getImageUrl } from '../../utils/getImageUrl';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 interface Chapter {
   id: number;
