@@ -47,6 +47,8 @@ const storage = multer.diskStorage({
       dest += 'events';
     } else if (req.path.includes('/upload/program-banner')) {
       dest += 'programs';
+    } else if (req.path.includes('/upload/chapter-chairman-photo') || req.path.includes('/upload/chapter-committee-photo')) {
+      dest += 'chapters';
     } else if (req.path.includes('/upload/chairman-photo')) {
       dest += 'chairman';
     } else if (req.path.includes('/upload/secretariat-photo')) {
@@ -143,6 +145,18 @@ const uploadProgramBanner = multer({
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Invalid file type for program banner'));
   }
+});
+
+const uploadChapterChairmanPhoto = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('Only images are allowed'))
+});
+
+const uploadChapterCommitteePhoto = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => file.mimetype.startsWith('image/') ? cb(null, true) : cb(new Error('Only images are allowed'))
 });
 
 const uploadChairmanPhoto = multer({
@@ -329,7 +343,9 @@ const TABLE_COLUMNS = {
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
     secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
   member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
-  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status']
+  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status'],
+  chapters: ['name', 'slug', 'about_html', 'objectives_json', 'chairman_name', 'chairman_designation', 'chairman_photo_url', 'chairman_message_html', 'sort_order', 'status'],
+  chapter_committee_members: ['chapter_id', 'name', 'designation', 'company', 'role_label', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'sort_order', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -986,6 +1002,8 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
   // Auto-generate slug if missing
   if (allowedColumns.includes('slug') && !safeData.slug && safeData.title) {
     safeData.slug = safeData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
+  } else if (allowedColumns.includes('slug') && !safeData.slug && safeData.name) {
+    safeData.slug = safeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   }
 
   if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
@@ -1002,6 +1020,20 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
     console.error(`Error creating in ${table}:`, error);
     res.status(500).json({ message: error.message });
   }
+});
+
+// Upload Chapter Chairman Photo
+app.post('/api/admin/upload/chapter-chairman-photo', authenticateToken, uploadChapterChairmanPhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Chapter Committee Photo
+app.post('/api/admin/upload/chapter-committee-photo', authenticateToken, uploadChapterCommitteePhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativePath });
 });
 
 // Upload Chairman Photo
@@ -1052,6 +1084,8 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   // Auto-generate slug if missing
   if (allowedColumns.includes('slug') && !safeData.slug && safeData.title) {
     safeData.slug = safeData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
+  } else if (allowedColumns.includes('slug') && !safeData.slug && safeData.name) {
+    safeData.slug = safeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   }
 
   if (Object.keys(safeData).length === 0) return res.status(400).json({ error: 'No valid data provided' });
@@ -1128,6 +1162,69 @@ app.get('/api/leadership-members', async (req, res) => {
   } catch (error) {
     console.error('Error fetching leadership members:', error);
     res.status(500).json({ error: 'Failed to fetch leadership members' });
+  }
+});
+
+// Public Chapters API
+app.get('/api/chapters', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE status = ? ORDER BY sort_order ASC, created_at DESC', [status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
+});
+
+app.get('/api/chapters/:slug', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+    const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = ?', [req.params.slug, status]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chapter detail:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter' });
+  }
+});
+
+app.get('/api/chapters/:slug/committee', async (req, res) => {
+  try {
+    const status = req.query.status || 'published';
+
+    // Join with chapters to filter by slug and ensure both are published
+    const query = `
+      SELECT ccm.*
+      FROM chapter_committee_members ccm
+      JOIN chapters c ON c.id = ccm.chapter_id
+      WHERE c.slug = ? AND ccm.status = ? AND c.status = ?
+      ORDER BY ccm.hierarchy_level ASC, ccm.seat ASC, ccm.sort_order ASC
+    `;
+    const [rows] = await pool.execute(query, [req.params.slug, status, status]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapter committee:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter committee' });
+  }
+});
+
+// Admin get chapter committee members
+app.get('/api/admin/chapter-committee', authenticateToken, async (req, res) => {
+  try {
+    const chapterId = req.query.chapter_id;
+    let query = 'SELECT * FROM chapter_committee_members';
+    let params = [];
+    if (chapterId) {
+      query += ' WHERE chapter_id = ?';
+      params.push(chapterId);
+    }
+    query += ' ORDER BY hierarchy_level ASC, seat ASC, sort_order ASC';
+    const [rows] = await pool.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapter committee for admin:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter committee' });
   }
 });
 

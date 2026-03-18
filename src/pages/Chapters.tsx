@@ -15,10 +15,9 @@ import {
   LucideIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { chaptersData } from '../data/chapters';
 import { SubHeaderBar } from '../components/SubHeaderBar';
 import { SectionHeader } from '../components/SectionHeader';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const stats: { label: string; value: string; icon: LucideIcon }[] = [
   { label: "Total Chapters", value: "7+", icon: Layers },
@@ -28,10 +27,27 @@ const stats: { label: string; value: string; icon: LucideIcon }[] = [
 
 export const Chapters = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [chapters, setChapters] = useState<any[]>([]);
 
-  const filteredChapters = chaptersData.filter(chapter =>
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/chapters?status=published`);
+        if (res.ok) {
+          const data = await res.json();
+          setChapters(data);
+        }
+      } catch (err) {
+        console.error('Failed to load chapters for chapters page', err);
+      }
+    };
+    fetchChapters();
+  }, []);
+
+  const filteredChapters = chapters.filter(chapter =>
     chapter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chapter.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (chapter.about_html && chapter.about_html.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -97,24 +113,17 @@ export const Chapters = () => {
                 className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col h-full"
               >
                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-fitis-blue mb-6 group-hover:bg-fitis-blue group-hover:text-white transition-colors">
-                  <chapter.icon size={28} />
+                  <Users size={28} />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-fitis-blue transition-colors">
                   {chapter.name}
                 </h3>
-                <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow">
-                  {chapter.description}
+                <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
+                  {chapter.about_html ? chapter.about_html.replace(/<[^>]+>/g, '') : ''}
                 </p>
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {chapter.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-full uppercase tracking-wider border border-slate-100">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
                 <Link 
-                  to={`/Chapter/chapters/${chapter.slug}`}
-                  className="w-full py-3 bg-slate-50 text-fitis-blue rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-fitis-blue hover:text-white transition-all group/btn"
+                  to={`/Chapter/${chapter.slug}`}
+                  className="w-full py-3 mt-auto bg-slate-50 text-fitis-blue rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-fitis-blue hover:text-white transition-all group/btn"
                 >
                   View Chapter <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                 </Link>
