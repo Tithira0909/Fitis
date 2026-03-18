@@ -120,38 +120,17 @@ const initializeDB = async () => {
         slug VARCHAR(255) UNIQUE NOT NULL,
         icon_name VARCHAR(150),
         icon_url VARCHAR(600),
-        banner_image_url VARCHAR(600),
         summary TEXT,
         objectives_json JSON,
         description_html LONGTEXT,
-        about_html LONGTEXT,
         chair_name VARCHAR(255),
         chair_title VARCHAR(255),
         contact_email VARCHAR(150),
         contact_phone VARCHAR(50),
-        chairman_name VARCHAR(255),
-        chairman_designation VARCHAR(255),
-        chairman_message_html LONGTEXT,
-        chairman_photo_url VARCHAR(600),
-        has_committee BOOLEAN DEFAULT FALSE,
         sort_order INT DEFAULT 0,
         status ENUM('draft','published') DEFAULT 'published',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )`,
-      `CREATE TABLE IF NOT EXISTS chapter_committee_members (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        chapter_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        designation VARCHAR(255),
-        company VARCHAR(255),
-        role_badge VARCHAR(150),
-        photo_url VARCHAR(600),
-        linkedin_url VARCHAR(600),
-        sort_order INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -296,24 +275,6 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
-
-    // Update chapters table if it already exists
-    try {
-      await connection.execute("ALTER TABLE chapters ADD COLUMN banner_image_url VARCHAR(600)");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN about_html LONGTEXT");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN chairman_name VARCHAR(255)");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN chairman_designation VARCHAR(255)");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN chairman_message_html LONGTEXT");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN chairman_photo_url VARCHAR(600)");
-      await connection.execute("ALTER TABLE chapters ADD COLUMN has_committee BOOLEAN DEFAULT FALSE");
-      console.log('Executed data migration: Added new columns to chapters');
-    } catch (migErr) {
-      if (migErr.code === 'ER_DUP_FIELDNAME') {
-        console.log('Migration skipped: columns already exist in chapters');
-      } else {
-        console.error('Migration error (chapters columns):', migErr.message);
-      }
-    }
 
     // Update leadership_members table if it already exists
     try {
