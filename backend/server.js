@@ -645,7 +645,8 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
   try {
     const [chapters] = await pool.execute('SELECT COUNT(*) as count FROM chapters');
     const [events] = await pool.execute('SELECT COUNT(*) as count FROM events WHERE event_date >= CURDATE()');
-    const [members] = await pool.execute('SELECT SUM(member_count) as count FROM chapters');
+    // Using 0 as fallback since member_count was removed
+    const members = [{count: 0}];
     const [partners] = await pool.execute('SELECT COUNT(*) as count FROM partners');
 
     // Also fetch recent activity (e.g., recent news or events)
