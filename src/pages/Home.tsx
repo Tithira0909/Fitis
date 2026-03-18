@@ -196,7 +196,7 @@ const BoardSection = () => {
     ]
   };
 
-  const MemberCard = ({ member, size = "md" }: { member: any, size?: "md" | "sm" }) => (
+  const MemberCard = ({ member, size = "md", key }: { member: any, size?: "md" | "sm", key?: React.Key }) => (
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
       whileInView={{ opacity: 1, scale: 1 }}

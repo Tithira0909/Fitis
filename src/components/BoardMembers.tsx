@@ -24,7 +24,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-const MemberCard = ({ member }: { member: LeadershipMember }) => {
+const MemberCard = ({ member, key }: { member: LeadershipMember, key?: React.Key }) => {
   const [imgError, setImgError] = useState(false);
 
   const getInitials = (name: string) => {

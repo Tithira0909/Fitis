@@ -117,9 +117,39 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS chapters (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        head VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL,
+        short_description TEXT,
+        hero_title VARCHAR(255),
+        breadcrumb_title VARCHAR(255),
         member_count INT DEFAULT 0,
+        members_summary_text TEXT,
+        view_all_link VARCHAR(600),
+        president_name VARCHAR(255),
+        president_designation VARCHAR(255),
+        president_company VARCHAR(255),
+        president_image_url VARCHAR(600),
+        president_message_body LONGTEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS chapter_objectives (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chapter_id INT NOT NULL,
+        objective_text TEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+      )`,
+      `CREATE TABLE IF NOT EXISTS chapter_exco_members (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chapter_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        designation VARCHAR(255) NOT NULL,
+        company VARCHAR(255),
+        role VARCHAR(255),
+        image_url VARCHAR(600),
+        linkedin_url VARCHAR(600),
+        sort_order INT DEFAULT 0,
+        status ENUM('active', 'inactive') DEFAULT 'active',
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -264,6 +294,43 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
+
+    // Update chapters table if it already exists
+    try {
+      await connection.execute("ALTER TABLE chapters ADD COLUMN slug VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN short_description TEXT");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN hero_title VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN breadcrumb_title VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN members_summary_text TEXT");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN view_all_link VARCHAR(600)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN president_name VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN president_designation VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN president_company VARCHAR(255)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN president_image_url VARCHAR(600)");
+      await connection.execute("ALTER TABLE chapters ADD COLUMN president_message_body LONGTEXT");
+      console.log('Executed data migration: Added new columns to chapters');
+    } catch (migErr) {
+      if (migErr.code === 'ER_DUP_FIELDNAME') {
+        console.log('Migration skipped: columns already exist in chapters');
+      } else {
+        console.error('Migration error (chapters columns):', migErr.message);
+      }
+    }
+
+    try {
+      await connection.execute("UPDATE chapters SET slug = LOWER(REPLACE(name, ' ', '-')) WHERE slug IS NULL");
+      await connection.execute("ALTER TABLE chapters MODIFY slug VARCHAR(255) NOT NULL");
+    } catch (migErr) {
+       console.error('Migration error (chapters slug NOT NULL):', migErr.message);
+    }
+
+    try {
+      // Remove 'head' column from chapters if it exists since it's not needed anymore
+      await connection.execute("ALTER TABLE chapters DROP COLUMN head");
+      console.log('Executed data migration: Dropped head from chapters');
+    } catch (migErr) {
+      // ignore
+    }
 
     // Update leadership_members table if it already exists
     try {
