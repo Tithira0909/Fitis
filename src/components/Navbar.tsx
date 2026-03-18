@@ -7,7 +7,7 @@ import { cn } from '../lib/utils';
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
   const location = useLocation();
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
+  const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>([
     { name: 'Home', href: '/' },
     {
       name: 'Introduction',
@@ -34,7 +34,11 @@ export const Navbar = () => {
     { name: 'News', href: '/Home/news' },
     { name: 'Events', href: '/Home/events' },
     { name: 'Programs', href: '/Home/programs' },
-    { name: 'Chapters', href: '/Chapter/chapters' },
+    {
+      name: 'Chapters',
+      href: '/Chapter/chapters',
+      submenu: [] // Will be populated dynamically
+    },
     { name: 'Partnerships', href: '/Home/partnerships' },
     {
       name: 'Members',
@@ -45,7 +49,33 @@ export const Navbar = () => {
       ]
     },
     { name: 'Gallery', href: '/Home/gallery' },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/chapters?status=published`);
+        if (res.ok) {
+          const chapters = await res.json();
+          const chapterSubmenu = chapters.map((c: any) => ({
+            name: c.name.toUpperCase(),
+            href: `/Chapter/${c.slug}`
+          }));
+
+          setDynamicNavLinks(prev => prev.map(link => {
+            if (link.name === 'Chapters') {
+              return { ...link, submenu: chapterSubmenu };
+            }
+            return link;
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load chapters for navbar', err);
+      }
+    };
+    fetchChapters();
+  }, []);
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
@@ -64,12 +94,12 @@ export const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {dynamicNavLinks.map((link) => (
             <div
               key={link.name}
               className="relative group"
-              onMouseEnter={() => link.submenu && setIsIntroOpen(true)}
-              onMouseLeave={() => link.submenu && setIsIntroOpen(false)}
+              onMouseEnter={() => link.submenu && setOpenSubmenus(prev => ({ ...prev, [link.name]: true }))}
+              onMouseLeave={() => link.submenu && setOpenSubmenus(prev => ({ ...prev, [link.name]: false }))}
             >
               <Link
                 to={link.href}
@@ -81,13 +111,13 @@ export const Navbar = () => {
                 )}
               >
                 {link.name}
-                {link.submenu && <ChevronDown size={14} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />}
+                {link.submenu && link.submenu.length > 0 && <ChevronDown size={14} className={cn("transition-transform duration-200", openSubmenus[link.name] && "rotate-180")} />}
               </Link>
 
               {/* Dropdown Menu */}
-              {link.submenu && (
+              {link.submenu && link.submenu.length > 0 && (
                 <AnimatePresence>
-                  {isIntroOpen && (
+                  {openSubmenus[link.name] && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -99,7 +129,7 @@ export const Navbar = () => {
                         <Link
                           key={subItem.name}
                           to={subItem.href}
-                          onClick={() => setIsIntroOpen(false)}
+                          onClick={() => setOpenSubmenus(prev => ({ ...prev, [link.name]: false }))}
                           className={cn(
                             "block px-5 py-2.5 text-sm transition-colors",
                             location.pathname === subItem.href
@@ -145,7 +175,7 @@ export const Navbar = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 max-h-[calc(100vh-80px)] overflow-y-auto bg-white shadow-xl border-t border-slate-100 p-6 flex flex-col gap-4 md:hidden"
           >
-            {navLinks.map((link) => (
+            {dynamicNavLinks.map((link) => (
               <div key={link.name} className="flex flex-col">
                 <div className="flex items-center justify-between">
                   <Link
@@ -160,22 +190,22 @@ export const Navbar = () => {
                   >
                     {link.name}
                   </Link>
-                  {link.submenu && (
+                  {link.submenu && link.submenu.length > 0 && (
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsIntroOpen(!isIntroOpen);
+                        setOpenSubmenus(prev => ({ ...prev, [link.name]: !prev[link.name] }));
                       }}
                       className="p-2 text-slate-500"
                     >
-                      <ChevronDown size={20} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />
+                      <ChevronDown size={20} className={cn("transition-transform duration-200", openSubmenus[link.name] && "rotate-180")} />
                     </button>
                   )}
                 </div>
 
                 {/* Mobile Submenu Accordion */}
-                {link.submenu && isIntroOpen && (
+                {link.submenu && link.submenu.length > 0 && openSubmenus[link.name] && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}

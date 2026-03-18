@@ -36,6 +36,7 @@ import { AdminPrograms } from './pages/admin/AdminPrograms';
 import { Programs } from './pages/Programs';
 import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminChapters } from './pages/admin/AdminChapters';
+import { AdminChapterCommittees } from './pages/admin/AdminChapterCommittees';
 import { AdminLeadership } from './pages/admin/AdminLeadership';
 import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="news" element={<AdminNews />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="chapters" element={<AdminChapters />} />
+          <Route path="chapter-committees" element={<AdminChapterCommittees />} />
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="members" element={<AdminMembers />} />
           <Route path="member-benefits" element={<AdminMemberBenefits />} />
@@ -141,7 +143,7 @@ export default function App() {
               <Route path="/Home/gallery" element={<Gallery />} />
               <Route path="/Home/events" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />
-              <Route path="/Chapter/chapters/:slug" element={<ChapterDetail />} />
+              <Route path="/Chapter/:slug" element={<ChapterDetail />} />
               <Route path="/Home/contact" element={<Contact />} />
             </Routes>
           </PublicLayout>

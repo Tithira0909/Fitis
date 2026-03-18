@@ -117,9 +117,34 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS chapters (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        head VARCHAR(255) NOT NULL,
-        member_count INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        about_html TEXT,
+        objectives_json JSON,
+        chairman_name VARCHAR(255),
+        chairman_designation VARCHAR(255),
+        chairman_photo_url VARCHAR(600),
+        chairman_message_html TEXT,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS chapter_committee_members (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chapter_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        designation VARCHAR(255),
+        company VARCHAR(255),
+        role_label VARCHAR(255),
+        image_url VARCHAR(600),
+        linkedin_url VARCHAR(600),
+        hierarchy_level INT DEFAULT 0,
+        seat INT DEFAULT 0,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -264,6 +289,56 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
+
+    // Update chapters table if it already exists and using old schema
+    try {
+      const [cols] = await connection.execute("SHOW COLUMNS FROM chapters LIKE 'head'");
+      if (cols.length > 0) {
+        await connection.execute("DROP TABLE IF EXISTS chapter_committee_members");
+        await connection.execute("DROP TABLE chapters");
+        await connection.execute(`
+          CREATE TABLE chapters (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL UNIQUE,
+            about_html TEXT,
+            objectives_json JSON,
+            chairman_name VARCHAR(255),
+            chairman_designation VARCHAR(255),
+            chairman_photo_url VARCHAR(600),
+            chairman_message_html TEXT,
+            sort_order INT DEFAULT 0,
+            status ENUM('draft', 'published') DEFAULT 'published',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('Executed data migration: Recreated chapters table with new schema');
+
+        // Recreate the chapter_committee_members table
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS chapter_committee_members (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            chapter_id INT NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            designation VARCHAR(255),
+            company VARCHAR(255),
+            role_label VARCHAR(255),
+            image_url VARCHAR(600),
+            linkedin_url VARCHAR(600),
+            hierarchy_level INT DEFAULT 0,
+            seat INT DEFAULT 0,
+            sort_order INT DEFAULT 0,
+            status ENUM('draft', 'published') DEFAULT 'published',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+          )
+        `);
+      }
+    } catch (migErr) {
+      console.error('Migration error (chapters table):', migErr.message);
+    }
 
     // Update leadership_members table if it already exists
     try {
