@@ -57,12 +57,20 @@ export const AdminChapters: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/custom-chapters`, {
+      const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${url}/api/admin/custom-chapters`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch chapters');
-      const data = await res.json();
-      setChapters(data);
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await res.json();
+        setChapters(data);
+      } else {
+        const text = await res.text();
+        console.error("Expected JSON but got:", text);
+        throw new Error("Invalid API response format (expected JSON)");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -78,16 +86,24 @@ export const AdminChapters: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/custom-chapters/${id}`, {
+      const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${url}/api/admin/custom-chapters/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch chapter details');
-      const data = await res.json();
-      // Ensure has_committee is a boolean
-      data.has_committee = Boolean(data.has_committee);
-      if (!data.committee) data.committee = [];
-      setCurrentChapter(data);
-      setIsEditing(true);
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await res.json();
+        // Ensure has_committee is a boolean
+        data.has_committee = Boolean(data.has_committee);
+        if (!data.committee) data.committee = [];
+        setCurrentChapter(data);
+        setIsEditing(true);
+      } else {
+        const text = await res.text();
+        console.error("Expected JSON but got:", text);
+        throw new Error("Invalid API response format (expected JSON)");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -99,7 +115,8 @@ export const AdminChapters: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this chapter?')) return;
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/custom-chapters/${id}`, {
+      const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${url}/api/admin/custom-chapters/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -133,7 +150,8 @@ export const AdminChapters: React.FC = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}${uploadUrl}`, {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${baseUrl}${uploadUrl}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -157,10 +175,11 @@ export const AdminChapters: React.FC = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const isNew = !currentChapter.id;
       const url = isNew
-        ? `${import.meta.env.VITE_API_URL}/api/admin/custom-chapters`
-        : `${import.meta.env.VITE_API_URL}/api/admin/custom-chapters/${currentChapter.id}`;
+        ? `${baseUrl}/api/admin/custom-chapters`
+        : `${baseUrl}/api/admin/custom-chapters/${currentChapter.id}`;
 
       const method = isNew ? 'POST' : 'PUT';
 
