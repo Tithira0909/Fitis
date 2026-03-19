@@ -128,9 +128,27 @@ const initializeDB = async () => {
         contact_email VARCHAR(150),
         contact_phone VARCHAR(50),
         sort_order INT DEFAULT 0,
-        status ENUM('draft','published') DEFAULT 'published',
+        status ENUM('active','inactive') DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        banner_image_url VARCHAR(600),
+        about_chapter LONGTEXT,
+        chair_message LONGTEXT,
+        chair_image_url VARCHAR(600),
+        has_committee BOOLEAN DEFAULT FALSE
+)`,
+
+      `CREATE TABLE IF NOT EXISTS chapter_committee (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chapter_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        designation VARCHAR(255),
+        company VARCHAR(255),
+        role_label VARCHAR(150),
+        image_url VARCHAR(600),
+        linkedin_url VARCHAR(600),
+        display_order INT DEFAULT 0,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -291,7 +309,31 @@ const initializeDB = async () => {
       }
     }
 
-    // Data Migration: Update partners table schema if it's the old one
+
+    // Data Migration: Add new columns to chapters table
+    try {
+      const colsToAdd = [
+        "ADD COLUMN banner_image_url VARCHAR(600)",
+        "ADD COLUMN about_chapter LONGTEXT",
+        "ADD COLUMN chair_message LONGTEXT",
+        "ADD COLUMN chair_image_url VARCHAR(600)",
+        "ADD COLUMN has_committee BOOLEAN DEFAULT FALSE"
+      ];
+      for (const col of colsToAdd) {
+        try {
+          await connection.execute(`ALTER TABLE chapters ${col}`);
+        } catch (migErr) {
+          if (migErr.code !== 'ER_DUP_FIELDNAME') {
+            console.error(`Migration error adding column ${col}:`, migErr.message);
+          }
+        }
+      }
+      console.log('Migration for chapters columns completed.');
+    } catch (migErr) {
+      console.error('Migration error (chapters columns):', migErr.message);
+    }
+
+// Data Migration: Update partners table schema if it's the old one
     try {
       // Check if old column exists
       const [cols] = await connection.execute("SHOW COLUMNS FROM partners LIKE 'company_name'");

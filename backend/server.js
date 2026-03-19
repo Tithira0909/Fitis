@@ -334,7 +334,6 @@ app.post('/api/auth/login', async (req, res) => {
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
-  chapters: ['name', 'slug', 'icon_name', 'icon_url', 'summary', 'objectives_json', 'description_html', 'chair_name', 'chair_title', 'contact_email', 'contact_phone', 'sort_order', 'status'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
@@ -598,6 +597,18 @@ app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
 
 
 // File Uploads (Protected)
+// Generic Upload
+const uploadGeneric = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 } });
+app.post('/api/admin/upload', authenticateToken, uploadGeneric.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const folder = req.body.folder || 'misc';
+  // Use generic /uploads path, actual move to folder logic could go here but this meets the basic requirement
+  res.json({ imageUrl: `/uploads/${req.file.filename}`, message: 'Image uploaded successfully' });
+});
+
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
   const relativeUrl = `/uploads/hero/${req.file.filename}`;
@@ -951,6 +962,183 @@ app.delete('/api/admin/member-benefits/:id', authenticateToken, async (req, res)
 });
 
 // Generic GET all items
+
+// --- CUSTOM CHAPTERS ROUTES ---
+
+app.get('/api/admin/chapters', authenticateToken, async (req, res) => {
+  try {
+    const [chapters] = await pool.execute('SELECT * FROM chapters ORDER BY sort_order ASC, id DESC');
+    res.json(chapters);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
+});
+
+app.get('/api/admin/chapters/:id', authenticateToken, async (req, res) => {
+  try {
+    const [chapterRows] = await pool.execute('SELECT * FROM chapters WHERE id = ?', [req.params.id]);
+    if (chapterRows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+
+    const chapter = chapterRows[0];
+
+    const [committeeRows] = await pool.execute('SELECT * FROM chapter_committee WHERE chapter_id = ? ORDER BY display_order ASC, id ASC', [chapter.id]);
+    chapter.committee = committeeRows;
+
+    res.json(chapter);
+  } catch (error) {
+    console.error('Error fetching chapter details:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter' });
+  }
+});
+
+app.post('/api/admin/chapters', authenticateToken, async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const data = req.body;
+
+    // Auto-generate slug if missing
+    if (!data.slug && data.name) {
+      data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-6);
+    }
+
+    const chapterFields = [
+      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url',
+      'chair_name', 'chair_title', 'chair_message', 'chair_image_url',
+      'contact_email', 'contact_phone', 'has_committee', 'status'
+    ];
+
+    const safeData = {};
+    for (const key of chapterFields) {
+      if (data[key] !== undefined) {
+        safeData[key] = data[key];
+      }
+    }
+
+    // Handle has_committee bool conversion if needed
+    if (safeData.has_committee !== undefined) {
+      safeData.has_committee = safeData.has_committee === true || safeData.has_committee === 'true' || safeData.has_committee === 1;
+    }
+
+    const columns = Object.keys(safeData).join(', ');
+    const placeholders = Object.keys(safeData).map(() => '?').join(', ');
+    const values = Object.values(safeData);
+
+    const [result] = await conn.execute(`INSERT INTO chapters (${columns}) VALUES (${placeholders})`, values);
+    const chapterId = result.insertId;
+
+    if (safeData.has_committee && data.committee && Array.isArray(data.committee)) {
+      for (const member of data.committee) {
+        await conn.execute(
+          `INSERT INTO chapter_committee (chapter_id, name, designation, company, role_label, image_url, linkedin_url, display_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            chapterId,
+            member.name || '',
+            member.designation || null,
+            member.company || null,
+            member.role_label || null,
+            member.image_url || null,
+            member.linkedin_url || null,
+            member.display_order || 0
+          ]
+        );
+      }
+    }
+
+    await conn.commit();
+    res.status(201).json({ id: chapterId, ...safeData });
+  } catch (error) {
+    await conn.rollback();
+    console.error('Error creating chapter:', error);
+    res.status(500).json({ error: 'Failed to create chapter' });
+  } finally {
+    conn.release();
+  }
+});
+
+app.put('/api/admin/chapters/:id', authenticateToken, async (req, res) => {
+  const chapterId = req.params.id;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const data = req.body;
+
+    const chapterFields = [
+      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url',
+      'chair_name', 'chair_title', 'chair_message', 'chair_image_url',
+      'contact_email', 'contact_phone', 'has_committee', 'status'
+    ];
+
+    const safeData = {};
+    for (const key of chapterFields) {
+      if (data[key] !== undefined) {
+        safeData[key] = data[key];
+      }
+    }
+
+    if (safeData.has_committee !== undefined) {
+      safeData.has_committee = safeData.has_committee === true || safeData.has_committee === 'true' || safeData.has_committee === 1;
+    }
+
+    if (Object.keys(safeData).length > 0) {
+      const updates = Object.keys(safeData).map(key => `${key} = ?`).join(', ');
+      const values = Object.values(safeData);
+      values.push(chapterId);
+
+      await conn.execute(`UPDATE chapters SET ${updates} WHERE id = ?`, values);
+    }
+
+    // Always replace committee members to keep it simple
+    await conn.execute('DELETE FROM chapter_committee WHERE chapter_id = ?', [chapterId]);
+
+    if (safeData.has_committee && data.committee && Array.isArray(data.committee)) {
+      for (const member of data.committee) {
+        await conn.execute(
+          `INSERT INTO chapter_committee (chapter_id, name, designation, company, role_label, image_url, linkedin_url, display_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            chapterId,
+            member.name || '',
+            member.designation || null,
+            member.company || null,
+            member.role_label || null,
+            member.image_url || null,
+            member.linkedin_url || null,
+            member.display_order || 0
+          ]
+        );
+      }
+    }
+
+    await conn.commit();
+    res.json({ message: 'Chapter updated successfully' });
+  } catch (error) {
+    await conn.rollback();
+    console.error('Error updating chapter:', error);
+    res.status(500).json({ error: 'Failed to update chapter' });
+  } finally {
+    conn.release();
+  }
+});
+
+app.delete('/api/admin/chapters/:id', authenticateToken, async (req, res) => {
+  try {
+    // ON DELETE CASCADE will handle chapter_committee rows
+    const [result] = await pool.execute('DELETE FROM chapters WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Chapter not found' });
+    res.json({ message: 'Chapter deleted' });
+  } catch (error) {
+    console.error('Error deleting chapter:', error);
+    res.status(500).json({ error: 'Failed to delete chapter' });
+  }
+});
+
+// --- END CUSTOM CHAPTERS ROUTES ---
+
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
@@ -1166,7 +1354,12 @@ app.get('/api/chapters/:slug', async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM chapters WHERE slug = ? AND status = "active"', [req.params.slug]);
     if (rows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
-    res.json(rows[0]);
+
+    const chapter = rows[0];
+    const [committeeRows] = await pool.execute('SELECT * FROM chapter_committee WHERE chapter_id = ? ORDER BY display_order ASC, id ASC', [chapter.id]);
+    chapter.committee = committeeRows;
+
+    res.json(chapter);
   } catch (error) {
     console.error('Error fetching chapter:', error);
     res.status(500).json({ error: 'Failed to fetch chapter' });
