@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Loader } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { SubHeaderBar } from '../components/SubHeaderBar';
 import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
@@ -94,8 +95,8 @@ export const Programs = () => {
         {/* Programs Grid */}
         <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
           {filteredPrograms.map((program, idx) => {
-            const readMore = (program.read_more_url || "").trim();
-            const isExternal = /^(http|https):\/\//i.test(readMore);
+
+
 
             return (
             <motion.div
@@ -127,32 +128,12 @@ export const Programs = () => {
                 </p>
 
                 <div className="mt-auto flex justify-end">
-                  {readMore ? (
-                    isExternal ? (
-                      <a
-                        href={readMore}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-white bg-fitis-blue hover:bg-blue-800 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:translate-x-1"
-                      >
-                        READ MORE <ArrowRight size={16} />
-                      </a>
-                    ) : (
-                      <a
-                        href={readMore}
-                        className="inline-flex items-center gap-2 text-white bg-fitis-blue hover:bg-blue-800 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:translate-x-1"
-                      >
-                        READ MORE <ArrowRight size={16} />
-                      </a>
-                    )
-                  ) : (
-                    <button
-                      disabled
-                      className="inline-flex items-center gap-2 text-white bg-slate-300 font-bold text-sm px-5 py-2.5 rounded-xl cursor-not-allowed"
+                  <Link
+                      to={`/Home/programs/${program.slug}`}
+                      className="inline-flex items-center gap-2 text-white bg-fitis-blue hover:bg-blue-800 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm group-hover:shadow-md group-hover:translate-x-1"
                     >
                       READ MORE <ArrowRight size={16} />
-                    </button>
-                  )}
+                    </Link>
                 </div>
               </div>
             </motion.div>

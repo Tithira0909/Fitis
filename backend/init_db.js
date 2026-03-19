@@ -280,7 +280,7 @@ const initializeDB = async () => {
         slug VARCHAR(255) UNIQUE NOT NULL,
         description TEXT NOT NULL,
         banner_image_url VARCHAR(600) NOT NULL,
-        read_more_url VARCHAR(600) NOT NULL,
+        read_more_url VARCHAR(600) NULL,
         status ENUM('draft', 'published') DEFAULT 'published',
         sort_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -293,6 +293,20 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
+
+    // Update programs table: make read_more_url optional
+    try {
+      const [cols] = await connection.query("SHOW COLUMNS FROM programs LIKE 'read_more_url'");
+      if (cols.length > 0) {
+        if (cols[0].Null === 'NO') {
+          console.log("Altering 'read_more_url' to be NULLable in 'programs' table...");
+          await connection.query("ALTER TABLE programs MODIFY COLUMN read_more_url VARCHAR(600) NULL");
+          console.log("Successfully altered 'programs.read_more_url'.");
+        }
+      }
+    } catch (e) {
+      console.log('Error modifying programs table:', e.message);
+    }
 
     // Update leadership_members table if it already exists
     try {

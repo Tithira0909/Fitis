@@ -34,6 +34,7 @@ import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminNews } from './pages/admin/AdminNews';
 import { AdminPrograms } from './pages/admin/AdminPrograms';
 import { Programs } from './pages/Programs';
+import { ProgramDetail } from './pages/ProgramDetail';
 import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminChapters } from './pages/admin/AdminChapters';
 import { AdminLeadership } from './pages/admin/AdminLeadership';
@@ -136,6 +137,7 @@ export default function App() {
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
               <Route path="/Home/past-leaders" element={<PastLeaders />} />
               <Route path="/Home/programs" element={<Programs />} />
+              <Route path="/Home/programs/:slug" element={<ProgramDetail />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
               <Route path="/Home/gallery" element={<Gallery />} />
