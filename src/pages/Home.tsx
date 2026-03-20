@@ -334,12 +334,9 @@ const ServicesSection = () => {
                 <service.icon size={28} />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">{service.title}</h3>
-              <p className="text-slate-600 leading-relaxed mb-6">
+              <p className="text-slate-600 leading-relaxed">
                 {service.desc}
               </p>
-              <a href="#" className="inline-flex items-center gap-2 text-sm font-bold text-fitis-blue hover:gap-3 transition-all">
-                Learn More <ArrowRight size={16} />
-              </a>
             </motion.div>
           ))}
         </div>

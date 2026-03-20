@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl } from '../utils/getImageUrl';
 import { SectionHeader } from '../components/SectionHeader';
 
 const ChapterDetail = () => {
@@ -57,7 +57,7 @@ const ChapterDetail = () => {
         <SectionHeader
           title={chapter.name}
           subtitle={chapter.summary}
-          breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Chapters', path: '/Chapter/chapters' }, { label: chapter.name }]}
+
         />
       )}
 

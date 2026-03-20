@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl } from '../utils/getImageUrl';
 import { SectionHeader } from '../components/SectionHeader';
 import { ArrowLeft, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon } from 'lucide-react';
 
