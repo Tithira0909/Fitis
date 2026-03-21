@@ -13,20 +13,18 @@ interface Partner {
 
 const CATEGORY_ORDER = [
   'government',
+  'corporate',
   'industry',
   'international',
   'premium_corporate',
-  'corporate',
-  'supporting',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  government: 'GOVERNMENT PARTNERS',
-  industry: 'INDUSTRY PARTNERS',
-  international: 'INTERNATIONAL BODIES',
-  premium_corporate: 'PREMIUM CORPORATE PARTNERS',
-  corporate: 'FITIS CORPORATE PARTNERS',
-  supporting: 'SUPPORTING PARTNERS',
+  government: 'Government Partners',
+  corporate: 'FITIS Corporate Partners',
+  industry: 'Industry Partners',
+  international: 'International Bodies',
+  premium_corporate: 'Premium Corporate Partners',
 };
 
 export const Partners = () => {
@@ -63,11 +61,11 @@ export const Partners = () => {
         title="PARTNERSHIPS & AFFILIATIONS"
         showSearch={false}
       />
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-6">
 
-          <div className="text-center max-w-4xl mx-auto mb-16 md:mb-24">
-            <h2 className="text-3xl md:text-5xl font-black text-fitis-blue mb-4 uppercase tracking-wider">
+          <div className="text-center max-w-4xl mx-auto mb-16 md:mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 uppercase">
               PARTNERSHIPS AND AFFILIATIONS
             </h2>
             <div className="w-24 h-1 bg-fitis-gold mx-auto mb-6"></div>
@@ -78,30 +76,30 @@ export const Partners = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fitis-blue"></div>
             </div>
           ) : partners.length > 0 ? (
-            <div className="space-y-16 md:space-y-20">
+            <div className="space-y-16">
               {CATEGORY_ORDER.map((catKey) => {
                 const group = groupedPartners[catKey];
                 if (!group || group.length === 0) return null;
 
-                // Adjust spacing for single items (like EDB)
-                const isSingle = group.length === 1;
-
                 return (
                   <div key={catKey} className="relative">
-                    <h3 className="text-xl md:text-2xl font-bold text-slate-800 text-center uppercase tracking-widest mb-4">
-                      {CATEGORY_LABELS[catKey]}
-                    </h3>
-                    <div className="w-full h-px bg-slate-200 mb-8 md:mb-12"></div>
+                    <div className="flex items-center justify-center mb-10">
+                      <div className="h-px bg-slate-200 flex-grow max-w-[100px] md:max-w-[300px]"></div>
+                      <h3 className="px-6 text-xl md:text-2xl font-bold text-slate-800 text-center">
+                        {CATEGORY_LABELS[catKey]}
+                      </h3>
+                      <div className="h-px bg-slate-200 flex-grow max-w-[100px] md:max-w-[300px]"></div>
+                    </div>
 
-                    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10 md:gap-x-10 md:gap-y-14 items-center justify-items-center ${isSingle ? '!flex !justify-center' : ''}`}>
+                    <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16">
                       {group.map((partner) => {
                         const content = (
-                          <div className={`flex items-center justify-center p-2 transition-transform duration-300 hover:scale-105 hover:opacity-90 ${isSingle ? 'w-48 h-32 md:w-64 md:h-40 lg:h-48 lg:w-72' : 'w-32 h-20 sm:w-36 sm:h-24 md:w-40 md:h-28 lg:w-48 lg:h-32'}`}>
+                          <div className="flex items-center justify-center transition-transform duration-300 hover:scale-105 hover:opacity-90 w-40 h-24 md:w-56 md:h-32 p-4">
                             {partner.logo_url ? (
                               <img
                                 src={getImageUrl(partner.logo_url)}
                                 alt={partner.name}
-                                className="max-w-full max-h-full object-contain"
+                                className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 title={partner.name}
                               />
