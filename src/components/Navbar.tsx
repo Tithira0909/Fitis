@@ -44,7 +44,26 @@ export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>(navLinks);
+  const [headerLogo, setHeaderLogo] = useState('/fitis-logo.png');
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/site-settings?t=${new Date().getTime()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.header_logo_url) {
+            setHeaderLogo(getImageUrl(data.header_logo_url));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch site settings', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchChapters = async () => {
@@ -91,7 +110,7 @@ export const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/fitis-logo.png" alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
+          <img src={headerLogo} alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
         </Link>
 
         {/* Desktop Nav */}

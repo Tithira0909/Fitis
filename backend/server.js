@@ -369,21 +369,21 @@ app.get('/api/admin/site-settings', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
-  const { site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url } = req.body;
+  const { site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url } = req.body;
   try {
     const [existing] = await pool.execute('SELECT id FROM site_settings WHERE id = 1');
     if (existing.length === 0) {
       await pool.execute(
-        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url)
-         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
+        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
       );
     } else {
       await pool.execute(
         `UPDATE site_settings
-         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, favicon_url=?, facebook_url=?, instagram_url=?, linkedin_url=?, twitter_url=?, youtube_url=?
+         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, header_logo_url=?, footer_logo_url=?, favicon_url=?, facebook_url=?, instagram_url=?, linkedin_url=?, twitter_url=?, youtube_url=?
          WHERE id=1`,
-        [site_email, site_phone, site_location, hero_type, hero_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
+        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
       );
     }
     res.json({ message: 'Settings updated successfully' });

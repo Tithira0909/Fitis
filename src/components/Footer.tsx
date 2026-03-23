@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Facebook, Twitter, Linkedin, Instagram, Globe, Mail, Phone } from 'lucide-react';
+import { getImageUrl } from '../utils/getImageUrl';
 
 export const Footer = () => {
   const [settings, setSettings] = useState<any>({
@@ -19,6 +20,7 @@ export const Footer = () => {
             site_location: data.site_location || settings.site_location,
             site_email: data.site_email || settings.site_email,
             site_phone: data.site_phone || settings.site_phone,
+            footer_logo_url: data.footer_logo_url
           });
         }
       } catch (err) {
@@ -33,7 +35,7 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
         <div>
           <div className="flex items-center gap-2 mb-6">
-            <img src="/fitis-logo.png" alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
+            <img src={settings.footer_logo_url ? getImageUrl(settings.footer_logo_url) : "/fitis-logo.png"} alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1 object-contain" onError={(e) => { e.currentTarget.src = '/fitis-logo.png'; }} />
           </div>
           <p className="text-slate-400 leading-relaxed mb-8">
             The Federation of Information Technology Industry Sri Lanka is the apex body of the ICT industry in Sri Lanka.

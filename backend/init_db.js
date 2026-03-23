@@ -207,6 +207,8 @@ const initializeDB = async () => {
         hero_type ENUM('image', 'video') DEFAULT 'image',
         hero_url VARCHAR(500),
         favicon_url VARCHAR(500),
+        header_logo_url VARCHAR(500),
+        footer_logo_url VARCHAR(500),
         facebook_url VARCHAR(500),
         instagram_url VARCHAR(500),
         linkedin_url VARCHAR(500),
@@ -395,6 +397,20 @@ const initializeDB = async () => {
       console.log('Seeded admin user.');
     } else {
       console.log('Admin user already exists.');
+    }
+
+    // Data Migration: Add logo columns to site_settings if they don't exist
+    try {
+        const [headerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'header_logo_url'");
+        if (headerLogoCols.length === 0) {
+            await connection.execute("ALTER TABLE site_settings ADD COLUMN header_logo_url VARCHAR(500)");
+        }
+        const [footerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'footer_logo_url'");
+        if (footerLogoCols.length === 0) {
+            await connection.execute("ALTER TABLE site_settings ADD COLUMN footer_logo_url VARCHAR(500)");
+        }
+    } catch (error) {
+        console.error("Site Settings Logo Migration failed:", error);
     }
 
     // Seed default site settings

@@ -145,8 +145,12 @@ export const AdminSiteSettings: React.FC = () => {
         // Auto-detect type based on mimetype
         const heroType = file.type.startsWith('video/') ? 'video' : 'image';
         setData(prev => ({ ...prev, hero_url: result.url, hero_type: heroType }));
-      } else {
+      } else if (type === 'favicon') {
         setData(prev => ({ ...prev, favicon_url: result.url }));
+      } else if (type === 'header_logo') {
+        setData(prev => ({ ...prev, header_logo_url: result.url }));
+      } else if (type === 'footer_logo') {
+        setData(prev => ({ ...prev, footer_logo_url: result.url }));
       }
 
       showToast('File uploaded successfully', 'success');
@@ -396,20 +400,69 @@ export const AdminSiteSettings: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Media Settings</h3>
 
             <div className="mb-6 border p-4 rounded-lg bg-gray-50">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Favicon (ICO, PNG, SVG)</label>
-              <input
-                type="file"
-                accept=".ico,.png,.svg"
-                onChange={(e) => handleFileUpload(e, 'favicon')}
-                className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                disabled={isLoading}
-              />
-              {data.favicon_url && (
-                <div className="mt-2">
-                  <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                  <img src={getImageUrl(data.favicon_url)} alt="Favicon preview" className="w-8 h-8 border rounded shadow-sm bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/32/32'; }} />
+              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Branding & Logos</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Header Logo</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    onChange={(e) => handleFileUpload(e, 'header_logo')}
+                    className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    disabled={isLoading}
+                  />
+                  {data.header_logo_url && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="relative group inline-block">
+                        <img src={getImageUrl(data.header_logo_url)} alt="Header Logo" className="h-12 object-contain border rounded shadow-sm bg-slate-100 p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <button type="button" onClick={() => setData(prev => ({...prev, header_logo_url: ''}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Footer Logo (Optional)</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    onChange={(e) => handleFileUpload(e, 'footer_logo')}
+                    className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    disabled={isLoading}
+                  />
+                  {data.footer_logo_url && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="relative group inline-block">
+                        <img src={getImageUrl(data.footer_logo_url)} alt="Footer Logo" className="h-12 object-contain border rounded shadow-sm bg-slate-100 p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <button type="button" onClick={() => setData(prev => ({...prev, footer_logo_url: ''}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Favicon (ICO, PNG, SVG)</label>
+                  <input
+                    type="file"
+                    accept=".ico,.png,.svg"
+                    onChange={(e) => handleFileUpload(e, 'favicon')}
+                    className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    disabled={isLoading}
+                  />
+                  {data.favicon_url && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="relative group inline-block">
+                        <img src={getImageUrl(data.favicon_url)} alt="Favicon" className="w-8 h-8 border rounded shadow-sm bg-slate-100 p-1 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <button type="button" onClick={() => setData(prev => ({...prev, favicon_url: ''}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="mb-6 border p-4 rounded-lg bg-gray-50">
