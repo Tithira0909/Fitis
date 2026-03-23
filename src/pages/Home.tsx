@@ -466,7 +466,7 @@ const PartnersSection = () => {
     <section id="partners" className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-4xl mx-auto mb-16 md:mb-20">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 uppercase">
+          <h2 className="text-3xl md:text-4xl font-bold text-fitis-blue mb-4 uppercase">
             PARTNERSHIPS AND AFFILIATIONS
           </h2>
           <div className="w-24 h-1 bg-fitis-gold mx-auto mb-6"></div>
