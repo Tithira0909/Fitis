@@ -42,7 +42,7 @@ const navLinks = [
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>(navLinks);
   const location = useLocation();
 
@@ -100,8 +100,8 @@ export const Navbar = () => {
             <div
               key={link.name}
               className="relative group"
-              onMouseEnter={() => link.submenu && setIsIntroOpen(true)}
-              onMouseLeave={() => link.submenu && setIsIntroOpen(false)}
+              onMouseEnter={() => link.submenu && setActiveDropdown(link.name)}
+              onMouseLeave={() => link.submenu && setActiveDropdown(null)}
             >
               <Link
                 to={link.href}
@@ -113,13 +113,13 @@ export const Navbar = () => {
                 )}
               >
                 {link.name}
-                {link.submenu && <ChevronDown size={14} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />}
+                {link.submenu && <ChevronDown size={14} className={cn("transition-transform duration-200", activeDropdown === link.name && "rotate-180")} />}
               </Link>
 
               {/* Dropdown Menu */}
               {link.submenu && (
                 <AnimatePresence>
-                  {isIntroOpen && (
+                  {activeDropdown === link.name && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -131,7 +131,7 @@ export const Navbar = () => {
                         <Link
                           key={subItem.name}
                           to={subItem.href}
-                          onClick={() => setIsIntroOpen(false)}
+                          onClick={() => setActiveDropdown(null)}
                           className={cn(
                             "block px-5 py-2.5 text-sm transition-colors",
                             location.pathname === subItem.href
@@ -197,17 +197,17 @@ export const Navbar = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsIntroOpen(!isIntroOpen);
+                        setActiveDropdown(activeDropdown === link.name ? null : link.name);
                       }}
                       className="p-2 text-slate-500"
                     >
-                      <ChevronDown size={20} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />
+                      <ChevronDown size={20} className={cn("transition-transform duration-200", activeDropdown === link.name && "rotate-180")} />
                     </button>
                   )}
                 </div>
 
                 {/* Mobile Submenu Accordion */}
-                {link.submenu && isIntroOpen && (
+                {link.submenu && activeDropdown === link.name && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
