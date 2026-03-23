@@ -5,26 +5,28 @@ import { getImageUrl } from '../utils/getImageUrl';
 interface Partner {
   id: number;
   name: string;
-  category: 'government' | 'industry' | 'international' | 'premium_corporate' | 'corporate' | 'supporting';
+  category: 'government_partners' | 'fitis_corporate_partners' | 'industry_partners' | 'international_bodies' | 'premium_corporate_partners' | 'corporate_partners';
   logo_url: string;
   website_url: string;
   sort_order: number;
 }
 
 const CATEGORY_ORDER = [
-  'government',
-  'corporate',
-  'industry',
-  'international',
-  'premium_corporate',
+  'government_partners',
+  'fitis_corporate_partners',
+  'industry_partners',
+  'international_bodies',
+  'premium_corporate_partners',
+  'corporate_partners',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  government: 'Government Partners',
-  corporate: 'FITIS Corporate Partners',
-  industry: 'Industry Partners',
-  international: 'International Bodies',
-  premium_corporate: 'Premium Corporate Partners',
+  government_partners: 'Government Partners',
+  fitis_corporate_partners: 'FITIS Corporate Partners',
+  industry_partners: 'Industry Partners',
+  international_bodies: 'International Bodies',
+  premium_corporate_partners: 'Premium Corporate Partners',
+  corporate_partners: 'Corporate Partners',
 };
 
 export const Partners = () => {

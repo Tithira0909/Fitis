@@ -169,7 +169,7 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS partners (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(150) NOT NULL,
-        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting', 'government_partners', 'fitis_corporate_partners', 'industry_partners', 'international_bodies', 'premium_corporate_partners', 'corporate_partners') NOT NULL,
         logo_url VARCHAR(600) NOT NULL,
         website_url VARCHAR(600) NULL,
         sort_order INT DEFAULT 0,
@@ -357,7 +357,7 @@ const initializeDB = async () => {
           CREATE TABLE partners (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(150) NOT NULL,
-            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting', 'government_partners', 'fitis_corporate_partners', 'industry_partners', 'international_bodies', 'premium_corporate_partners', 'corporate_partners') NOT NULL,
             logo_url VARCHAR(600) NOT NULL,
             website_url VARCHAR(600) NULL,
             sort_order INT DEFAULT 0,
