@@ -189,7 +189,7 @@ const BoardSection = () => {
       { name: "Nagarajah Nirmalan", role: "President", sub: "Professional Consultants Chapter" },
     ],
     bottom: [
-      { name: "Shanaka Fernando", role: "Vice President", sub: "Hardware Chapter" },
+      { name: "Shanaka Fernando", role: "Vice President", sub: "Digital Trust Chapter" },
       { name: "Kalinga Ihalagedara", role: "Vice President", sub: "Software Chapter" },
       { name: "Dr. Sampath Kannangara", role: "Vice President", sub: "Education & Training Chapter" },
       { name: "Ashane Jayasekara", role: "Vice President", sub: "Professional (ISACA) Chapter" },
@@ -365,7 +365,6 @@ const MembershipCTA = () => {
               </p>
               <div className="space-y-4 mb-10">
                 {[
-                  "Access to FITIS Digital Excellence Awards",
                   "Participation in International Trade Fairs",
                   "Government Policy Advocacy Representation",
                   "Exclusive B2B Networking Opportunities"

@@ -155,10 +155,10 @@ export const AdminChairmanMessage: React.FC = () => {
       )}
 
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Chairman's Message</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Chairman's Message</h1>
       </div>
 
-      <div className="bg-white shadow rounded-lg p-8">
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -173,7 +173,7 @@ export const AdminChairmanMessage: React.FC = () => {
                   name="name"
                   value={data.name}
                   onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -186,7 +186,7 @@ export const AdminChairmanMessage: React.FC = () => {
                   value={data.designation}
                   onChange={handleInputChange}
                   placeholder="e.g. Chairman, FITIS"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -199,11 +199,11 @@ export const AdminChairmanMessage: React.FC = () => {
                   value={data.subtitle}
                   onChange={handleInputChange}
                   placeholder="e.g. Strategic Adviser / Vice President Huawei Technologies"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 />
               </div>
 
-              <div className="border p-4 rounded-lg bg-gray-50">
+              <div className="border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Chairman Photo * (Portrait recommended)</label>
                 <input
                   type="file"
@@ -233,7 +233,7 @@ export const AdminChairmanMessage: React.FC = () => {
                   name="message_title"
                   value={data.message_title}
                   onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -245,7 +245,7 @@ export const AdminChairmanMessage: React.FC = () => {
                   value={data.message_body}
                   onChange={handleInputChange}
                   rows={10}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -256,7 +256,7 @@ export const AdminChairmanMessage: React.FC = () => {
                   name="status"
                   value={data.status}
                   onChange={handleInputChange}
-                  className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -275,7 +275,7 @@ export const AdminChairmanMessage: React.FC = () => {
                 type="button"
                 onClick={addFocusCard}
                 disabled={data.focus_cards.length >= 4}
-                className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50"
               >
                 <Plus size={16} />
                 <span>Add Card</span>
@@ -328,7 +328,7 @@ export const AdminChairmanMessage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`font-bold py-3 px-8 rounded shadow ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              className={`font-bold py-3.5 px-10 rounded-xl shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-gradient-to-r from-fitis-blue to-blue-700 text-white hover:shadow-xl hover:-translate-y-0.5'}`}
             >
               {isLoading ? 'Saving...' : 'Save Settings'}
             </button>

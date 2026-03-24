@@ -283,7 +283,7 @@ const AdminChapters = () => {
         <div className="space-y-8">
 
           {/* SECTION 1: Basic Info */}
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+          <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-300">1. Basic Chapter Info</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -346,7 +346,7 @@ const AdminChapters = () => {
           </div>
 
           {/* SECTION 2: Chairman Details */}
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+          <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-300">2. Chairman / Chapter Head Section</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -415,7 +415,7 @@ const AdminChapters = () => {
           </div>
 
           {/* SECTION 3: Executive Committee (Optional) */}
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+          <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-300">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">3. Chapter Executive Committee (Optional)</h3>

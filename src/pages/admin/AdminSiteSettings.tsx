@@ -24,6 +24,8 @@ interface SiteSettingsData {
   hero_type: 'image' | 'video';
   hero_url: string;
   favicon_url: string;
+  header_logo_url?: string;
+  footer_logo_url?: string;
   facebook_url: string;
   instagram_url: string;
   linkedin_url: string;
@@ -118,7 +120,7 @@ export const AdminSiteSettings: React.FC = () => {
     setData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'hero' | 'favicon') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'hero' | 'favicon' | 'header_logo' | 'footer_logo') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -305,7 +307,7 @@ export const AdminSiteSettings: React.FC = () => {
       )}
 
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Site Settings</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Site Settings</h1>
       </div>
 
       {/* Tabs */}
@@ -330,7 +332,7 @@ export const AdminSiteSettings: React.FC = () => {
       </div>
 
       {activeTab === 'general' ? (
-        <div className="bg-white shadow rounded-lg p-8">
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -340,7 +342,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="site_email"
                 value={data.site_email}
                 onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -351,7 +353,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="site_phone"
                 value={data.site_phone}
                 onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -362,7 +364,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="site_location"
                 value={data.site_location}
                 onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -372,23 +374,23 @@ export const AdminSiteSettings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">Facebook URL</label>
-                  <input type="url" name="facebook_url" value={data.facebook_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://facebook.com/..." />
+                  <input type="url" name="facebook_url" value={data.facebook_url || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" placeholder="https://facebook.com/..." />
                 </div>
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">Instagram URL</label>
-                  <input type="url" name="instagram_url" value={data.instagram_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://instagram.com/..." />
+                  <input type="url" name="instagram_url" value={data.instagram_url || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" placeholder="https://instagram.com/..." />
                 </div>
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">LinkedIn URL</label>
-                  <input type="url" name="linkedin_url" value={data.linkedin_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://linkedin.com/..." />
+                  <input type="url" name="linkedin_url" value={data.linkedin_url || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" placeholder="https://linkedin.com/..." />
                 </div>
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">Twitter/X URL</label>
-                  <input type="url" name="twitter_url" value={data.twitter_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://twitter.com/..." />
+                  <input type="url" name="twitter_url" value={data.twitter_url || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" placeholder="https://twitter.com/..." />
                 </div>
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">YouTube URL</label>
-                  <input type="url" name="youtube_url" value={data.youtube_url || ''} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://youtube.com/..." />
+                  <input type="url" name="youtube_url" value={data.youtube_url || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" placeholder="https://youtube.com/..." />
                 </div>
               </div>
             </div>
@@ -399,7 +401,7 @@ export const AdminSiteSettings: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Media Settings</h3>
 
-            <div className="mb-6 border p-4 rounded-lg bg-gray-50">
+            <div className="mb-6 border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
               <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Branding & Logos</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -465,7 +467,7 @@ export const AdminSiteSettings: React.FC = () => {
               </div>
             </div>
 
-            <div className="mb-6 border p-4 rounded-lg bg-gray-50">
+            <div className="mb-6 border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
               <label className="block text-gray-700 text-sm font-bold mb-2">Hero Media (JPG, PNG, WEBP, MP4, WEBM)</label>
               <input
                 type="file"
@@ -495,7 +497,7 @@ export const AdminSiteSettings: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`font-bold py-3 px-8 rounded shadow ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              className={`font-bold py-3.5 px-10 rounded-xl shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-gradient-to-r from-fitis-blue to-blue-700 text-white hover:shadow-xl hover:-translate-y-0.5'}`}
             >
               {isLoading ? 'Saving...' : 'Save Settings'}
             </button>
@@ -503,7 +505,7 @@ export const AdminSiteSettings: React.FC = () => {
         </form>
       </div>
       ) : activeTab === 'privacy' ? (
-      <div className="bg-white shadow rounded-lg p-8">
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
         <form onSubmit={handlePrivacySubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
@@ -513,7 +515,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="effective_date"
                 value={privacyData.effective_date}
                 onChange={handlePrivacyInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -524,7 +526,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="page_title"
                 value={privacyData.page_title}
                 onChange={handlePrivacyInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -534,7 +536,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="status"
                 value={privacyData.status}
                 onChange={handlePrivacyInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -550,7 +552,7 @@ export const AdminSiteSettings: React.FC = () => {
               <button
                 type="button"
                 onClick={addPrivacySection}
-                className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
                 <Plus size={16} />
                 <span>Add Section</span>
@@ -612,7 +614,7 @@ export const AdminSiteSettings: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`font-bold py-3 px-8 rounded shadow ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              className={`font-bold py-3.5 px-10 rounded-xl shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-gradient-to-r from-fitis-blue to-blue-700 text-white hover:shadow-xl hover:-translate-y-0.5'}`}
             >
               {isLoading ? 'Saving...' : 'Save Privacy Policy'}
             </button>
@@ -620,7 +622,7 @@ export const AdminSiteSettings: React.FC = () => {
         </form>
       </div>
       ) : (
-      <div className="bg-white shadow rounded-lg p-8">
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
         <form onSubmit={handleDisclaimerSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
@@ -630,7 +632,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="effective_date"
                 value={disclaimerData.effective_date}
                 onChange={handleDisclaimerInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -641,7 +643,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="page_title"
                 value={disclaimerData.page_title}
                 onChange={handleDisclaimerInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 required
               />
             </div>
@@ -651,7 +653,7 @@ export const AdminSiteSettings: React.FC = () => {
                 name="status"
                 value={disclaimerData.status}
                 onChange={handleDisclaimerInputChange}
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -667,7 +669,7 @@ export const AdminSiteSettings: React.FC = () => {
               <button
                 type="button"
                 onClick={addDisclaimerSection}
-                className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
                 <Plus size={16} />
                 <span>Add Section</span>
@@ -729,7 +731,7 @@ export const AdminSiteSettings: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`font-bold py-3 px-8 rounded shadow ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              className={`font-bold py-3.5 px-10 rounded-xl shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed text-white' : 'bg-gradient-to-r from-fitis-blue to-blue-700 text-white hover:shadow-xl hover:-translate-y-0.5'}`}
             >
               {isLoading ? 'Saving...' : 'Save Disclaimer'}
             </button>

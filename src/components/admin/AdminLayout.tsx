@@ -36,6 +36,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/gallery', label: 'Gallery', icon: <ImageIcon size={20} /> },
     { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },
     { path: '/admin/members', label: 'Member Apps', icon: <Contact size={20} /> },
+    { path: '/admin/community-requests', label: 'Community Requests', icon: <Contact size={20} /> },
     { path: '/admin/member-benefits', label: 'Member Benefits', icon: <Briefcase size={20} /> },
   ];
 

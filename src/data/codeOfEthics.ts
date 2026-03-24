@@ -15,12 +15,13 @@ export const codeOfEthicsData: PolicySection[] = [
 
       <ul class="list-decimal pl-6 space-y-2 font-medium">
         <li>The Software Chapter</li>
-        <li>The Hardware Chapter</li>
-        <li>The Education and Training Chapter</li>
+        <li>The Digital Trust Chapter</li>
+        <li>The Education & Training Chapter</li>
         <li>The Communication Chapter</li>
         <li>The Digital Services Chapter</li>
         <li>The Office Automation Chapter</li>
         <li>The Professional Chapter</li>
+        <li>The ICT Infrastructure Chapter</li>
       </ul>
     `
   },

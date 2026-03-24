@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -33,6 +34,7 @@ const navLinks = [
     href: '#',
     submenu: [
       { name: 'Become a Member', href: '/Home/become-a-member' },
+      { name: 'Member Community', href: '/Home/member-community' },
       { name: 'Member Benefits', href: '/Home/member-benefits' }
     ]
   },
@@ -45,7 +47,19 @@ export const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>(navLinks);
   const [headerLogo, setHeaderLogo] = useState('/fitis-logo.png');
+  const [hoveredAuth, setHoveredAuth] = useState<'login' | 'register' | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('communityToken');
+    localStorage.removeItem('communityUser');
+    navigate('/');
+    window.location.reload();
+  };
+
+  const communityToken = localStorage.getItem('communityToken');
+  const communityUser = JSON.parse(localStorage.getItem('communityUser') || 'null');
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -110,7 +124,11 @@ export const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={headerLogo} alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
+          <img 
+            src={(!isScrolled && location.pathname === '/') ? '/fitis-logo-white.png' : headerLogo} 
+            alt="FITIS Logo" 
+            className="h-16 md:h-20 w-auto object-contain transition-all duration-300"
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -167,12 +185,69 @@ export const Navbar = () => {
               )}
             </div>
           ))}
-          <button className={cn(
-            "px-5 py-2 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg active:scale-95",
-            isScrolled || location.pathname !== '/' ? "bg-fitis-blue text-white hover:bg-fitis-blue-light" : "bg-white text-fitis-blue hover:bg-white/90"
-          )}>
-            Join Now
-          </button>
+          {communityToken && communityUser ? (
+            <div className="flex items-center gap-4 ml-2">
+              <span className={cn(
+                "hidden lg:block text-sm font-bold tracking-tight",
+                isScrolled || location.pathname !== '/' ? "text-slate-700" : "text-white/90"
+              )}>
+                {communityUser.company_name}
+              </span>
+              <button 
+                onClick={handleLogout} 
+                className={cn(
+                  "px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm border",
+                  isScrolled || location.pathname !== '/' 
+                    ? "bg-white border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-200" 
+                    : "bg-white/10 border-white/20 backdrop-blur-md text-white hover:bg-white/20"
+                )}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div 
+              className={cn(
+                "relative flex items-center rounded-full p-1 shadow-sm border transition-colors duration-300 gap-1",
+                isScrolled || location.pathname !== '/' 
+                  ? "bg-slate-50 border-slate-200" 
+                  : "bg-white/10 border-white/20 backdrop-blur-md"
+              )}
+              onMouseLeave={() => setHoveredAuth(null)}
+            >
+              {/* Sliding Background */}
+              <div
+                className="absolute top-1 bottom-1 w-28 rounded-full transition-all duration-300 animate-in ease-out shadow-md bg-fitis-blue"
+                style={{
+                  left: '4px',
+                  transform: hoveredAuth === 'login' ? 'translateX(0)' : 'translateX(116px)'
+                }}
+              />
+
+              <Link 
+                to="/login" 
+                className={cn(
+                  "relative z-10 px-6 py-2 w-28 text-center rounded-full text-sm font-bold transition-colors duration-300",
+                  hoveredAuth === 'login' ? "text-white" :
+                  (isScrolled || location.pathname !== '/') ? "text-slate-600 hover:text-slate-900" : "text-white/80 hover:text-white"
+                )}
+                onMouseEnter={() => setHoveredAuth('login')}
+              >
+                Sign In
+              </Link>
+              <Link 
+                to="/signup" 
+                className={cn(
+                  "relative z-10 px-6 py-2 w-28 text-center rounded-full text-sm font-bold transition-colors duration-300",
+                  (hoveredAuth === 'register' || hoveredAuth === null) ? "text-white" :
+                  (isScrolled || location.pathname !== '/') ? "text-slate-600 hover:text-slate-900" : "text-white/80 hover:text-white"
+                )}
+                onMouseEnter={() => setHoveredAuth('register')}
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -252,9 +327,14 @@ export const Navbar = () => {
                 )}
               </div>
             ))}
-            <button className="w-full bg-fitis-blue text-white py-3 rounded-xl font-semibold">
-              Join Now
-            </button>
+            <div className="flex gap-3 pt-2">
+              <Link to="/login" className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-center hover:bg-slate-200 shadow-sm transition-colors border border-slate-200">
+                Sign In
+              </Link>
+              <Link to="/Home/become-a-member" className="flex-1 bg-fitis-blue text-white py-3 rounded-xl font-bold text-center shadow-lg shadow-fitis-blue/20 hover:bg-blue-700 transition-colors">
+                Sign Up
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

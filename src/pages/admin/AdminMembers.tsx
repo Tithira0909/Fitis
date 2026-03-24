@@ -148,7 +148,7 @@ export const AdminMembers = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Member Applications</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Member Applications</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -186,10 +186,10 @@ export const AdminMembers = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => openModal(app)} className="text-blue-600 hover:text-blue-900 mr-4">
+                      <button onClick={() => openModal(app)} className="text-fitis-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-3">
                         <Eye className="w-5 h-5 inline" />
                       </button>
-                      <button onClick={() => handleDelete(app.id)} className="text-red-600 hover:text-red-900">
+                      <button onClick={() => handleDelete(app.id)} className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
                         <Trash2 className="w-5 h-5 inline" />
                       </button>
                     </td>
@@ -214,7 +214,7 @@ export const AdminMembers = () => {
             <div className="p-6 overflow-y-auto flex-1 space-y-8 bg-gray-50">
 
               {/* Status Update */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between">
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200 flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">Current Status</h4>
                   <span className={`px-3 py-1 inline-flex text-sm leading-5 font-bold rounded-full ${
@@ -241,7 +241,7 @@ export const AdminMembers = () => {
 
               {/* Section A & B */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                   <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Company Info</h4>
                   <dl className="space-y-3 text-sm">
                     <div><dt className="text-gray-500 font-medium">Company Name</dt><dd className="text-gray-900 font-semibold">{selectedApp.company_name}</dd></div>
@@ -253,7 +253,7 @@ export const AdminMembers = () => {
                   </dl>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                   <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Contact Info</h4>
                   <dl className="space-y-3 text-sm">
                     <div><dt className="text-gray-500 font-medium">Email</dt><dd className="text-gray-900">{selectedApp.email}</dd></div>
@@ -265,7 +265,7 @@ export const AdminMembers = () => {
               </div>
 
               {/* Section C */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Organization Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <dl className="space-y-3">
@@ -288,7 +288,7 @@ export const AdminMembers = () => {
 
               {/* Nominees */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                   <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Primary Nominee</h4>
                   {(() => {
                     const nom = safeParseJSON(selectedApp.primary_nominee, {});
@@ -302,7 +302,7 @@ export const AdminMembers = () => {
                     )
                   })()}
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                   <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Secondary Nominee</h4>
                   {(() => {
                     const nom = safeParseJSON(selectedApp.secondary_nominee, {});
@@ -319,7 +319,7 @@ export const AdminMembers = () => {
               </div>
 
               {/* Documents */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Uploaded Documents</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -344,7 +344,7 @@ export const AdminMembers = () => {
               </div>
 
               {/* Declaration */}
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm border border-gray-200">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">Declaration</h4>
                 <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                   <div><dt className="text-gray-500">Applicant Name</dt><dd className="font-medium text-gray-900">{selectedApp.declaration_applicant_name}</dd></div>
@@ -356,7 +356,7 @@ export const AdminMembers = () => {
             </div>
 
             <div className="border-t p-4 flex justify-end bg-gray-50 rounded-b-xl">
-              <button onClick={() => setIsModalOpen(false)} className="bg-gray-200 text-gray-800 px-6 py-2 rounded hover:bg-gray-300 font-medium">
+              <button onClick={() => setIsModalOpen(false)} className="bg-slate-100 text-slate-700 font-bold px-6 py-2.5 rounded-xl hover:bg-slate-200 transition-colors">
                 Close
               </button>
             </div>

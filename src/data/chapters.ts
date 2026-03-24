@@ -6,7 +6,8 @@ import {
   Radio, 
   GraduationCap, 
   Cpu, 
-  Briefcase 
+  Briefcase,
+  ShieldCheck
 } from 'lucide-react';
 
 import { LucideIcon } from 'lucide-react';
@@ -24,10 +25,10 @@ export interface Chapter {
 
 export const chaptersData: Chapter[] = [
   {
-    name: "Infrastructure Chapter",
-    slug: "infrastructure",
+    name: "ICT Infrastructure Chapter",
+    slug: "ict-infrastructure",
     description: "Driving the foundation of Sri Lanka's digital connectivity and data center growth.",
-    longDescription: "The Infrastructure Chapter of FITIS is dedicated to building and maintaining the robust digital backbone required for a thriving digital economy. We focus on enhancing connectivity, promoting data center investments, and ensuring sustainable infrastructure development across the nation.",
+    longDescription: "The ICT Infrastructure Chapter of FITIS is dedicated to building and maintaining the robust digital backbone required for a thriving digital economy. We focus on enhancing connectivity, promoting data center investments, and ensuring sustainable infrastructure development across the nation.",
     tags: ["Cloud", "Data Centers", "Connectivity"],
     icon: Server,
     focusAreas: [
@@ -104,10 +105,10 @@ export const chaptersData: Chapter[] = [
     ]
   },
   {
-    name: "ICT Education & Training Chapter",
+    name: "Education & Training Chapter",
     slug: "education-training",
     description: "Bridging the skills gap by fostering world-class ICT education and professional development.",
-    longDescription: "The ICT Education & Training Chapter is committed to developing a future-ready workforce for Sri Lanka's tech industry. We collaborate with educational institutions and industry partners to align curricula with market needs and promote lifelong learning.",
+    longDescription: "The Education & Training Chapter is committed to developing a future-ready workforce for Sri Lanka's tech industry. We collaborate with educational institutions and industry partners to align curricula with market needs and promote lifelong learning.",
     tags: ["Skills", "Certifications", "STEM"],
     icon: GraduationCap,
     focusAreas: [
@@ -124,12 +125,12 @@ export const chaptersData: Chapter[] = [
     ]
   },
   {
-    name: "Hardware Chapter",
-    slug: "hardware",
+    name: "Digital Trust Chapter",
+    slug: "digital-trust",
     description: "Representing the interests of hardware vendors, distributors, and manufacturers.",
-    longDescription: "The Hardware Chapter supports the ecosystem of hardware vendors, distributors, and manufacturers in Sri Lanka. We focus on supply chain efficiency, device standards, and promoting the adoption of modern hardware technologies across all sectors.",
+    longDescription: "The Digital Trust Chapter supports the ecosystem of hardware vendors, distributors, and manufacturers in Sri Lanka. We focus on supply chain efficiency, device standards, and promoting the adoption of modern hardware technologies across all sectors.",
     tags: ["Devices", "IoT", "Supply Chain"],
-    icon: Cpu,
+    icon: ShieldCheck,
     focusAreas: [
       "Hardware Import & Tax Policies",
       "IoT Device Standards",

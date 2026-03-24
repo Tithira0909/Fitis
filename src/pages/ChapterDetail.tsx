@@ -75,7 +75,7 @@ const ChapterDetail = () => {
               <div className="absolute -bottom-2 left-0 w-1/3 h-1 bg-blue-600 rounded-full"></div>
             </h2>
             <div
-              className="prose prose-lg prose-blue max-w-none text-gray-700"
+              className="prose prose-lg prose-blue max-w-none text-gray-700 break-words whitespace-pre-wrap overflow-hidden"
               dangerouslySetInnerHTML={{ __html: chapter.about_chapter }}
             />
           </motion.div>

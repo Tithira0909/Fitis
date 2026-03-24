@@ -200,8 +200,8 @@ const uploadChapterIcon = multer({
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
-  user: process.env.DB_USER || 'fitis_user',
-  password: process.env.DB_PASSWORD || 'fitis_password',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'fitis',
   waitForConnections: true,
   connectionLimit: 10,
@@ -295,6 +295,106 @@ app.post('/api/membership/apply', multer({
   }
 });
 
+// POST /api/community/apply - Public endpoint for new member community applications
+app.post('/api/community/apply', multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(process.cwd(), 'uploads', 'community');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+  })
+}).fields([
+  { name: 'company_logo', maxCount: 1 },
+  { name: 'rep_image', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const data = req.body;
+
+    const fileUrl = (fieldname) => {
+      if (req.files && req.files[fieldname] && req.files[fieldname][0]) {
+        return `/uploads/community/${req.files[fieldname][0].filename}`;
+      }
+      return null;
+    };
+
+    const logo_url = fileUrl('company_logo');
+    const rep_img_url = fileUrl('rep_image');
+
+    const sql = `
+      INSERT INTO member_community_requests (
+        company_name, company_logo_url, company_id, official_email,
+        company_linkedin, website_link, rep_image_url, rep_name,
+        rep_email, rep_mobile, rep_designation, password, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+    `;
+
+    const values = [
+      data.company_name, logo_url, data.company_id, data.official_email,
+      data.company_linkedin, data.website_link, rep_img_url, data.rep_name,
+      data.rep_email, data.rep_mobile, data.rep_designation, data.password
+    ];
+
+    await pool.query(sql, values);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Community application error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/community-members - Public endpoint to get approved community members
+app.get('/api/community-members', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching community members:', error);
+    res.status(500).json({ error: 'Failed to fetch community members' });
+  }
+});
+
+// POST /api/auth/community-login - Public endpoint for community members to login
+app.post('/api/auth/community-login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE official_email = ?', [email]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (user.status === 'Pending') {
+      return res.status(403).json({ error: 'Your account is pending approval by the administration.' });
+    }
+    if (user.status === 'Rejected') {
+      return res.status(403).json({ error: 'Your account request was rejected.' });
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      { id: user.id, company_name: user.company_name, email: user.official_email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ message: 'Login successful', token, user: { id: user.id, company_name: user.company_name, email: user.official_email } });
+  } catch (error) {
+    console.error('Community Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -340,7 +440,8 @@ const TABLE_COLUMNS = {
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
     secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
   member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
-  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status']
+  member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status'],
+  member_community_requests: ['company_name', 'company_logo_url', 'company_id', 'official_email', 'company_linkedin', 'website_link', 'rep_image_url', 'rep_name', 'rep_email', 'rep_mobile', 'rep_designation', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 

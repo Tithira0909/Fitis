@@ -41,7 +41,7 @@ export const BecomeAMember = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const CHAPTER_OPTIONS = ['Software Chapter', 'Hardware Chapter', 'Training Chapter', 'Communication Chapter', 'Professional Chapter'];
+  const CHAPTER_OPTIONS = ['Software Chapter', 'Digital Trust Chapter', 'ICT Infrastructure Chapter', 'Education & Training Chapter', 'Communication Chapter', 'Professional Chapter'];
   const INDUSTRY_OPTIONS = ['BFI/Banking', 'Telecommunications', 'Logistics & Transportation', 'Healthcare', 'Education', 'Retail/E-commerce', 'Manufacturing'];
   const EMPLOYEES_OPTIONS = ['1-10', '11-50', '51-200', '201-500', '500+'];
   const CATEGORY_OPTIONS = ['Corporate', 'Associate', 'Affiliate'];
@@ -94,7 +94,6 @@ export const BecomeAMember = () => {
     setIsSubmitting(true);
 
     const payload = new FormData();
-    // Append standard fields
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'chapters_applied' || key === 'industry_focus' || key === 'primary_nominee' || key === 'secondary_nominee') {
         payload.append(`${key}_json`, JSON.stringify(value));
@@ -103,7 +102,6 @@ export const BecomeAMember = () => {
       }
     });
 
-    // Append files
     if (files.business_registration) payload.append('business_registration', files.business_registration);
     if (files.audited_accounts) payload.append('audited_accounts', files.audited_accounts);
     if (files.company_profile) payload.append('company_profile', files.company_profile);
@@ -131,273 +129,323 @@ export const BecomeAMember = () => {
     }
   };
 
+  // Reusable Tailwind CSS classes for the sleek redesign
+  const inputClass = "w-full border border-slate-200 rounded-xl p-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-fitis-blue/10 focus:border-fitis-blue transition-all outline-none shadow-sm hover:border-slate-300 text-slate-800 placeholder:text-slate-400";
+  const labelClass = "block text-sm font-bold text-slate-700 mb-2 tracking-wide uppercase text-xs";
+  const sectionClass = "bg-white p-8 md:p-12 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-slate-200/70 transition-shadow duration-500";
+  const sectionTitleClass = "text-2xl font-black text-slate-800 border-b-2 border-slate-100 pb-5 mb-8 text-fitis-blue flex items-center gap-4";
+  const fileInputClass = "w-full text-sm text-slate-600 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-fitis-blue/10 file:text-fitis-blue hover:file:bg-fitis-blue/20 transition-all cursor-pointer focus:outline-none";
+  const badgeClass = "flex items-center space-x-3 p-3 rounded-xl border border-slate-200 hover:border-fitis-blue hover:bg-fitis-blue/5 transition-all cursor-pointer group";
+
   if (success) {
     return (
       <div className="bg-slate-50 min-h-screen font-sans">
         <SubHeaderBar breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Become a Member' }]} title="BECOME A MEMBER" showSearch={false} />
-        <div className="max-w-3xl mx-auto px-6 py-24 text-center">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✓</div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Submitted Successfully!</h2>
-          <p className="text-slate-600 mb-8">Thank you for applying to become a member of FITIS. Our team will review your application and contact you shortly.</p>
-          <button onClick={() => window.location.reload()} className="bg-fitis-blue text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700">Submit Another Application</button>
+        <div className="max-w-3xl mx-auto px-6 py-28 text-center">
+          <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 text-5xl shadow-lg shadow-green-100/50">✓</div>
+          <h2 className="text-4xl font-extrabold text-slate-900 mb-4">Application Submitted!</h2>
+          <p className="text-lg text-slate-600 mb-10 leading-relaxed">Thank you for applying to become a member of FITIS. Our team will carefully review your application and contact you shortly.</p>
+          <button onClick={() => window.location.reload()} className="bg-gradient-to-r from-fitis-blue to-blue-700 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
+            Submit Another Application
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20 font-sans">
+    <div className="bg-slate-50/50 min-h-screen pb-24 font-sans selection:bg-fitis-blue selection:text-white">
       <SubHeaderBar breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Become a Member' }]} title="BECOME A MEMBER" showSearch={false} />
 
-      <section className="py-12 md:py-20">
+      <section className="py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-6">
 
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 uppercase">NEW MEMBER REGISTRATION</h2>
-            <div className="text-slate-600 leading-relaxed space-y-4 max-w-3xl mx-auto text-left md:text-center">
-              <p>A body corporate should satisfy the eligibility criteria set out for the respective Chapter as stipulated in the Articles of Association of FITIS to become a member.</p>
-              <p>Eligible members may apply for membership by duly completing the specified application form together with the supporting documents mentioned therein and the applicable fees.</p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">NEW MEMBER REGISTRATION</h2>
+            <div className="text-slate-600 leading-relaxed space-y-4 max-w-2xl mx-auto text-lg">
+              <p>A body corporate should satisfy the eligibility criteria set out for the respective Chapter to become a prestigious member of FITIS.</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200 space-y-12">
+          <form onSubmit={handleSubmit} className="space-y-10">
 
             {/* Section A */}
-            <div>
-              <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">A. Membership Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={sectionClass}>
+              <h3 className={sectionTitleClass}>A. Membership Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Primary Chapter</label>
-                  <select name="primary_chapter" value={formData.primary_chapter} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required>
-                    <option value="">Select Primary Chapter</option>
-                    {CHAPTER_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+                  <label className={labelClass}>Primary Chapter *</label>
+                  <div className="relative">
+                    <select name="primary_chapter" value={formData.primary_chapter} onChange={handleChange} className={`${inputClass} appearance-none`} required>
+                      <option value="">Select Primary Chapter</option>
+                      {CHAPTER_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Membership Category</label>
-                  <select name="membership_category" value={formData.membership_category} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required>
-                    <option value="">Select Category</option>
-                    {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+                  <label className={labelClass}>Membership Category *</label>
+                  <div className="relative">
+                    <select name="membership_category" value={formData.membership_category} onChange={handleChange} className={`${inputClass} appearance-none`} required>
+                      <option value="">Select Category</option>
+                      {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Chapter(s) you are applying for *</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 mt-2">
+                  <label className={labelClass}>Chapter(s) you are applying for *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     {CHAPTER_OPTIONS.map(opt => (
-                      <label key={opt} className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
-                        <input type="checkbox" checked={formData.chapters_applied.includes(opt)} onChange={() => handleArrayChange('chapters_applied', opt)} className="w-4 h-4 text-fitis-blue rounded border-gray-300" />
-                        <span>{opt}</span>
+                      <label key={opt} className={badgeClass}>
+                        <input type="checkbox" checked={formData.chapters_applied.includes(opt)} onChange={() => handleArrayChange('chapters_applied', opt)} className="w-5 h-5 text-fitis-blue rounded-md border-slate-300 focus:ring-fitis-blue focus:ring-offset-2 transition-all" />
+                        <span className="text-sm font-semibold text-slate-700 group-hover:text-fitis-blue transition-colors">{opt}</span>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Company Name *</label>
-                  <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Company Name *</label>
+                  <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} className={inputClass} placeholder="Enter full registered company name" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Name of the CEO / Managing Director</label>
-                  <input type="text" name="ceo_name" value={formData.ceo_name} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                  <label className={labelClass}>Name of the CEO / Managing Director</label>
+                  <input type="text" name="ceo_name" value={formData.ceo_name} onChange={handleChange} className={inputClass} placeholder="Full name of CEO/MD" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Company Address</label>
-                  <textarea name="company_address" value={formData.company_address} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" rows={3} required />
+                  <label className={labelClass}>Company Address</label>
+                  <textarea name="company_address" value={formData.company_address} onChange={handleChange} className={inputClass} rows={3} placeholder="Full postal address" required />
                 </div>
               </div>
             </div>
 
             {/* Section B */}
-            <div>
-              <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">B. Organization Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={sectionClass}>
+              <h3 className={sectionTitleClass}>B. Organization Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number *</label>
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Phone Number *</label>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputClass} placeholder="+94 11 234 5678" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Fax</label>
-                  <input type="text" name="fax" value={formData.fax} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                  <label className={labelClass}>Fax</label>
+                  <input type="text" name="fax" value={formData.fax} onChange={handleChange} className={inputClass} placeholder="+94 11 234 5679" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address *</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Email Address *</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass} placeholder="info@company.com" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Company Website</label>
-                  <input type="url" name="website" value={formData.website} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" placeholder="https://" />
+                  <label className={labelClass}>Company Website</label>
+                  <input type="url" name="website" value={formData.website} onChange={handleChange} className={inputClass} placeholder="https://www.company.com" />
                 </div>
               </div>
             </div>
 
             {/* Section C */}
-            <div>
-              <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">C. Organization Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={sectionClass}>
+              <h3 className={sectionTitleClass}>C. Organization Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Business Registration Number *</label>
-                  <input type="text" name="br_number" value={formData.br_number} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Business Registration Number *</label>
+                  <input type="text" name="br_number" value={formData.br_number} onChange={handleChange} className={inputClass} placeholder="PV 12345" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Year of Incorporation in Sri Lanka *</label>
-                  <input type="text" name="year_incorporation" value={formData.year_incorporation} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Year of Incorporation</label>
+                  <input type="text" name="year_incorporation" value={formData.year_incorporation} onChange={handleChange} className={inputClass} placeholder="YYYY" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">BOI No (If Applicable)</label>
-                  <input type="text" name="boi_no" value={formData.boi_no} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                  <label className={labelClass}>BOI No (If Applicable)</label>
+                  <input type="text" name="boi_no" value={formData.boi_no} onChange={handleChange} className={inputClass} placeholder="Enter BOI Reg No." />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Ownership % Local</label>
-                  <input type="text" name="ownership_local" value={formData.ownership_local} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" placeholder="e.g. 100%" />
+                  <label className={labelClass}>Ownership % Local</label>
+                  <div className="relative">
+                    <input type="text" name="ownership_local" value={formData.ownership_local} onChange={handleChange} className={inputClass} placeholder="100" />
+                    <span className="absolute right-5 top-4 text-slate-400 font-bold">%</span>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Ownership % Foreign</label>
-                  <input type="text" name="ownership_foreign" value={formData.ownership_foreign} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" placeholder="e.g. 0%" />
+                  <label className={labelClass}>Ownership % Foreign</label>
+                  <div className="relative">
+                    <input type="text" name="ownership_foreign" value={formData.ownership_foreign} onChange={handleChange} className={inputClass} placeholder="0" />
+                    <span className="absolute right-5 top-4 text-slate-400 font-bold">%</span>
+                  </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Briefly explain Business Activities *</label>
-                  <textarea name="business_activities" value={formData.business_activities} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" rows={3} required />
+                  <label className={labelClass}>Briefly explain Business Activities *</label>
+                  <textarea name="business_activities" value={formData.business_activities} onChange={handleChange} className={inputClass} rows={4} placeholder="Describe core products/services..." required />
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Industry Focus *</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 mt-2">
+                  <label className={labelClass}>Industry Focus *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     {INDUSTRY_OPTIONS.map(opt => (
-                      <label key={opt} className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
-                        <input type="checkbox" checked={formData.industry_focus.includes(opt)} onChange={() => handleArrayChange('industry_focus', opt)} className="w-4 h-4 text-fitis-blue rounded border-gray-300" />
-                        <span>{opt}</span>
+                      <label key={opt} className={badgeClass}>
+                        <input type="checkbox" checked={formData.industry_focus.includes(opt)} onChange={() => handleArrayChange('industry_focus', opt)} className="w-5 h-5 text-fitis-blue rounded-md border-slate-300 focus:ring-fitis-blue focus:ring-offset-2 transition-all" />
+                        <span className="text-sm font-semibold text-slate-700 group-hover:text-fitis-blue transition-colors">{opt}</span>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Revenue Ratio % Local</label>
-                  <input type="text" name="revenue_local" value={formData.revenue_local} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" placeholder="e.g. 80%" />
+                  <label className={labelClass}>Revenue Ratio % Local</label>
+                  <div className="relative">
+                    <input type="text" name="revenue_local" value={formData.revenue_local} onChange={handleChange} className={inputClass} placeholder="80" />
+                    <span className="absolute right-5 top-4 text-slate-400 font-bold">%</span>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Revenue Ratio % Foreign</label>
-                  <input type="text" name="revenue_foreign" value={formData.revenue_foreign} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" placeholder="e.g. 20%" />
+                  <label className={labelClass}>Revenue Ratio % Foreign</label>
+                  <div className="relative">
+                    <input type="text" name="revenue_foreign" value={formData.revenue_foreign} onChange={handleChange} className={inputClass} placeholder="20" />
+                    <span className="absolute right-5 top-4 text-slate-400 font-bold">%</span>
+                  </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Number of Employees *</label>
-                  <select name="employees_count" value={formData.employees_count} onChange={handleChange} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required>
-                    <option value="">Select Employee Count</option>
-                    {EMPLOYEES_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+                  <label className={labelClass}>Number of Employees *</label>
+                  <div className="relative">
+                    <select name="employees_count" value={formData.employees_count} onChange={handleChange} className={`${inputClass} appearance-none`} required>
+                      <option value="">Select Employee Count</option>
+                      {EMPLOYEES_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Sections D & E */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div>
-                <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">D. Primary Nominee</h3>
-                <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className={`${sectionClass} md:p-10 basis-full`}>
+                <h3 className={sectionTitleClass}>D. Primary Nominee</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Name *</label>
-                    <input type="text" value={formData.primary_nominee.name} onChange={(e) => handleNestedChange('primary_nominee', 'name', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                    <label className={labelClass}>Name *</label>
+                    <input type="text" value={formData.primary_nominee.name} onChange={(e) => handleNestedChange('primary_nominee', 'name', e.target.value)} className={inputClass} required />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Designation *</label>
-                    <input type="text" value={formData.primary_nominee.designation} onChange={(e) => handleNestedChange('primary_nominee', 'designation', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                    <label className={labelClass}>Designation *</label>
+                    <input type="text" value={formData.primary_nominee.designation} onChange={(e) => handleNestedChange('primary_nominee', 'designation', e.target.value)} className={inputClass} required />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number *</label>
-                    <input type="tel" value={formData.primary_nominee.phone} onChange={(e) => handleNestedChange('primary_nominee', 'phone', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                    <label className={labelClass}>Mobile Number *</label>
+                    <input type="tel" value={formData.primary_nominee.phone} onChange={(e) => handleNestedChange('primary_nominee', 'phone', e.target.value)} className={inputClass} required />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email *</label>
-                    <input type="email" value={formData.primary_nominee.email} onChange={(e) => handleNestedChange('primary_nominee', 'email', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                    <label className={labelClass}>Email *</label>
+                    <input type="email" value={formData.primary_nominee.email} onChange={(e) => handleNestedChange('primary_nominee', 'email', e.target.value)} className={inputClass} required />
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">E. Secondary Nominee</h3>
-                <div className="space-y-4">
+              <div className={`${sectionClass} md:p-10 basis-full`}>
+                <h3 className={sectionTitleClass}>E. Secondary Nominee</h3>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Name</label>
-                    <input type="text" value={formData.secondary_nominee.name} onChange={(e) => handleNestedChange('secondary_nominee', 'name', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                    <label className={labelClass}>Name</label>
+                    <input type="text" value={formData.secondary_nominee.name} onChange={(e) => handleNestedChange('secondary_nominee', 'name', e.target.value)} className={inputClass} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Designation</label>
-                    <input type="text" value={formData.secondary_nominee.designation} onChange={(e) => handleNestedChange('secondary_nominee', 'designation', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                    <label className={labelClass}>Designation</label>
+                    <input type="text" value={formData.secondary_nominee.designation} onChange={(e) => handleNestedChange('secondary_nominee', 'designation', e.target.value)} className={inputClass} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
-                    <input type="tel" value={formData.secondary_nominee.phone} onChange={(e) => handleNestedChange('secondary_nominee', 'phone', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                    <label className={labelClass}>Mobile Number</label>
+                    <input type="tel" value={formData.secondary_nominee.phone} onChange={(e) => handleNestedChange('secondary_nominee', 'phone', e.target.value)} className={inputClass} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
-                    <input type="email" value={formData.secondary_nominee.email} onChange={(e) => handleNestedChange('secondary_nominee', 'email', e.target.value)} className="w-full border rounded-lg p-3 bg-slate-50 focus:ring-2 focus:ring-fitis-blue outline-none" />
+                    <label className={labelClass}>Email</label>
+                    <input type="email" value={formData.secondary_nominee.email} onChange={(e) => handleNestedChange('secondary_nominee', 'email', e.target.value)} className={inputClass} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Section F */}
-            <div>
-              <h3 className="text-xl font-bold text-fitis-blue border-b pb-2 mb-6">F. Upload Documents</h3>
-              <p className="text-sm text-slate-500 mb-4">Please upload the required documents in PDF, JPG, or PNG format (Max 20MB per file).</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 border rounded-lg bg-slate-50">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Business Registration *</label>
-                  <input type="file" onChange={(e) => handleFileChange(e, 'business_registration')} className="w-full text-sm" required />
+            <div className={sectionClass}>
+              <h3 className={sectionTitleClass}>F. Upload Documents</h3>
+              <p className="text-sm font-medium text-slate-500 mb-8 bg-slate-50 border border-slate-200 p-4 rounded-xl border-l-4 border-l-fitis-blue">Please upload the required documents in PDF, JPG, or PNG format (Max 20MB per file).</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 border-2 border-dashed border-slate-200 hover:border-fitis-blue/50 rounded-2xl bg-white transition-colors group">
+                  <label className="block text-sm font-bold text-slate-800 mb-3">Business Registration *</label>
+                  <input type="file" onChange={(e) => handleFileChange(e, 'business_registration')} className={fileInputClass} required />
                 </div>
-                <div className="p-4 border rounded-lg bg-slate-50">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Audited Accounts (Latest) *</label>
-                  <input type="file" onChange={(e) => handleFileChange(e, 'audited_accounts')} className="w-full text-sm" required />
+                <div className="p-6 border-2 border-dashed border-slate-200 hover:border-fitis-blue/50 rounded-2xl bg-white transition-colors group">
+                  <label className="block text-sm font-bold text-slate-800 mb-3">Audited Accounts (Latest) *</label>
+                  <input type="file" onChange={(e) => handleFileChange(e, 'audited_accounts')} className={fileInputClass} required />
                 </div>
-                <div className="p-4 border rounded-lg bg-slate-50">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Company Profile *</label>
-                  <input type="file" onChange={(e) => handleFileChange(e, 'company_profile')} className="w-full text-sm" required />
+                <div className="p-6 border-2 border-dashed border-slate-200 hover:border-fitis-blue/50 rounded-2xl bg-white transition-colors group">
+                  <label className="block text-sm font-bold text-slate-800 mb-3">Company Profile *</label>
+                  <input type="file" onChange={(e) => handleFileChange(e, 'company_profile')} className={fileInputClass} required />
                 </div>
-                <div className="p-4 border rounded-lg bg-slate-50">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Other Documents (Optional)</label>
-                  <input type="file" onChange={(e) => handleFileChange(e, 'other_documents')} className="w-full text-sm" />
+                <div className="p-6 border-2 border-dashed border-slate-200 hover:border-fitis-blue/50 rounded-2xl bg-white transition-colors group">
+                  <label className="block text-sm font-bold text-slate-800 mb-3">Other Documents <span className="text-slate-400 font-normal">(Optional)</span></label>
+                  <input type="file" onChange={(e) => handleFileChange(e, 'other_documents')} className={fileInputClass} />
                 </div>
               </div>
             </div>
 
             {/* Section G */}
-            <div className="bg-slate-100 p-8 rounded-xl border border-slate-200">
-              <h3 className="text-xl font-bold text-fitis-blue border-b border-slate-300 pb-2 mb-6">G. Declaration by Applicant</h3>
+            <div className="bg-gradient-to-br from-slate-100 to-slate-50 p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-200 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-fitis-blue/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+              
+              <h3 className="text-3xl font-black text-slate-900 border-b-2 border-slate-200 pb-5 mb-8 flex items-center gap-4">G. Declaration by Applicant</h3>
 
-              <div className="prose prose-sm max-w-none text-slate-700 mb-6">
-                <p>We hereby apply for membership of the Federation of Information Technology Industry Sri Lanka (FITIS). If admitted to Membership, we agree to abide by the Memorandum and Articles of Association of FITIS and its Chapters, as well as the rules and regulations, and code of conduct governing its Membership.</p>
+              <div className="prose prose-slate max-w-none text-slate-600 mb-10 text-lg leading-relaxed bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm">
+                <p className="mb-4">We hereby apply for membership of the Federation of Information Technology Industry Sri Lanka (FITIS). If admitted to Membership, we agree to abide by the Memorandum and Articles of Association of FITIS and its Chapters, as well as the rules and regulations, and code of conduct governing its Membership.</p>
                 <p>We declare that the information provided in this application is true and correct to the best of our knowledge and belief. We understand that any false information may result in the rejection of this application or subsequent termination of membership.</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-slate-200 mb-8 max-w-md">
-                <h4 className="font-bold text-slate-800 mb-2">Applicable Fees:</h4>
-                <ul className="text-sm space-y-1 text-slate-700">
-                  <li className="flex justify-between"><span>Entrance Fee:</span> <span className="font-semibold">LKR 25,000</span></li>
-                  <li className="flex justify-between"><span>Membership Fee (Annual):</span> <span className="font-semibold">LKR 25,000</span></li>
-                  <li className="flex justify-between border-t border-slate-100 pt-1 mt-1"><span>Administration Fee:</span> <span className="font-semibold">LKR 5,000</span></li>
+              <div className="bg-slate-800 text-white p-8 rounded-2xl shadow-xl mb-12 max-w-md">
+                <h4 className="font-bold text-slate-100 text-lg mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-fitis-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Applicable Fees Structure
+                </h4>
+                <ul className="space-y-3 text-slate-300">
+                  <li className="flex justify-between items-center border-b border-slate-700 pb-2"><span>Entrance Fee:</span> <span className="font-bold text-white tracking-wide">LKR 25,000</span></li>
+                  <li className="flex justify-between items-center border-b border-slate-700 pb-2"><span>Membership Fee (Annual):</span> <span className="font-bold text-white tracking-wide">LKR 25,000</span></li>
+                  <li className="flex justify-between items-center pt-1 text-slate-400"><span>Administration Fee:</span> <span className="font-bold text-white tracking-wide">LKR 5,000</span></li>
                 </ul>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Applicant's Name *</label>
-                  <input type="text" name="declaration_applicant_name" value={formData.declaration_applicant_name} onChange={handleChange} className="w-full border rounded-lg p-3 bg-white focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Applicant's Name *</label>
+                  <input type="text" name="declaration_applicant_name" value={formData.declaration_applicant_name} onChange={handleChange} className={`${inputClass} bg-white`} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Applicant's Designation *</label>
-                  <input type="text" name="declaration_applicant_designation" value={formData.declaration_applicant_designation} onChange={handleChange} className="w-full border rounded-lg p-3 bg-white focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Applicant's Designation *</label>
+                  <input type="text" name="declaration_applicant_designation" value={formData.declaration_applicant_designation} onChange={handleChange} className={`${inputClass} bg-white`} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date *</label>
-                  <input type="date" name="declaration_date" value={formData.declaration_date} onChange={handleChange} className="w-full border rounded-lg p-3 bg-white focus:ring-2 focus:ring-fitis-blue outline-none" required />
+                  <label className={labelClass}>Date *</label>
+                  <input type="date" name="declaration_date" value={formData.declaration_date} onChange={handleChange} className={`${inputClass} bg-white`} required />
                 </div>
               </div>
 
-              <label className="flex items-start space-x-3 mb-8 cursor-pointer">
-                <input type="checkbox" name="agree_checkbox" checked={formData.agree_checkbox} onChange={handleChange} className="mt-1 w-5 h-5 text-fitis-blue rounded border-gray-300" required />
-                <span className="text-sm font-bold text-slate-800">I hereby certify that I am authorized to sign this application on behalf of the organization.</span>
+              <label className="flex items-start space-x-4 mb-12 p-6 bg-white border-2 border-slate-200 rounded-2xl cursor-pointer hover:border-fitis-blue transition-colors shadow-sm group">
+                <input type="checkbox" name="agree_checkbox" checked={formData.agree_checkbox} onChange={handleChange} className="mt-1 w-6 h-6 text-fitis-blue bg-slate-100 rounded border-slate-300 focus:ring-fitis-blue transition-all" required />
+                <span className="text-base font-bold text-slate-800 group-hover:text-fitis-blue transition-colors pt-0.5">I hereby certify that I am authorized to sign this application on behalf of the organization.</span>
               </label>
 
-              <div className="text-center">
-                <button type="submit" disabled={isSubmitting} className={`px-12 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-fitis-blue hover:bg-blue-700 active:scale-95'}`}>
-                  {isSubmitting ? 'Submitting Application...' : 'Submit Application'}
+              <div className="text-center pt-4">
+                <button type="submit" disabled={isSubmitting} className={`relative inline-flex items-center justify-center px-16 py-5 text-white font-extrabold text-xl rounded-full shadow-2xl transition-all duration-300 overflow-hidden ${isSubmitting ? 'bg-slate-400 cursor-not-allowed scale-95' : 'bg-gradient-to-r from-fitis-blue to-blue-800 hover:from-blue-600 hover:to-blue-900 hover:scale-105 hover:shadow-blue-900/30'}`}>
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-3">
+                      <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting Application...
+                    </span>
+                  ) : 'Submit Member Application'}
                 </button>
               </div>
             </div>

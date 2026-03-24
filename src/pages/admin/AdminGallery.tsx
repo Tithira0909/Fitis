@@ -219,7 +219,7 @@ export const AdminGallery: React.FC = () => {
       )}
 
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Gallery Management</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gallery Management</h1>
         <button
           onClick={() => handleOpenModal()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
@@ -253,10 +253,10 @@ export const AdminGallery: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-4 text-right space-x-2">
-                    <button onClick={() => handleOpenModal(post)} className="text-blue-600 hover:bg-blue-50 p-2 rounded">
+                    <button onClick={() => handleOpenModal(post)} className="text-fitis-blue bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2">
                       <Edit2 size={18} />
                     </button>
-                    <button onClick={() => handleDeletePost(post.id)} className="text-red-600 hover:bg-red-50 p-2 rounded">
+                    <button onClick={() => handleDeletePost(post.id)} className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -292,29 +292,29 @@ export const AdminGallery: React.FC = () => {
                 <form id="gallery-form" onSubmit={handleSavePost} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" required />
+                    <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" required />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea name="description" value={formData.description || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" rows={4} required />
+                    <textarea name="description" value={formData.description || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" rows={4} required />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
-                      <input type="date" name="event_date" value={formData.event_date ? formData.event_date.split('T')[0] : ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" />
+                      <input type="date" name="event_date" value={formData.event_date ? formData.event_date.split('T')[0] : ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                      <select name="status" value={formData.status || 'draft'} onChange={handleInputChange} className="w-full border rounded-lg p-2">
+                      <select name="status" value={formData.status || 'draft'} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800">
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
                       </select>
                     </div>
                   </div>
 
-                  <button type="submit" disabled={isLoading} className={`w-full py-2 text-white rounded-lg font-medium ${isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                  <button type="submit" disabled={isLoading} className={`w-full py-3 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-fitis-blue to-blue-700 hover:-translate-y-0.5'}`}>
                     {editingPost ? 'Save Details' : 'Create Gallery'}
                   </button>
                 </form>

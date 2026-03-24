@@ -140,10 +140,9 @@ export const BoardMembers = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-center justify-between border-b border-white/10 pb-6 mb-16">
           <div className="flex-1 flex justify-start mb-4 md:mb-0">
-             {/* Logo Placeholder - You could use an image if available */}
-             <div className="flex items-center gap-2 text-white">
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl">F</div>
-                <span className="font-display font-bold text-xl tracking-tighter">FITIS</span>
+             {/* Logo */}
+             <div className="flex items-center text-white">
+                <img src="/fitis-logo-white.png" alt="FITIS Logo" className="h-12 md:h-16 w-auto object-contain" />
              </div>
           </div>
 

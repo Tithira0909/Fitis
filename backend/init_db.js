@@ -12,8 +12,8 @@ const initializeDB = async () => {
   try {
     connection = await mysql.createConnection({
       host: process.env.DB_HOST || '127.0.0.1',
-      user: process.env.DB_USER || 'fitis_user',
-      password: process.env.DB_PASSWORD || 'fitis_password',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'fitis',
     });
 
@@ -216,7 +216,7 @@ const initializeDB = async () => {
         youtube_url VARCHAR(500),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
-            `CREATE TABLE IF NOT EXISTS chairman_message (
+      `CREATE TABLE IF NOT EXISTS chairman_message (
         id INT PRIMARY KEY DEFAULT 1,
         name VARCHAR(150),
         designation VARCHAR(150),
@@ -287,6 +287,24 @@ const initializeDB = async () => {
         sort_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS member_community_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        company_name VARCHAR(255) NOT NULL,
+        company_logo_url VARCHAR(600),
+        company_id VARCHAR(100),
+        official_email VARCHAR(255) NOT NULL,
+        company_linkedin VARCHAR(600),
+        website_link VARCHAR(600),
+        rep_image_url VARCHAR(600),
+        rep_name VARCHAR(255),
+        rep_email VARCHAR(255),
+        rep_mobile VARCHAR(50),
+        rep_designation VARCHAR(150),
+        password VARCHAR(255) NOT NULL,
+        status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
 
@@ -349,7 +367,7 @@ const initializeDB = async () => {
       console.error('Migration error (chapters columns):', migErr.message);
     }
 
-// Data Migration: Update partners table schema if it's the old one
+    // Data Migration: Update partners table schema if it's the old one
     try {
       // Check if old column exists
       const [cols] = await connection.execute("SHOW COLUMNS FROM partners LIKE 'company_name'");
@@ -401,16 +419,16 @@ const initializeDB = async () => {
 
     // Data Migration: Add logo columns to site_settings if they don't exist
     try {
-        const [headerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'header_logo_url'");
-        if (headerLogoCols.length === 0) {
-            await connection.execute("ALTER TABLE site_settings ADD COLUMN header_logo_url VARCHAR(500)");
-        }
-        const [footerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'footer_logo_url'");
-        if (footerLogoCols.length === 0) {
-            await connection.execute("ALTER TABLE site_settings ADD COLUMN footer_logo_url VARCHAR(500)");
-        }
+      const [headerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'header_logo_url'");
+      if (headerLogoCols.length === 0) {
+        await connection.execute("ALTER TABLE site_settings ADD COLUMN header_logo_url VARCHAR(500)");
+      }
+      const [footerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'footer_logo_url'");
+      if (footerLogoCols.length === 0) {
+        await connection.execute("ALTER TABLE site_settings ADD COLUMN footer_logo_url VARCHAR(500)");
+      }
     } catch (error) {
-        console.error("Site Settings Logo Migration failed:", error);
+      console.error("Site Settings Logo Migration failed:", error);
     }
 
     // Seed default site settings
@@ -427,12 +445,12 @@ const initializeDB = async () => {
 
     // Data Migration: Migrating chapters
     try {
-        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive', 'draft', 'published') DEFAULT 'active'`);
-        await connection.execute(`UPDATE chapters SET status = 'active' WHERE status = 'published'`);
-        await connection.execute(`UPDATE chapters SET status = 'inactive' WHERE status = 'draft'`);
-        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive') DEFAULT 'active'`);
+      await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive', 'draft', 'published') DEFAULT 'active'`);
+      await connection.execute(`UPDATE chapters SET status = 'active' WHERE status = 'published'`);
+      await connection.execute(`UPDATE chapters SET status = 'inactive' WHERE status = 'draft'`);
+      await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive') DEFAULT 'active'`);
     } catch (error) {
-        console.error("Chapter status Migration failed:", error);
+      console.error("Chapter status Migration failed:", error);
     }
 
     // Seed default chairman message
@@ -445,6 +463,17 @@ const initializeDB = async () => {
       console.log('Seeded default chairman message.');
     } else {
       console.log('Chairman message already exists.');
+    }
+
+    try {
+      await connection.execute("ALTER TABLE member_community_requests ADD COLUMN password VARCHAR(255) NOT NULL DEFAULT 'password'");
+      console.log('Executed data migration: Added password to member_community_requests');
+    } catch (migErr) {
+      if (migErr.code === 'ER_DUP_FIELDNAME') {
+        console.log('Migration skipped: password already exists in member_community_requests');
+      } else {
+        console.error('Migration error (member_community_requests password):', migErr.message);
+      }
     }
 
     // Seed default privacy policy
@@ -467,7 +496,7 @@ const initializeDB = async () => {
         ['DISCLAIMER', '2021-03-01']
       );
 
-      const sections = [{"title": "External Links Disclaimer", "html": "<p>The Site may contain (or you may be sent through the Site) links to other websites or content belonging to or originating from third parties or links to websites and features. Such external links are not investigated, monitored, or checked for accuracy, adequacy, validity, reliability, availability or completeness by us.</p><p><strong>WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR THE ACCURACY OR RELIABILITY OF ANY INFORMATION OFFERED BY THIRD-PARTY WEBSITES LINKED THROUGH THE SITE OR ANY WEBSITE OR FEATURE LINKED IN ANY BANNER OR OTHER ADVERTISING. WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES.</strong></p>"}, {"title": "Testimonials Disclaimer", "html": "<p><strong>YOUR INDIVIDUAL RESULTS MAY VARY.</strong></p><p>The testimonials on the Site are submitted in various forms such as text, audio and/or video, and are reviewed by us before being posted. They appear on the Site verbatim as given by the users, except for the correction of grammar or typing errors. Some testimonials may have been shortened for the sake of brevity, where the full testimonial contained extraneous information not relevant to the general public.</p><p>The views and opinions contained in the testimonials belong solely to the individual user and do not reflect our views and opinions.</p>"}, {"title": "Errors and Omissions Disclaimer", "html": "<p>While we have made every attempt to ensure that the information contained in this site has been obtained from reliable sources, FITIS Guarantee Limited is not responsible for any errors or omissions or for the results obtained from the use of this information. All information in this site is provided \u201cas is\u201d, with no guarantee of completeness, accuracy, timeliness or of the results obtained from the use of this information, and without warranty of any kind, express or implied, including, but not limited to warranties of performance, merchantability, and fitness for a particular purpose.</p><p>In no event will FITIS Guarantee Limited, its related partnerships or corporations, or the partners, agents or employees thereof be liable to you or anyone else for any decision made or action taken in reliance on the information in this Site or for any consequential, special or similar damages, even if advised of the possibility of such damages.</p>"}, {"title": "Logos and Trademarks Disclaimer", "html": "<p>All logos and trademarks of third parties referenced on www.fitis.lk are the trademarks and logos of their respective owners. Any inclusion of such trademarks or logos does not imply or constitute any approval, endorsement or sponsorship of FITIS Guarantee Limited by such owners.</p>"}, {"title": "Website Disclaimer", "html": "<p>The information provided by FITIS Guarantee Limited (\u201cCompany\u201d, \u201cwe\u201d, \u201cour\u201d, \u201cus\u201d) on www.fitis.lk (the \u201cSite\u201d) is for general informational purposes only. All information on the Site is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.</p><p><strong>UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF THE SITE OR RELIANCE ON ANY INFORMATION PROVIDED ON THE SITE. YOUR USE OF THE SITE AND YOUR RELIANCE ON ANY INFORMATION ON THE SITE IS SOLELY AT YOUR OWN RISK.</strong></p>"}, {"title": "Affiliates Disclaimer", "html": "<p>The Site may contain links to affiliate websites, and we may receive an affiliate commission for any purchases or actions made by you on the affiliate websites using such links.</p>"}, {"title": "Contact Us", "html": "<p>Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: info@fitis.lk.</p>"}];
+      const sections = [{ "title": "External Links Disclaimer", "html": "<p>The Site may contain (or you may be sent through the Site) links to other websites or content belonging to or originating from third parties or links to websites and features. Such external links are not investigated, monitored, or checked for accuracy, adequacy, validity, reliability, availability or completeness by us.</p><p><strong>WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR THE ACCURACY OR RELIABILITY OF ANY INFORMATION OFFERED BY THIRD-PARTY WEBSITES LINKED THROUGH THE SITE OR ANY WEBSITE OR FEATURE LINKED IN ANY BANNER OR OTHER ADVERTISING. WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES.</strong></p>" }, { "title": "Testimonials Disclaimer", "html": "<p><strong>YOUR INDIVIDUAL RESULTS MAY VARY.</strong></p><p>The testimonials on the Site are submitted in various forms such as text, audio and/or video, and are reviewed by us before being posted. They appear on the Site verbatim as given by the users, except for the correction of grammar or typing errors. Some testimonials may have been shortened for the sake of brevity, where the full testimonial contained extraneous information not relevant to the general public.</p><p>The views and opinions contained in the testimonials belong solely to the individual user and do not reflect our views and opinions.</p>" }, { "title": "Errors and Omissions Disclaimer", "html": "<p>While we have made every attempt to ensure that the information contained in this site has been obtained from reliable sources, FITIS Guarantee Limited is not responsible for any errors or omissions or for the results obtained from the use of this information. All information in this site is provided \u201cas is\u201d, with no guarantee of completeness, accuracy, timeliness or of the results obtained from the use of this information, and without warranty of any kind, express or implied, including, but not limited to warranties of performance, merchantability, and fitness for a particular purpose.</p><p>In no event will FITIS Guarantee Limited, its related partnerships or corporations, or the partners, agents or employees thereof be liable to you or anyone else for any decision made or action taken in reliance on the information in this Site or for any consequential, special or similar damages, even if advised of the possibility of such damages.</p>" }, { "title": "Logos and Trademarks Disclaimer", "html": "<p>All logos and trademarks of third parties referenced on www.fitis.lk are the trademarks and logos of their respective owners. Any inclusion of such trademarks or logos does not imply or constitute any approval, endorsement or sponsorship of FITIS Guarantee Limited by such owners.</p>" }, { "title": "Website Disclaimer", "html": "<p>The information provided by FITIS Guarantee Limited (\u201cCompany\u201d, \u201cwe\u201d, \u201cour\u201d, \u201cus\u201d) on www.fitis.lk (the \u201cSite\u201d) is for general informational purposes only. All information on the Site is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.</p><p><strong>UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF THE SITE OR RELIANCE ON ANY INFORMATION PROVIDED ON THE SITE. YOUR USE OF THE SITE AND YOUR RELIANCE ON ANY INFORMATION ON THE SITE IS SOLELY AT YOUR OWN RISK.</strong></p>" }, { "title": "Affiliates Disclaimer", "html": "<p>The Site may contain links to affiliate websites, and we may receive an affiliate commission for any purchases or actions made by you on the affiliate websites using such links.</p>" }, { "title": "Contact Us", "html": "<p>Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: info@fitis.lk.</p>" }];
 
       for (let i = 0; i < sections.length; i++) {
         const sec = sections[i];

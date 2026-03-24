@@ -35,7 +35,7 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
         <div>
           <div className="flex items-center gap-2 mb-6">
-            <img src={settings.footer_logo_url ? getImageUrl(settings.footer_logo_url) : "/fitis-logo.png"} alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1 object-contain" onError={(e) => { e.currentTarget.src = '/fitis-logo.png'; }} />
+            <img src={settings.footer_logo_url ? getImageUrl(settings.footer_logo_url) : "/fitis-logo-white.png"} alt="FITIS Logo" className="h-16 md:h-20 w-auto object-contain" onError={(e) => { e.currentTarget.src = '/fitis-logo-white.png'; }} />
           </div>
           <p className="text-slate-400 leading-relaxed mb-8">
             The Federation of Information Technology Industry Sri Lanka is the apex body of the ICT industry in Sri Lanka.
@@ -63,11 +63,12 @@ export const Footer = () => {
         <div>
           <h4 className="font-bold text-lg mb-6 text-white">Our Chapters</h4>
           <ul className="space-y-4 text-slate-400">
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Hardware Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Trust Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Software Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Education Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">Education & Training Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Communication Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Professional Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">ICT Infrastructure Chapter</a></li>
           </ul>
         </div>
 

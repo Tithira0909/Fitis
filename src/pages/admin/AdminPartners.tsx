@@ -155,7 +155,7 @@ export const AdminPartners: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Partners Management</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Partners Management</h1>
         <button
           onClick={() => handleOpenModal()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
@@ -166,7 +166,7 @@ export const AdminPartners: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-lg shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100-sm">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -238,13 +238,13 @@ export const AdminPartners: React.FC = () => {
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => handleOpenModal(item)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded transition-colors"
+                      className="text-fitis-blue bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2 transition-colors"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded transition-colors"
+                      className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors transition-colors"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -283,7 +283,7 @@ export const AdminPartners: React.FC = () => {
                     name="name"
                     value={formData.name || ''}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                    className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
                     required
                   />
                 </div>
@@ -294,7 +294,7 @@ export const AdminPartners: React.FC = () => {
                     name="category"
                     value={formData.category || 'corporate'}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                     required
                   >
                     {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
@@ -311,7 +311,7 @@ export const AdminPartners: React.FC = () => {
                     value={formData.website_url || ''}
                     onChange={handleInputChange}
                     placeholder="https://..."
-                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800.5 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
 
@@ -322,7 +322,7 @@ export const AdminPartners: React.FC = () => {
                       name="status"
                       value={formData.status || 'published'}
                       onChange={handleInputChange}
-                      className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                      className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                     >
                       <option value="published">Published</option>
                       <option value="draft">Draft</option>
@@ -336,7 +336,7 @@ export const AdminPartners: React.FC = () => {
                       name="sort_order"
                       value={formData.sort_order ?? 0}
                       onChange={handleInputChange}
-                      className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800.5 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                 </div>

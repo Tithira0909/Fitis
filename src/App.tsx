@@ -22,11 +22,15 @@ import { Events } from './pages/Events';
 import { Chapters } from './pages/Chapters';
 import { ChapterDetail } from './pages/ChapterDetail';
 import { Contact } from './pages/Contact';
+import { Login } from './pages/Login';
 
 import { AdminLayout } from './components/admin/AdminLayout';
 import { BecomeAMember } from './pages/BecomeAMember';
+import { CompanySignup } from './pages/CompanySignup';
+import { MemberCommunity } from './pages/MemberCommunity';
 import { MemberBenefits } from './pages/MemberBenefits';
 import { AdminMembers } from './pages/admin/AdminMembers';
+import { AdminCommunityRequests } from './pages/admin/AdminCommunityRequests';
 import { AdminMemberBenefits } from './pages/admin/AdminMemberBenefits';
 
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -110,6 +114,7 @@ export default function App() {
           <Route path="chapters" element={<AdminChapters />} />
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="members" element={<AdminMembers />} />
+          <Route path="community-requests" element={<AdminCommunityRequests />} />
           <Route path="member-benefits" element={<AdminMemberBenefits />} />
           <Route path="partners" element={<AdminPartners />} />
           <Route path="newsletter" element={<AdminNewsletter />} />
@@ -130,7 +135,10 @@ export default function App() {
               <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
               <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
-                                      <Route path="/Home/become-a-member" element={<BecomeAMember />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/Home/become-a-member" element={<BecomeAMember />} />
+              <Route path="/signup" element={<CompanySignup />} />
+              <Route path="/Home/member-community" element={<MemberCommunity />} />
               <Route path="/Home/member-benefits" element={<MemberBenefits />} />
               <Route path="/Home/partnerships" element={<Partners />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />

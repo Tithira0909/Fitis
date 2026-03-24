@@ -29,8 +29,8 @@ export const AdminOverview: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard Overview</h1>
+        <button className="bg-gradient-to-r from-fitis-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all shadow">
           Refresh Data
         </button>
       </div>

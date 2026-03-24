@@ -139,7 +139,7 @@ export const AdminSecretariat: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Secretariat Team</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Secretariat Team</h1>
         <button
           onClick={() => handleOpenModal()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
@@ -189,13 +189,13 @@ export const AdminSecretariat: React.FC = () => {
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => handleOpenModal(item)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded"
+                      className="text-fitis-blue bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded"
+                      className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -217,8 +217,8 @@ export const AdminSecretariat: React.FC = () => {
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="bg-white rounded-2xl p-8 w-full shadow-2xl border border-slate-100 max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-black text-slate-800 block mb-6 border-b border-slate-100 pb-3">
               {editingItem ? 'Edit Member' : 'Add New Member'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -230,7 +230,7 @@ export const AdminSecretariat: React.FC = () => {
                   name="name"
                   value={formData.name || ''}
                   onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -242,7 +242,7 @@ export const AdminSecretariat: React.FC = () => {
                   name="role"
                   value={formData.role || ''}
                   onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   required
                 />
               </div>
@@ -254,7 +254,7 @@ export const AdminSecretariat: React.FC = () => {
                   name="linkedin_url"
                   value={formData.linkedin_url || ''}
                   onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 />
               </div>
 
@@ -265,7 +265,7 @@ export const AdminSecretariat: React.FC = () => {
                   name="facebook_url"
                   value={formData.facebook_url || ''}
                   onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                 />
               </div>
 
@@ -276,7 +276,7 @@ export const AdminSecretariat: React.FC = () => {
                     name="status"
                     value={formData.status || 'published'}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
+                    className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   >
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
@@ -290,7 +290,7 @@ export const AdminSecretariat: React.FC = () => {
                     name="sort_order"
                     value={formData.sort_order || 0}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
+                    className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                   />
                 </div>
               </div>
@@ -315,14 +315,14 @@ export const AdminSecretariat: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                  className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`px-4 py-2 text-white rounded-lg ${isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-fitis-blue to-blue-700 hover:-translate-y-0.5'}`}
                 >
                   Save
                 </button>

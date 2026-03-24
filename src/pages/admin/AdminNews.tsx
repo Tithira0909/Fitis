@@ -145,7 +145,7 @@ export const AdminNews: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">News Articles</h1>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">News Articles</h1>
         <button
           onClick={() => handleOpenModal()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
@@ -187,10 +187,10 @@ export const AdminNews: React.FC = () => {
                   </td>
                   <td className="p-4 text-gray-600">{item.publish_date ? new Date(item.publish_date).toLocaleDateString() : 'N/A'}</td>
                   <td className="p-4 text-right space-x-2">
-                    <button onClick={() => handleOpenModal(item)} className="text-blue-600 hover:bg-blue-50 p-2 rounded">
+                    <button onClick={() => handleOpenModal(item)} className="text-fitis-blue bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2">
                       <Edit2 size={18} />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:bg-red-50 p-2 rounded">
+                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -210,24 +210,24 @@ export const AdminNews: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{editingItem ? 'Edit News' : 'Add News'}</h2>
+          <div className="bg-white rounded-2xl p-8 w-full shadow-2xl border border-slate-100 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-black text-slate-800 block mb-6 border-b border-slate-100 pb-3">{editingItem ? 'Edit News' : 'Add News'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" required />
+                <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" required />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                <input type="text" name="slug" value={formData.slug || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2 bg-gray-50" required />
+                <input type="text" name="slug" value={formData.slug || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" required />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <select name="category" value={formData.category || 'Announcement'} onChange={handleInputChange} className="w-full border rounded-lg p-2">
+                  <select name="category" value={formData.category || 'Announcement'} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800">
                     <option value="Announcement">Announcement</option>
                     <option value="Event">Event</option>
                     <option value="Industry">Industry</option>
@@ -235,7 +235,7 @@ export const AdminNews: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select name="status" value={formData.status || 'draft'} onChange={handleInputChange} className="w-full border rounded-lg p-2">
+                  <select name="status" value={formData.status || 'draft'} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800">
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
@@ -245,25 +245,25 @@ export const AdminNews: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
-                  <input type="date" name="publish_date" value={formData.publish_date ? formData.publish_date.split('T')[0] : ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" />
+                  <input type="date" name="publish_date" value={formData.publish_date ? formData.publish_date.split('T')[0] : ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Author (optional)</label>
-                  <input type="text" name="author" value={formData.author || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" />
+                  <input type="text" name="author" value={formData.author || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Short Excerpt</label>
-                <textarea name="excerpt" value={formData.excerpt || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" rows={2} required />
+                <textarea name="excerpt" value={formData.excerpt || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" rows={2} required />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Content</label>
-                <textarea name="content" value={formData.content || ''} onChange={handleInputChange} className="w-full border rounded-lg p-2" rows={6} required />
+                <textarea name="content" value={formData.content || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" rows={6} required />
               </div>
 
-              <div className="border p-4 rounded-lg bg-gray-50">
+              <div className="border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image (Required)</label>
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => handleFileUpload(e, 'banner')} className="w-full text-sm mb-2" disabled={isLoading} />
                 {formData.banner_image_url && (
@@ -271,7 +271,7 @@ export const AdminNews: React.FC = () => {
                 )}
               </div>
 
-              <div className="border p-4 rounded-lg bg-gray-50">
+              <div className="border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
                 <label className="block text-sm font-medium text-gray-700 mb-1">PDF Document (Optional)</label>
                 <input type="file" accept="application/pdf" onChange={(e) => handleFileUpload(e, 'pdf')} className="w-full text-sm mb-2" disabled={isLoading} />
                 {formData.pdf_url && (
@@ -280,8 +280,8 @@ export const AdminNews: React.FC = () => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">
-                <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                <button type="submit" disabled={isLoading} className={`px-4 py-2 text-white rounded-lg ${isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}>Save</button>
+                <button type="button" onClick={handleCloseModal} className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                <button type="submit" disabled={isLoading} className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all border border-transparent ${isLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-fitis-blue to-blue-700 hover:-translate-y-0.5'}`}>Save</button>
               </div>
             </form>
           </div>
