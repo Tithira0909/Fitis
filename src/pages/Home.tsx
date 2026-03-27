@@ -1,5 +1,6 @@
 import { BoardMembers } from '../components/BoardMembers';
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Users, 
@@ -15,12 +16,14 @@ import {
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
 import { SectionHeader } from '../components/SectionHeader';
+import { getImageUrl } from '../utils/getImageUrl';
+import { useEffect, useState } from 'react';
 
 const ChairmanMessage = () => {
   return (
     <section id="about" className="py-16 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm relative overflow-hidden">
+        <Link to="/Home/chairman-message" className="block bg-slate-50 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group cursor-pointer">
           {/* Decorative element */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-fitis-blue/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           
@@ -72,13 +75,13 @@ const ChairmanMessage = () => {
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Chairman, FITIS</p>
                   </div>
                 </div>
-                <button className="text-fitis-blue font-bold flex items-center gap-2 hover:gap-3 transition-all group">
+                <span className="text-fitis-blue font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
                   Read Full Message <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </span>
               </div>
             </motion.div>
           </div>
-        </div>
+        </Link>
       </div>
     </section>
   );
@@ -131,25 +134,8 @@ const NetworkMesh = () => {
 };
 
 const FitisLogoWhite = () => (
-  <div className="flex items-center gap-3">
-    <div className="relative w-12 h-12">
-      <svg viewBox="0 0 100 100" className="w-full h-full text-white">
-        <path d="M20 20 L80 20 L80 35 L40 35 L40 50 L70 50 L70 65 L40 65 L40 85 L20 85 Z" fill="currentColor" />
-        {/* Mesh dots to the left of F */}
-        <g fill="currentColor" opacity="0.8">
-          <circle cx="10" cy="30" r="2" />
-          <circle cx="5" cy="45" r="2" />
-          <circle cx="12" cy="60" r="2" />
-          <circle cx="8" cy="75" r="2" />
-          <circle cx="15" cy="40" r="1.5" />
-          <circle cx="18" cy="55" r="1.5" />
-        </g>
-      </svg>
-    </div>
-    <div className="text-white">
-      <p className="font-black text-3xl leading-none tracking-tighter">FITIS</p>
-      <p className="text-[7px] uppercase tracking-[0.2em] font-bold opacity-70">Federation of IT Industry Sri Lanka</p>
-    </div>
+  <div className="bg-white/90 p-4 rounded-xl inline-block shadow-lg backdrop-blur-md">
+    <img src="/fitis-logo.png" alt="FITIS" className="w-auto h-16 md:h-20 object-contain" />
   </div>
 );
 
@@ -399,10 +385,31 @@ const MembershipCTA = () => {
   );
 };
 
+interface Partner {
+  id: number;
+  name: string;
+  logo_url?: string;
+  website_url?: string;
+}
+
 const PartnersSection = () => {
-  const partners = [
-    "Ministry of Technology", "ICTA", "SLASSCOM", "CSSL", "BCS", "Export Development Board", "TRCSL", "LankaPay"
-  ];
+  const [partners, setPartners] = useState<Partner[]>([]);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${baseUrl}/api/partners`);
+        if (res.ok) {
+          const data = await res.json();
+          setPartners(data);
+        }
+      } catch (error) {
+        console.error('Failed to load partners', error);
+      }
+    };
+    fetchPartners();
+  }, []);
 
   return (
     <section id="partners" className="py-24 bg-white">
@@ -410,18 +417,43 @@ const PartnersSection = () => {
         <SectionHeader title="Partnerships & Affiliations" />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-          {partners.map((partner, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.05 }}
-              className="h-24 bg-slate-50 rounded-2xl flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all border border-slate-100 group"
-            >
-              <span className="text-slate-400 font-bold text-sm text-center group-hover:text-fitis-blue transition-colors uppercase tracking-widest">{partner}</span>
-            </motion.div>
-          ))}
+          {partners.map((partner, idx) => {
+            const innerContent = (
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.05 }}
+                className="h-24 bg-slate-50 rounded-2xl flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all border border-slate-100 group hover:shadow-md cursor-pointer overflow-hidden"
+              >
+                {partner.logo_url ? (
+                  <img
+                    src={getImageUrl(partner.logo_url)}
+                    alt={partner.name}
+                    className="max-w-full max-h-full object-contain"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="text-slate-400 font-bold text-sm text-center group-hover:text-fitis-blue transition-colors uppercase tracking-widest">{partner.name}</span>
+                )}
+              </motion.div>
+            );
+
+            return partner.website_url ? (
+              <a
+                key={partner.id}
+                href={partner.website_url.startsWith('http') ? partner.website_url : `https://${partner.website_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {innerContent}
+              </a>
+            ) : (
+              <div key={partner.id}>
+                {innerContent}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

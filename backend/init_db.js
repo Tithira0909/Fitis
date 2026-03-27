@@ -21,6 +21,43 @@ const initializeDB = async () => {
 
     // Create tables
     const tables = [
+      `CREATE TABLE IF NOT EXISTS member_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    primary_chapter VARCHAR(150),
+    chapters_applied JSON,
+    company_name VARCHAR(255),
+    membership_category VARCHAR(150),
+    ceo_name VARCHAR(255),
+    company_address TEXT,
+    phone VARCHAR(50),
+    fax VARCHAR(50),
+    website VARCHAR(255),
+    email VARCHAR(150),
+    br_number VARCHAR(150),
+    year_incorporation VARCHAR(50),
+    boi_no VARCHAR(150),
+    ownership_local VARCHAR(50),
+    ownership_foreign VARCHAR(50),
+    business_activities TEXT,
+    industry_focus JSON,
+    revenue_local VARCHAR(50),
+    revenue_foreign VARCHAR(50),
+    employees_count VARCHAR(50),
+    primary_nominee JSON,
+    secondary_nominee JSON,
+    business_registration VARCHAR(600),
+    audited_accounts VARCHAR(600),
+    company_profile VARCHAR(600),
+    other_documents VARCHAR(600),
+    declaration_applicant_name VARCHAR(255),
+    declaration_applicant_designation VARCHAR(255),
+    declaration_date DATE,
+    agree_checkbox BOOLEAN,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )`,
+
       `CREATE TABLE IF NOT EXISTS admin_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
@@ -77,15 +114,23 @@ const initializeDB = async () => {
         linkedin_url VARCHAR(500),
         hierarchy_level INT DEFAULT 1,
         seat INT DEFAULT 1,
+        year_start INT,
+        year_end INT,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS partners (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        company_name VARCHAR(255) NOT NULL,
-        tier ENUM('Platinum', 'Gold', 'Silver', 'Bronze') NOT NULL,
-        contact_person VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        name VARCHAR(150) NOT NULL,
+        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+        logo_url VARCHAR(600) NOT NULL,
+        website_url VARCHAR(600) NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS newsletter_subscribers (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -119,6 +164,66 @@ const initializeDB = async () => {
         favicon_url VARCHAR(500),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
+            `CREATE TABLE IF NOT EXISTS chairman_message (
+        id INT PRIMARY KEY DEFAULT 1,
+        name VARCHAR(150),
+        designation VARCHAR(150),
+        subtitle VARCHAR(255),
+        photo_url VARCHAR(600),
+        message_title VARCHAR(255),
+        message_body LONGTEXT,
+        focus_cards JSON NULL,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS secretariat_team (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        role VARCHAR(150) NOT NULL,
+        photo_url VARCHAR(600) NULL,
+        linkedin_url VARCHAR(600) NULL,
+        facebook_url VARCHAR(600) NULL,
+        sort_order INT DEFAULT 0,
+        status ENUM('draft','published') DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS privacy_policy_page (
+        id INT PRIMARY KEY DEFAULT 1,
+        page_title VARCHAR(255) DEFAULT 'PRIVACY POLICY',
+        effective_date DATE,
+        status ENUM('draft','published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS privacy_policy_sections (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        page_id INT DEFAULT 1,
+        section_slug VARCHAR(255) NOT NULL,
+        section_title VARCHAR(255) NOT NULL,
+        section_html LONGTEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (page_id) REFERENCES privacy_policy_page(id) ON DELETE CASCADE
+      )`,
+      `CREATE TABLE IF NOT EXISTS disclaimer_page (
+        id INT PRIMARY KEY DEFAULT 1,
+        page_title VARCHAR(255) DEFAULT 'DISCLAIMER',
+        effective_date DATE,
+        status ENUM('draft','published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS disclaimer_sections (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        page_id INT DEFAULT 1,
+        section_slug VARCHAR(255) NOT NULL,
+        section_title VARCHAR(255) NOT NULL,
+        section_html LONGTEXT NOT NULL,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (page_id) REFERENCES disclaimer_page(id) ON DELETE CASCADE
+      )`,
       `CREATE TABLE IF NOT EXISTS programs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -136,6 +241,47 @@ const initializeDB = async () => {
     for (const query of tables) {
       await connection.execute(query);
       console.log('Executed query:', query.substring(0, 50) + '...');
+    }
+
+
+    // Update leadership_members table if it already exists
+    try {
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN year_start INT");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN year_end INT");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN sort_order INT DEFAULT 0");
+      await connection.execute("ALTER TABLE leadership_members ADD COLUMN status ENUM('draft', 'published') DEFAULT 'published'");
+      console.log('Executed data migration: Added year_start, year_end, sort_order, status to leadership_members');
+    } catch (migErr) {
+      if (migErr.code === 'ER_DUP_FIELDNAME') {
+        console.log('Migration skipped: columns already exist in leadership_members');
+      } else {
+        console.error('Migration error (leadership_members columns):', migErr.message);
+      }
+    }
+
+    // Data Migration: Update partners table schema if it's the old one
+    try {
+      // Check if old column exists
+      const [cols] = await connection.execute("SHOW COLUMNS FROM partners LIKE 'company_name'");
+      if (cols.length > 0) {
+        await connection.execute("DROP TABLE partners");
+        await connection.execute(`
+          CREATE TABLE partners (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(150) NOT NULL,
+            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+            logo_url VARCHAR(600) NOT NULL,
+            website_url VARCHAR(600) NULL,
+            sort_order INT DEFAULT 0,
+            status ENUM('draft', 'published') DEFAULT 'published',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('Executed data migration: Recreated partners table with new schema');
+      }
+    } catch (migErr) {
+      console.error('Migration error (partners table):', migErr.message);
     }
 
     // Data Migration: Fix missing leading slashes in image URLs for programs
@@ -173,6 +319,54 @@ const initializeDB = async () => {
       console.log('Seeded default site settings.');
     } else {
       console.log('Site settings already exist.');
+    }
+
+        // Seed default chairman message
+    const [chairmanRows] = await connection.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (chairmanRows.length === 0) {
+      await connection.execute(
+        'INSERT INTO chairman_message (id, name, designation, message_title, message_body) VALUES (1, ?, ?, ?, ?)',
+        ['Mr Indika De Zoysa', 'Chairman, FITIS', '"FITIS: Pioneering Sri Lanka\'s Digital Transformation and Economic Growth"', 'Federation of Information Technology Industry Sri Lanka (FITIS) play a major role in the ICT Industry Sector...']
+      );
+      console.log('Seeded default chairman message.');
+    } else {
+      console.log('Chairman message already exists.');
+    }
+
+    // Seed default privacy policy
+    const [privacyRows] = await connection.execute('SELECT * FROM privacy_policy_page WHERE id = 1');
+    if (privacyRows.length === 0) {
+      await connection.execute(
+        'INSERT INTO privacy_policy_page (id, page_title, effective_date) VALUES (1, ?, ?)',
+        ['PRIVACY POLICY', '2021-03-01']
+      );
+      console.log('Seeded default privacy policy page.');
+    } else {
+      console.log('Privacy policy page already exists.');
+    }
+
+    // Seed default disclaimer page
+    const [disclaimerRows] = await connection.execute('SELECT * FROM disclaimer_page WHERE id = 1');
+    if (disclaimerRows.length === 0) {
+      await connection.execute(
+        'INSERT INTO disclaimer_page (id, page_title, effective_date) VALUES (1, ?, ?)',
+        ['DISCLAIMER', '2021-03-01']
+      );
+
+      const sections = [{"title": "External Links Disclaimer", "html": "<p>The Site may contain (or you may be sent through the Site) links to other websites or content belonging to or originating from third parties or links to websites and features. Such external links are not investigated, monitored, or checked for accuracy, adequacy, validity, reliability, availability or completeness by us.</p><p><strong>WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR THE ACCURACY OR RELIABILITY OF ANY INFORMATION OFFERED BY THIRD-PARTY WEBSITES LINKED THROUGH THE SITE OR ANY WEBSITE OR FEATURE LINKED IN ANY BANNER OR OTHER ADVERTISING. WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES.</strong></p>"}, {"title": "Testimonials Disclaimer", "html": "<p><strong>YOUR INDIVIDUAL RESULTS MAY VARY.</strong></p><p>The testimonials on the Site are submitted in various forms such as text, audio and/or video, and are reviewed by us before being posted. They appear on the Site verbatim as given by the users, except for the correction of grammar or typing errors. Some testimonials may have been shortened for the sake of brevity, where the full testimonial contained extraneous information not relevant to the general public.</p><p>The views and opinions contained in the testimonials belong solely to the individual user and do not reflect our views and opinions.</p>"}, {"title": "Errors and Omissions Disclaimer", "html": "<p>While we have made every attempt to ensure that the information contained in this site has been obtained from reliable sources, FITIS Guarantee Limited is not responsible for any errors or omissions or for the results obtained from the use of this information. All information in this site is provided \u201cas is\u201d, with no guarantee of completeness, accuracy, timeliness or of the results obtained from the use of this information, and without warranty of any kind, express or implied, including, but not limited to warranties of performance, merchantability, and fitness for a particular purpose.</p><p>In no event will FITIS Guarantee Limited, its related partnerships or corporations, or the partners, agents or employees thereof be liable to you or anyone else for any decision made or action taken in reliance on the information in this Site or for any consequential, special or similar damages, even if advised of the possibility of such damages.</p>"}, {"title": "Logos and Trademarks Disclaimer", "html": "<p>All logos and trademarks of third parties referenced on www.fitis.lk are the trademarks and logos of their respective owners. Any inclusion of such trademarks or logos does not imply or constitute any approval, endorsement or sponsorship of FITIS Guarantee Limited by such owners.</p>"}, {"title": "Website Disclaimer", "html": "<p>The information provided by FITIS Guarantee Limited (\u201cCompany\u201d, \u201cwe\u201d, \u201cour\u201d, \u201cus\u201d) on www.fitis.lk (the \u201cSite\u201d) is for general informational purposes only. All information on the Site is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.</p><p><strong>UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF THE SITE OR RELIANCE ON ANY INFORMATION PROVIDED ON THE SITE. YOUR USE OF THE SITE AND YOUR RELIANCE ON ANY INFORMATION ON THE SITE IS SOLELY AT YOUR OWN RISK.</strong></p>"}, {"title": "Affiliates Disclaimer", "html": "<p>The Site may contain links to affiliate websites, and we may receive an affiliate commission for any purchases or actions made by you on the affiliate websites using such links.</p>"}, {"title": "Contact Us", "html": "<p>Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: info@fitis.lk.</p>"}];
+
+      for (let i = 0; i < sections.length; i++) {
+        const sec = sections[i];
+        const slug = sec.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        await connection.execute(
+          'INSERT INTO disclaimer_sections (page_id, section_slug, section_title, section_html, sort_order) VALUES (1, ?, ?, ?, ?)',
+          [slug, sec.title, sec.html, i]
+        );
+      }
+
+      console.log('Seeded default disclaimer page and sections.');
+    } else {
+      console.log('Disclaimer page already exists.');
     }
 
     console.log('Database initialization complete.');

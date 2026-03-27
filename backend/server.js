@@ -43,6 +43,12 @@ const storage = multer.diskStorage({
       dest += 'events';
     } else if (req.path.includes('/upload/program-banner')) {
       dest += 'programs';
+    } else if (req.path.includes('/upload/chairman-photo')) {
+      dest += 'chairman';
+    } else if (req.path.includes('/upload/secretariat-photo')) {
+      dest += 'secretariat';
+    } else if (req.path.includes('/upload/partner-logo')) {
+      dest += 'partners';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -133,6 +139,36 @@ const uploadProgramBanner = multer({
   }
 });
 
+const uploadChairmanPhoto = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chairman photo'));
+  }
+});
+
+const uploadSecretariatPhoto = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for secretariat photo'));
+  }
+});
+
+const uploadPartnerLogo = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for partner logo'));
+  }
+});
+
 // Database connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -172,6 +208,65 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Admin Login
+
+// POST /api/membership/apply - Public endpoint for new member applications
+app.post('/api/membership/apply', multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(process.cwd(), 'uploads', 'memberships');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+  })
+}).fields([
+  { name: 'business_registration', maxCount: 1 },
+  { name: 'audited_accounts', maxCount: 1 },
+  { name: 'company_profile', maxCount: 1 },
+  { name: 'other_documents', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const data = req.body;
+
+    const fileUrl = (fieldname) => {
+      if (req.files && req.files[fieldname] && req.files[fieldname][0]) {
+        return `/uploads/memberships/${req.files[fieldname][0].filename}`;
+      }
+      return null;
+    };
+
+    const br_url = fileUrl('business_registration');
+    const aa_url = fileUrl('audited_accounts');
+    const cp_url = fileUrl('company_profile');
+    const od_url = fileUrl('other_documents');
+
+    const sql = `
+      INSERT INTO member_applications (
+        primary_chapter, chapters_applied, company_name, membership_category, ceo_name, company_address,
+        phone, fax, website, email, br_number, year_incorporation, boi_no, ownership_local, ownership_foreign,
+        business_activities, industry_focus, revenue_local, revenue_foreign, employees_count,
+        primary_nominee, secondary_nominee, business_registration, audited_accounts, company_profile, other_documents,
+        declaration_applicant_name, declaration_applicant_designation, declaration_date, agree_checkbox, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+    `;
+
+    const values = [
+      data.primary_chapter, data.chapters_applied_json, data.company_name, data.membership_category, data.ceo_name, data.company_address,
+      data.phone, data.fax, data.website, data.email, data.br_number, data.year_incorporation, data.boi_no, data.ownership_local, data.ownership_foreign,
+      data.business_activities, data.industry_focus_json, data.revenue_local, data.revenue_foreign, data.employees_count,
+      data.primary_nominee_json, data.secondary_nominee_json,
+      br_url, aa_url, cp_url, od_url,
+      data.declaration_applicant_name, data.declaration_applicant_designation, data.declaration_date, data.agree_checkbox === 'true' ? 1 : 0
+    ];
+
+    await pool.query(sql, values);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Membership application error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -212,10 +307,12 @@ const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
   chapters: ['name', 'head', 'member_count'],
-  leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat'],
-  partners: ['company_name', 'tier', 'contact_person'],
+  leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
+  partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
-  programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order']
+  programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
+    secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
+  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -267,6 +364,209 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
+// Privacy Policy Public
+app.get('/api/privacy-policy', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM privacy_policy_page WHERE id = 1 AND status = "published"');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Privacy Policy not found or not published' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM privacy_policy_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching privacy policy:', error);
+    res.status(500).json({ error: 'Failed to fetch privacy policy' });
+  }
+});
+
+// Admin Privacy Policy (Protected)
+app.get('/api/admin/privacy-policy', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM privacy_policy_page WHERE id = 1');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Privacy Policy not found' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM privacy_policy_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching privacy policy:', error);
+    res.status(500).json({ error: 'Failed to fetch privacy policy' });
+  }
+});
+
+app.put('/api/admin/privacy-policy', authenticateToken, async (req, res) => {
+  const { page_title, effective_date, status, sections } = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const [existing] = await dbConnection.execute('SELECT id FROM privacy_policy_page WHERE id = 1');
+    const effDate = effective_date ? new Date(effective_date).toISOString().split('T')[0] : null;
+
+    if (existing.length === 0) {
+      await dbConnection.execute(
+        `INSERT INTO privacy_policy_page (id, page_title, effective_date, status) VALUES (1, ?, ?, ?)`,
+        [page_title || 'PRIVACY POLICY', effDate, status || 'published']
+      );
+    } else {
+      await dbConnection.execute(
+        `UPDATE privacy_policy_page SET page_title=?, effective_date=?, status=? WHERE id=1`,
+        [page_title || 'PRIVACY POLICY', effDate, status || 'published']
+      );
+    }
+
+    // Replace sections
+    await dbConnection.execute('DELETE FROM privacy_policy_sections WHERE page_id = 1');
+
+    if (sections && Array.isArray(sections) && sections.length > 0) {
+      for (let i = 0; i < sections.length; i++) {
+        const sec = sections[i];
+        if (!sec.section_title || !sec.section_html) continue;
+        const slug = sec.section_slug || sec.section_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        await dbConnection.execute(
+          `INSERT INTO privacy_policy_sections (page_id, section_slug, section_title, section_html, sort_order) VALUES (1, ?, ?, ?, ?)`,
+          [slug, sec.section_title, sec.section_html, sec.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.json({ message: 'Privacy policy updated successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error updating privacy policy:', error);
+    res.status(500).json({ error: 'Failed to update privacy policy' });
+  } finally {
+    dbConnection.release();
+  }
+});
+
+// Disclaimer Public
+app.get('/api/disclaimer', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM disclaimer_page WHERE id = 1 AND status = "published"');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Disclaimer not found or not published' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM disclaimer_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching disclaimer:', error);
+    res.status(500).json({ error: 'Failed to fetch disclaimer' });
+  }
+});
+
+// Admin Disclaimer (Protected)
+app.get('/api/admin/disclaimer', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM disclaimer_page WHERE id = 1');
+    if (pageRows.length === 0) return res.status(404).json({ error: 'Disclaimer not found' });
+
+    const [sectionRows] = await pool.execute('SELECT * FROM disclaimer_sections WHERE page_id = 1 ORDER BY sort_order ASC, id ASC');
+    res.json({ ...pageRows[0], sections: sectionRows });
+  } catch (error) {
+    console.error('Error fetching disclaimer:', error);
+    res.status(500).json({ error: 'Failed to fetch disclaimer' });
+  }
+});
+
+app.put('/api/admin/disclaimer', authenticateToken, async (req, res) => {
+  const { page_title, effective_date, status, sections } = req.body;
+  const dbConnection = await pool.getConnection();
+  try {
+    await dbConnection.beginTransaction();
+
+    const [existing] = await dbConnection.execute('SELECT id FROM disclaimer_page WHERE id = 1');
+    const effDate = effective_date ? new Date(effective_date).toISOString().split('T')[0] : null;
+
+    if (existing.length === 0) {
+      await dbConnection.execute(
+        `INSERT INTO disclaimer_page (id, page_title, effective_date, status) VALUES (1, ?, ?, ?)`,
+        [page_title || 'DISCLAIMER', effDate, status || 'published']
+      );
+    } else {
+      await dbConnection.execute(
+        `UPDATE disclaimer_page SET page_title=?, effective_date=?, status=? WHERE id=1`,
+        [page_title || 'DISCLAIMER', effDate, status || 'published']
+      );
+    }
+
+    // Replace sections
+    await dbConnection.execute('DELETE FROM disclaimer_sections WHERE page_id = 1');
+
+    if (sections && Array.isArray(sections) && sections.length > 0) {
+      for (let i = 0; i < sections.length; i++) {
+        const sec = sections[i];
+        if (!sec.section_title || !sec.section_html) continue;
+        const slug = sec.section_slug || sec.section_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        await dbConnection.execute(
+          `INSERT INTO disclaimer_sections (page_id, section_slug, section_title, section_html, sort_order) VALUES (1, ?, ?, ?, ?)`,
+          [slug, sec.section_title, sec.section_html, sec.sort_order ?? i]
+        );
+      }
+    }
+
+    await dbConnection.commit();
+    res.json({ message: 'Disclaimer updated successfully' });
+  } catch (error) {
+    await dbConnection.rollback();
+    console.error('Error updating disclaimer:', error);
+    res.status(500).json({ error: 'Failed to update disclaimer' });
+  } finally {
+    dbConnection.release();
+  }
+});
+
+// Chairman Message Public
+app.get('/api/chairman-message', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1 AND status = "published"');
+    if (rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+// Admin Chairman Message (Protected)
+app.get('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  const { name, designation, subtitle, photo_url, message_title, message_body, focus_cards, status } = req.body;
+  try {
+    const [existing] = await pool.execute('SELECT id FROM chairman_message WHERE id = 1');
+    const focusCardsStr = focus_cards ? JSON.stringify(focus_cards) : null;
+
+    if (existing.length === 0) {
+      await pool.execute(
+        `INSERT INTO chairman_message (id, name, designation, subtitle, photo_url, message_title, message_body, focus_cards, status)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, designation, subtitle, photo_url, message_title, message_body, focusCardsStr, status || 'published']
+      );
+    } else {
+      await pool.execute(
+        `UPDATE chairman_message
+         SET name=?, designation=?, subtitle=?, photo_url=?, message_title=?, message_body=?, focus_cards=?, status=?
+         WHERE id=1`,
+        [name, designation, subtitle, photo_url, message_title, message_body, focusCardsStr, status || 'published']
+      );
+    }
+    res.json({ message: 'Chairman message updated successfully' });
+  } catch (error) {
+    console.error('Error updating chairman message:', error);
+    res.status(500).json({ error: 'Failed to update message' });
+  }
+});
+
 
 // File Uploads (Protected)
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
@@ -584,6 +884,27 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
   }
 });
 
+// Upload Chairman Photo
+app.post('/api/admin/upload/chairman-photo', authenticateToken, uploadChairmanPhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/chairman/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Secretariat Photo
+app.post('/api/admin/upload/secretariat-photo', authenticateToken, uploadSecretariatPhoto.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/secretariat/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Partner Logo
+app.post('/api/admin/upload/partner-logo', authenticateToken, uploadPartnerLogo.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/partners/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   const { table, id } = req.params;
@@ -638,10 +959,44 @@ app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Public Partners
+app.get('/api/partners', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM partners WHERE status = "published" ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    res.status(500).json({ error: 'Failed to fetch partners' });
+  }
+});
+
+// Public Secretariat Team
+app.get('/api/secretariat-team', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM secretariat_team WHERE status = "published" ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching secretariat team:', error);
+    res.status(500).json({ error: 'Failed to fetch secretariat team' });
+  }
+});
+
 // Public Leadership Members
 app.get('/api/leadership-members', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM leadership_members ORDER BY hierarchy_level ASC, seat ASC');
+    const type = req.query.type;
+    let query = 'SELECT * FROM leadership_members';
+    let params = [];
+
+    if (type === 'past') {
+      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC, sort_order ASC';
+    } else if (type === 'current') {
+      query += ' WHERE type = "current" AND status = "published" ORDER BY hierarchy_level ASC, seat ASC';
+    } else {
+      query += ' WHERE status = "published" ORDER BY type ASC, hierarchy_level ASC, seat ASC';
+    }
+
+    const [rows] = await pool.execute(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching leadership members:', error);

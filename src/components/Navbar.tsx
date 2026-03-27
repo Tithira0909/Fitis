@@ -28,12 +28,21 @@ export const Navbar = () => {
         { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
         { name: 'Code of Ethics', href: '/Home/code-of-ethics' },
         { name: 'Past Leaders', href: '/Home/past-leaders' },
+        { name: 'Secretariat Team', href: '/Home/secretariat-team' },
       ]
     },
     { name: 'News', href: '/Home/news' },
     { name: 'Events', href: '/Home/events' },
     { name: 'Programs', href: '/Home/programs' },
     { name: 'Chapters', href: '/Chapter/chapters' },
+    { name: 'Partnerships', href: '/Home/partnerships' },
+    {
+      name: 'Members',
+      href: '#',
+      submenu: [
+        { name: 'Become a Member', href: '/Home/become-a-member' }
+      ]
+    },
     { name: 'Gallery', href: '/Home/gallery' },
   ];
 
@@ -49,11 +58,7 @@ export const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-fitis-blue rounded-lg flex items-center justify-center text-white font-bold text-xl">F</div>
-          <span className={cn(
-            "font-display font-bold text-2xl tracking-tighter",
-            isScrolled || location.pathname !== '/' ? "text-fitis-blue" : "text-white"
-          )}>FITIS</span>
+          <img src="/fitis-logo.png" alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
         </Link>
 
         {/* Desktop Nav */}
