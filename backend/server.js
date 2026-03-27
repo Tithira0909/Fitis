@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
       dest += 'news-banner';
     } else if (req.path.includes('/upload/news-pdf')) {
       dest += 'news-pdf';
-    } else if (req.path.includes('/upload/gallery')) {
+    } else if (req.path.includes('/gallery') || req.path.includes('/upload/gallery')) {
       dest += 'gallery';
     } else if (req.path.includes('/upload/event-flyer')) {
       dest += 'events';
@@ -45,8 +45,8 @@ const storage = multer.diskStorage({
       dest += 'programs';
     }
     // Ensure directory exists
-    fs.mkdirSync(path.join(__dirname, dest), { recursive: true });
-    cb(null, path.join(__dirname, dest));
+    fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
+    cb(null, path.join(process.cwd(), dest));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -269,6 +269,65 @@ app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
 });
 
 // File Uploads (Protected)
+
+// Chairman's Message APIs
+app.get('/api/chairman-message', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1 AND status = "published"');
+    if (rows.length === 0) return res.status(404).json({ error: 'No published chairman message found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch chairman message' });
+  }
+});
+
+app.get('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (rows.length === 0) return res.status(404).json({ error: 'Chairman message not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching admin chairman message:', error);
+    res.status(500).json({ error: 'Failed to fetch admin chairman message' });
+  }
+});
+
+app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
+  const { name, designation, company, photo_url, message_title, message_body, status } = req.body;
+  try {
+    await pool.execute(
+      `UPDATE chairman_message SET
+        name = ?, designation = ?, company = ?, photo_url = ?,
+        message_title = ?, message_body = ?, status = ?
+      WHERE id = 1`,
+      [name, designation, company, photo_url, message_title, message_body, status]
+    );
+    res.json({ message: 'Chairman message updated successfully' });
+  } catch (error) {
+    console.error('Error updating chairman message:', error);
+    res.status(500).json({ error: 'Failed to update chairman message' });
+  }
+});
+
+const uploadChairman = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for chairman photo'));
+  }
+});
+
+app.post('/api/admin/upload/chairman-photo', authenticateToken, uploadChairman.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const relativeUrl = `/uploads/chairman/${req.file.filename}`;
+  res.json({ url: relativeUrl });
+});
+
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
   const relativeUrl = `/uploads/hero/${req.file.filename}`;
@@ -520,6 +579,7 @@ app.put('/api/admin/gallery/:id/images/reorder', authenticateToken, async (req, 
 
 // Generic GET all items
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return; // Handled explicitly above
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -532,8 +592,78 @@ app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// CODE OF CONDUCT ROUTES (Must be before generic routes)
+// ==========================================
+
+// Admin GET Code of Conduct
+app.get('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (admin):', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Admin PUT Code of Conduct
+app.put('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  const { page_title, last_updated, status, sections } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Update main page info
+    let updateQuery = 'UPDATE code_of_conduct_page SET page_title = ?, status = ?';
+    let updateParams = [page_title, status];
+
+    if (last_updated) {
+      updateQuery += ', last_updated = ?';
+      updateParams.push(last_updated);
+    }
+    updateQuery += ' WHERE id = 1';
+
+    await connection.query(updateQuery, updateParams);
+
+    // Delete existing sections to easily handle reordering/removals
+    await connection.query('DELETE FROM code_of_conduct_sections WHERE page_id = 1');
+
+    // Insert new sections
+    if (sections && Array.isArray(sections)) {
+      for (const section of sections) {
+        await connection.query(
+          `INSERT INTO code_of_conduct_sections
+          (page_id, section_slug, section_title, section_html, sort_order)
+          VALUES (1, ?, ?, ?, ?)`,
+          [section.section_slug || '', section.section_title || '', section.section_html || '', section.sort_order || 0]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: 'Code of Conduct updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error updating code of conduct:', err);
+    res.status(500).json({ error: 'Database update failed' });
+  } finally {
+    connection.release();
+  }
+});
+
 // Generic GET single item
 app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -548,6 +678,7 @@ app.get('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
 // Generic POST create item
 app.post('/api/admin/:table', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -586,6 +717,7 @@ app.post('/api/admin/:table', authenticateToken, async (req, res) => {
 
 // Generic PUT update item
 app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -625,6 +757,7 @@ app.put('/api/admin/:table/:id', authenticateToken, async (req, res) => {
 
 // Generic DELETE item
 app.delete('/api/admin/:table/:id', authenticateToken, async (req, res) => {
+  if (req.params.table === 'code-of-conduct') return;
   const { table, id } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(400).json({ error: 'Invalid table' });
 
@@ -745,6 +878,95 @@ app.get('/api/news/:slug/related', async (req, res) => {
   } catch (error) {
     console.error('Error fetching related news:', error);
     res.status(500).json({ error: 'Failed to fetch related news' });
+  }
+});
+
+// ==========================================
+// CODE OF CONDUCT ROUTES
+// ==========================================
+
+// Admin GET Code of Conduct
+app.get('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (admin):', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Admin PUT Code of Conduct
+app.put('/api/admin/code-of-conduct', authenticateToken, async (req, res) => {
+  const { page_title, last_updated, status, sections } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Update main page info
+    let updateQuery = 'UPDATE code_of_conduct_page SET page_title = ?, status = ?';
+    let updateParams = [page_title, status];
+
+    if (last_updated) {
+      updateQuery += ', last_updated = ?';
+      updateParams.push(last_updated);
+    }
+    updateQuery += ' WHERE id = 1';
+
+    await connection.query(updateQuery, updateParams);
+
+    // Delete existing sections to easily handle reordering/removals
+    await connection.query('DELETE FROM code_of_conduct_sections WHERE page_id = 1');
+
+    // Insert new sections
+    if (sections && Array.isArray(sections)) {
+      for (const section of sections) {
+        await connection.query(
+          `INSERT INTO code_of_conduct_sections
+          (page_id, section_slug, section_title, section_html, sort_order)
+          VALUES (1, ?, ?, ?, ?)`,
+          [section.section_slug || '', section.section_title || '', section.section_html || '', section.sort_order || 0]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: 'Code of Conduct updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error updating code of conduct:', err);
+    res.status(500).json({ error: 'Database update failed' });
+  } finally {
+    connection.release();
+  }
+});
+
+// Public GET Code of Conduct
+app.get('/api/code-of-conduct', async (req, res) => {
+  try {
+    const [pageRows] = await pool.execute('SELECT * FROM code_of_conduct_page WHERE id = 1 AND status = "Published"');
+    if (pageRows.length === 0) {
+      return res.status(404).json({ error: 'Code of conduct page not found or not published' });
+    }
+
+    const [sectionRows] = await pool.execute('SELECT * FROM code_of_conduct_sections WHERE page_id = 1 ORDER BY sort_order ASC');
+
+    res.json({
+      ...pageRows[0],
+      sections: sectionRows
+    });
+  } catch (err) {
+    console.error('Error fetching code of conduct (public):', err);
+    res.status(500).json({ error: 'Database query failed' });
   }
 });
 

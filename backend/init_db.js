@@ -130,6 +130,35 @@ const initializeDB = async () => {
         sort_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS chairman_message (
+        id INT PRIMARY KEY DEFAULT 1,
+        name VARCHAR(255),
+        designation VARCHAR(255),
+        company VARCHAR(255),
+        photo_url VARCHAR(500),
+        message_title VARCHAR(255),
+        message_body TEXT,
+        status ENUM('draft', 'published') DEFAULT 'published',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS code_of_conduct_page (
+        id INT PRIMARY KEY DEFAULT 1,
+        page_title VARCHAR(255) DEFAULT 'CODE OF ETHICS AND PROFESSIONAL CONDUCT',
+        last_updated DATE,
+        status ENUM('Draft', 'Published') DEFAULT 'Draft',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS code_of_conduct_sections (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        page_id INT,
+        section_slug VARCHAR(255),
+        section_title VARCHAR(255),
+        section_html TEXT,
+        sort_order INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (page_id) REFERENCES code_of_conduct_page(id) ON DELETE CASCADE
       )`
     ];
 
@@ -173,6 +202,30 @@ const initializeDB = async () => {
       console.log('Seeded default site settings.');
     } else {
       console.log('Site settings already exist.');
+    }
+
+    // Seed default chairman message
+    const [chairmanRows] = await connection.execute('SELECT * FROM chairman_message WHERE id = 1');
+    if (chairmanRows.length === 0) {
+        await connection.execute(`
+          INSERT INTO chairman_message (id, name, designation, message_title, message_body)
+          VALUES (1, 'John Doe', 'Chairman', 'Welcome to FITIS', 'Our mission is to lead.')
+        `);
+        console.log('Seeded default chairman message.');
+    } else {
+        console.log('Chairman message already exists.');
+    }
+
+    // Seed default code of conduct page
+    const [cocRows] = await connection.execute('SELECT COUNT(*) as count FROM code_of_conduct_page');
+    if (cocRows[0].count === 0) {
+      await connection.execute(`
+        INSERT INTO code_of_conduct_page (id, page_title, last_updated, status)
+        VALUES (1, 'CODE OF ETHICS AND PROFESSIONAL CONDUCT', CURRENT_DATE, 'Published')
+      `);
+      console.log('Seeded default code of conduct page.');
+    } else {
+      console.log('Code of conduct page already exists.');
     }
 
     console.log('Database initialization complete.');

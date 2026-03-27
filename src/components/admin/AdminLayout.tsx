@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated, logout } from '../../lib/auth';
-import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, Settings, LogOut, Image as ImageIcon, FolderGit2 } from 'lucide-react';
+import { LayoutDashboard, Newspaper, Calendar, Users, Briefcase, Handshake, Mail, Settings, LogOut, Image as ImageIcon, FolderGit2, ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -32,8 +33,13 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/partners', label: 'Partners', icon: <Handshake size={20} /> },
     { path: '/admin/newsletter', label: 'Newsletter', icon: <Mail size={20} /> },
     { path: '/admin/gallery', label: 'Gallery', icon: <ImageIcon size={20} /> },
-    { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },
   ];
+
+  React.useEffect(() => {
+    if (location.pathname.startsWith('/admin/site-settings') || location.pathname.startsWith('/admin/chairman-message')) {
+      setSettingsOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
@@ -58,6 +64,53 @@ export const AdminLayout: React.FC = () => {
               </Link>
             );
           })}
+
+          {/* Settings Section */}
+          <div className="mt-4">
+            <button
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <Settings size={20} />
+                <span>Settings</span>
+              </div>
+              {settingsOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+
+            {settingsOpen && (
+              <div className="ml-8 mt-2 space-y-2">
+                <Link
+                  to="/admin/site-settings"
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/admin/site-settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <Settings size={16} />
+                  <span className="text-sm">Site Settings</span>
+                </Link>
+                <Link
+                  to="/admin/chairman-message"
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/admin/chairman-message' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <MessageSquare size={16} />
+                  <span className="text-sm">Chairman Message</span>
+                </Link>
+                <Link
+                  to="/admin/code-of-conduct"
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                    location.pathname === '/admin/code-of-conduct' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <FolderGit2 size={16} />
+                  <span className="text-sm">Code of Conduct</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
         </nav>
         <div className="p-4 border-t border-gray-800">
           <button

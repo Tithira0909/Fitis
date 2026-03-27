@@ -4,6 +4,12 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { Introduction } from './pages/Introduction';
+
+import { LeadershipTeam } from './pages/LeadershipTeam';
+import { ChairmanMessage } from './pages/ChairmanMessage';
+import { CodeOfConduct } from './pages/CodeOfConduct';
+import { PastLeaders } from './pages/PastLeaders';
+
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
@@ -24,6 +30,8 @@ import { AdminLeadership } from './pages/admin/AdminLeadership';
 import { AdminPartners } from './pages/admin/AdminPartners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
+import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
+import { AdminCodeOfConduct } from './pages/admin/AdminCodeOfConduct';
 import { AdminGallery } from './pages/admin/AdminGallery';
 
 const ScrollToTop = () => {
@@ -94,6 +102,8 @@ export default function App() {
           <Route path="newsletter" element={<AdminNewsletter />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
+          <Route path="chairman-message" element={<AdminChairmanMessage />} />
+          <Route path="code-of-conduct" element={<AdminCodeOfConduct />} />
         </Route>
 
         {/* Public Routes */}
@@ -102,6 +112,10 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/Home/introduction" element={<Introduction />} />
+              <Route path="/Home/leadership-team" element={<LeadershipTeam />} />
+              <Route path="/Home/chairman-message" element={<ChairmanMessage />} />
+              <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
+              <Route path="/Home/past-leaders" element={<PastLeaders />} />
               <Route path="/Home/programs" element={<Programs />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
