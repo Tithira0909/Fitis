@@ -83,7 +83,7 @@ export const News = () => {
   const filteredNews = useMemo(() => {
     return newsData
       .filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                              item.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
         return matchesSearch && matchesCategory;
@@ -98,7 +98,7 @@ export const News = () => {
 
   const featuredItem = newsData.find(item => item.featured);
   const regularNews = filteredNews.filter(item => !item.featured);
-  
+
   const totalPages = Math.ceil(regularNews.length / itemsPerPage);
   const paginatedNews = regularNews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -126,7 +126,7 @@ export const News = () => {
       {featuredItem && (
         <section className="py-16 bg-slate-50/50">
           <div className="max-w-7xl mx-auto px-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -134,8 +134,8 @@ export const News = () => {
             >
               <div className="lg:w-3/5 relative overflow-hidden">
                 <img 
-                  src={featuredItem.image} 
-                  alt={featuredItem.title} 
+                  src={featuredItem.image}
+                  alt={featuredItem.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                 />
@@ -178,9 +178,9 @@ export const News = () => {
             {/* Search */}
             <div className="relative w-full md:w-96">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input 
-                type="text" 
-                placeholder="Search news..." 
+              <input
+                type="text"
+                placeholder="Search news..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all"
@@ -192,7 +192,7 @@ export const News = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Category:</span>
                 <div className="relative">
-                  <select 
+                  <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-fitis-blue/20 cursor-pointer"
@@ -209,7 +209,7 @@ export const News = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Sort:</span>
                 <div className="relative">
-                  <select 
+                  <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-fitis-blue/20 cursor-pointer"
@@ -240,9 +240,9 @@ export const News = () => {
                   className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group"
                 >
                   <div className="aspect-[16/10] relative overflow-hidden">
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
+                    <img
+                      src={item.image}
+                      alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       referrerPolicy="no-referrer"
                     />
@@ -273,7 +273,7 @@ export const News = () => {
           ) : (
             <div className="py-20 text-center">
               <p className="text-xl text-slate-400 font-medium">No news articles found matching your criteria.</p>
-              <button 
+              <button
                 onClick={() => { setSearchQuery(''); setCategoryFilter('All'); }}
                 className="mt-4 text-fitis-blue font-bold underline"
               >
@@ -285,22 +285,22 @@ export const News = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-20 flex items-center justify-center gap-2">
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
               >
                 <ChevronLeft size={20} />
               </button>
-              
+
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
                   className={cn(
                     "w-10 h-10 rounded-lg text-sm font-bold transition-all",
-                    currentPage === i + 1 
-                      ? "bg-fitis-blue text-white shadow-lg shadow-fitis-blue/20" 
+                    currentPage === i + 1
+                      ? "bg-fitis-blue text-white shadow-lg shadow-fitis-blue/20"
                       : "text-slate-600 hover:bg-slate-50 border border-slate-200"
                   )}
                 >
@@ -308,7 +308,7 @@ export const News = () => {
                 </button>
               ))}
 
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
