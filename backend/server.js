@@ -55,6 +55,8 @@ const storage = multer.diskStorage({
       dest += 'partners';
     } else if (req.path.includes('/upload/member-benefit-logo')) {
       dest += 'benefits';
+    } else if (req.path.includes('/upload/chapter')) {
+      dest += 'chapters';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -322,7 +324,9 @@ app.post('/api/auth/login', async (req, res) => {
 const TABLE_COLUMNS = {
   news: ['title', 'slug', 'excerpt', 'content', 'banner_image_url', 'pdf_url', 'category', 'status', 'publish_date', 'author'],
   events: ['title', 'flyer_image_url', 'venue', 'event_date', 'start_time', 'end_time', 'timezone', 'rsvp_open', 'short_description', 'details_url', 'facebook_url', 'twitter_url', 'linkedin_url', 'status'],
-  chapters: ['name', 'head', 'member_count'],
+  chapters: ['name', 'slug', 'short_description', 'hero_title', 'breadcrumb_title', 'member_count', 'members_summary_text', 'view_all_link', 'president_name', 'president_designation', 'president_company', 'president_image_url', 'president_message_body'],
+  chapter_objectives: ['chapter_id', 'objective_text', 'sort_order'],
+  chapter_exco_members: ['chapter_id', 'name', 'designation', 'company', 'role', 'image_url', 'linkedin_url', 'sort_order', 'status'],
   leadership_members: ['name', 'designation', 'type', 'image_url', 'linkedin_url', 'hierarchy_level', 'seat', 'year_start', 'year_end', 'sort_order', 'status'],
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
@@ -586,6 +590,12 @@ app.put('/api/admin/chairman-message', authenticateToken, async (req, res) => {
 
 
 // File Uploads (Protected)
+app.post('/api/admin/upload/chapter', authenticateToken, uploadLeadership.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
+  const relativeUrl = `/uploads/chapters/${req.file.filename}`;
+  res.json({ url: relativeUrl });
+});
+
 app.post('/api/admin/upload/hero', authenticateToken, uploadHero.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded or invalid type' });
   const relativeUrl = `/uploads/hero/${req.file.filename}`;
@@ -939,6 +949,16 @@ app.delete('/api/admin/member-benefits/:id', authenticateToken, async (req, res)
 });
 
 // Generic GET all items
+app.get('/api/chapters', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM chapters ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching chapters:', error);
+    res.status(500).json({ error: 'Failed to fetch chapters' });
+  }
+});
+
 app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   const { table } = req.params;
   if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
@@ -949,6 +969,27 @@ app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Public Chapter Detail Endpoint
+app.get('/api/chapters/:slug', async (req, res) => {
+  try {
+    const [chapterRows] = await pool.execute('SELECT * FROM chapters WHERE slug = ?', [req.params.slug]);
+    if (chapterRows.length === 0) return res.status(404).json({ error: 'Chapter not found' });
+
+    const chapter = chapterRows[0];
+
+    const [objectivesRows] = await pool.execute('SELECT * FROM chapter_objectives WHERE chapter_id = ? ORDER BY sort_order ASC', [chapter.id]);
+    chapter.objectives = objectivesRows;
+
+    const [excoRows] = await pool.execute('SELECT * FROM chapter_exco_members WHERE chapter_id = ? ORDER BY sort_order ASC', [chapter.id]);
+    chapter.exco_members = excoRows;
+
+    res.json(chapter);
+  } catch (error) {
+    console.error('Error fetching chapter:', error);
+    res.status(500).json({ error: 'Failed to fetch chapter details' });
   }
 });
 
