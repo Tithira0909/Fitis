@@ -128,9 +128,27 @@ const initializeDB = async () => {
         contact_email VARCHAR(150),
         contact_phone VARCHAR(50),
         sort_order INT DEFAULT 0,
-        status ENUM('draft','published') DEFAULT 'published',
+        status ENUM('active','inactive') DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        banner_image_url VARCHAR(600),
+        about_chapter LONGTEXT,
+        chair_message LONGTEXT,
+        chair_image_url VARCHAR(600),
+        has_committee BOOLEAN DEFAULT FALSE
+)`,
+
+      `CREATE TABLE IF NOT EXISTS chapter_committee (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        chapter_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        designation VARCHAR(255),
+        company VARCHAR(255),
+        role_label VARCHAR(150),
+        image_url VARCHAR(600),
+        linkedin_url VARCHAR(600),
+        display_order INT DEFAULT 0,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
       )`,
       `CREATE TABLE IF NOT EXISTS leadership_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -151,7 +169,7 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS partners (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(150) NOT NULL,
-        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+        category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting', 'government_partners', 'fitis_corporate_partners', 'industry_partners', 'international_bodies', 'premium_corporate_partners', 'corporate_partners') NOT NULL,
         logo_url VARCHAR(600) NOT NULL,
         website_url VARCHAR(600) NULL,
         sort_order INT DEFAULT 0,
@@ -189,6 +207,8 @@ const initializeDB = async () => {
         hero_type ENUM('image', 'video') DEFAULT 'image',
         hero_url VARCHAR(500),
         favicon_url VARCHAR(500),
+        header_logo_url VARCHAR(500),
+        footer_logo_url VARCHAR(500),
         facebook_url VARCHAR(500),
         instagram_url VARCHAR(500),
         linkedin_url VARCHAR(500),
@@ -262,7 +282,7 @@ const initializeDB = async () => {
         slug VARCHAR(255) UNIQUE NOT NULL,
         description TEXT NOT NULL,
         banner_image_url VARCHAR(600) NOT NULL,
-        read_more_url VARCHAR(600) NOT NULL,
+        read_more_url VARCHAR(600) NULL,
         status ENUM('draft', 'published') DEFAULT 'published',
         sort_order INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -275,6 +295,20 @@ const initializeDB = async () => {
       console.log('Executed query:', query.substring(0, 50) + '...');
     }
 
+
+    // Update programs table: make read_more_url optional
+    try {
+      const [cols] = await connection.query("SHOW COLUMNS FROM programs LIKE 'read_more_url'");
+      if (cols.length > 0) {
+        if (cols[0].Null === 'NO') {
+          console.log("Altering 'read_more_url' to be NULLable in 'programs' table...");
+          await connection.query("ALTER TABLE programs MODIFY COLUMN read_more_url VARCHAR(600) NULL");
+          console.log("Successfully altered 'programs.read_more_url'.");
+        }
+      }
+    } catch (e) {
+      console.log('Error modifying programs table:', e.message);
+    }
 
     // Update leadership_members table if it already exists
     try {
@@ -291,7 +325,31 @@ const initializeDB = async () => {
       }
     }
 
-    // Data Migration: Update partners table schema if it's the old one
+
+    // Data Migration: Add new columns to chapters table
+    try {
+      const colsToAdd = [
+        "ADD COLUMN banner_image_url VARCHAR(600)",
+        "ADD COLUMN about_chapter LONGTEXT",
+        "ADD COLUMN chair_message LONGTEXT",
+        "ADD COLUMN chair_image_url VARCHAR(600)",
+        "ADD COLUMN has_committee BOOLEAN DEFAULT FALSE"
+      ];
+      for (const col of colsToAdd) {
+        try {
+          await connection.execute(`ALTER TABLE chapters ${col}`);
+        } catch (migErr) {
+          if (migErr.code !== 'ER_DUP_FIELDNAME') {
+            console.error(`Migration error adding column ${col}:`, migErr.message);
+          }
+        }
+      }
+      console.log('Migration for chapters columns completed.');
+    } catch (migErr) {
+      console.error('Migration error (chapters columns):', migErr.message);
+    }
+
+// Data Migration: Update partners table schema if it's the old one
     try {
       // Check if old column exists
       const [cols] = await connection.execute("SHOW COLUMNS FROM partners LIKE 'company_name'");
@@ -301,7 +359,7 @@ const initializeDB = async () => {
           CREATE TABLE partners (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(150) NOT NULL,
-            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting') NOT NULL,
+            category ENUM('government', 'industry', 'international', 'premium_corporate', 'corporate', 'supporting', 'government_partners', 'fitis_corporate_partners', 'industry_partners', 'international_bodies', 'premium_corporate_partners', 'corporate_partners') NOT NULL,
             logo_url VARCHAR(600) NOT NULL,
             website_url VARCHAR(600) NULL,
             sort_order INT DEFAULT 0,
@@ -341,6 +399,20 @@ const initializeDB = async () => {
       console.log('Admin user already exists.');
     }
 
+    // Data Migration: Add logo columns to site_settings if they don't exist
+    try {
+        const [headerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'header_logo_url'");
+        if (headerLogoCols.length === 0) {
+            await connection.execute("ALTER TABLE site_settings ADD COLUMN header_logo_url VARCHAR(500)");
+        }
+        const [footerLogoCols] = await connection.execute("SHOW COLUMNS FROM site_settings LIKE 'footer_logo_url'");
+        if (footerLogoCols.length === 0) {
+            await connection.execute("ALTER TABLE site_settings ADD COLUMN footer_logo_url VARCHAR(500)");
+        }
+    } catch (error) {
+        console.error("Site Settings Logo Migration failed:", error);
+    }
+
     // Seed default site settings
     const [settingsRows] = await connection.execute('SELECT * FROM site_settings WHERE id = 1');
     if (settingsRows.length === 0) {
@@ -353,7 +425,17 @@ const initializeDB = async () => {
       console.log('Site settings already exist.');
     }
 
-        // Seed default chairman message
+    // Data Migration: Migrating chapters
+    try {
+        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive', 'draft', 'published') DEFAULT 'active'`);
+        await connection.execute(`UPDATE chapters SET status = 'active' WHERE status = 'published'`);
+        await connection.execute(`UPDATE chapters SET status = 'inactive' WHERE status = 'draft'`);
+        await connection.execute(`ALTER TABLE chapters MODIFY status ENUM('active','inactive') DEFAULT 'active'`);
+    } catch (error) {
+        console.error("Chapter status Migration failed:", error);
+    }
+
+    // Seed default chairman message
     const [chairmanRows] = await connection.execute('SELECT * FROM chairman_message WHERE id = 1');
     if (chairmanRows.length === 0) {
       await connection.execute(

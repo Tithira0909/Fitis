@@ -334,12 +334,9 @@ const ServicesSection = () => {
                 <service.icon size={28} />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">{service.title}</h3>
-              <p className="text-slate-600 leading-relaxed mb-6">
+              <p className="text-slate-600 leading-relaxed">
                 {service.desc}
               </p>
-              <a href="#" className="inline-flex items-center gap-2 text-sm font-bold text-fitis-blue hover:gap-3 transition-all">
-                Learn More <ArrowRight size={16} />
-              </a>
             </motion.div>
           ))}
         </div>
@@ -417,9 +414,29 @@ const MembershipCTA = () => {
 interface Partner {
   id: number;
   name: string;
-  logo_url?: string;
-  website_url?: string;
+  category: 'government_partners' | 'fitis_corporate_partners' | 'industry_partners' | 'international_bodies' | 'premium_corporate_partners' | 'corporate_partners';
+  logo_url: string;
+  website_url: string;
+  sort_order: number;
 }
+
+const CATEGORY_ORDER = [
+  'government_partners',
+  'fitis_corporate_partners',
+  'industry_partners',
+  'international_bodies',
+  'premium_corporate_partners',
+  'corporate_partners',
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  government_partners: 'Government Partners',
+  fitis_corporate_partners: 'FITIS Corporate Partners',
+  industry_partners: 'Industry Partners',
+  international_bodies: 'International Bodies',
+  premium_corporate_partners: 'Premium Corporate Partners',
+  corporate_partners: 'Corporate Partners',
+};
 
 const PartnersSection = () => {
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -440,50 +457,80 @@ const PartnersSection = () => {
     fetchPartners();
   }, []);
 
+  const groupedPartners = CATEGORY_ORDER.reduce((acc, cat) => {
+    acc[cat] = partners.filter(p => p.category === cat);
+    return acc;
+  }, {} as Record<string, Partner[]>);
+
   return (
-    <section id="partners" className="py-24 bg-white">
+    <section id="partners" className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader title="Partnerships & Affiliations" />
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-          {partners.map((partner, idx) => {
-            const innerContent = (
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="h-24 bg-slate-50 rounded-2xl flex items-center justify-center p-6 grayscale hover:grayscale-0 transition-all border border-slate-100 group hover:shadow-md cursor-pointer overflow-hidden"
-              >
-                {partner.logo_url ? (
-                  <img
-                    src={getImageUrl(partner.logo_url)}
-                    alt={partner.name}
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                ) : (
-                  <span className="text-slate-400 font-bold text-sm text-center group-hover:text-fitis-blue transition-colors uppercase tracking-widest">{partner.name}</span>
-                )}
-              </motion.div>
-            );
-
-            return partner.website_url ? (
-              <a
-                key={partner.id}
-                href={partner.website_url.startsWith('http') ? partner.website_url : `https://${partner.website_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {innerContent}
-              </a>
-            ) : (
-              <div key={partner.id}>
-                {innerContent}
-              </div>
-            );
-          })}
+        <div className="text-center max-w-4xl mx-auto mb-16 md:mb-20">
+          <h2 className="text-3xl md:text-4xl font-bold text-fitis-blue mb-4 uppercase">
+            PARTNERSHIPS AND AFFILIATIONS
+          </h2>
+          <div className="w-24 h-1 bg-fitis-gold mx-auto mb-6"></div>
         </div>
+
+        {partners.length > 0 ? (
+          <div className="space-y-16">
+            {CATEGORY_ORDER.map((catKey) => {
+              const group = groupedPartners[catKey];
+              if (!group || group.length === 0) return null;
+
+              return (
+                <div key={catKey} className="relative">
+                  <div className="flex flex-col items-center justify-center mb-10 w-full">
+                    <h3 className="text-xl md:text-2xl font-bold text-slate-800 text-center mb-4 uppercase">
+                      {CATEGORY_LABELS[catKey]}
+                    </h3>
+                    <div className="h-px bg-slate-200 w-full"></div>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16">
+                    {group.map((partner) => {
+                      const content = (
+                        <div className="flex items-center justify-center transition-transform duration-300 hover:scale-105 hover:opacity-90 w-40 h-24 md:w-56 md:h-32 p-4">
+                          {partner.logo_url ? (
+                            <img
+                              src={getImageUrl(partner.logo_url)}
+                              alt={partner.name}
+                              className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              title={partner.name}
+                            />
+                          ) : (
+                            <span className="text-center text-sm font-bold text-slate-400 uppercase tracking-wide">{partner.name}</span>
+                          )}
+                        </div>
+                      );
+
+                      return partner.website_url ? (
+                        <a
+                          key={partner.id}
+                          href={partner.website_url.startsWith('http') ? partner.website_url : `https://${partner.website_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl"
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <div key={partner.id}>
+                          {content}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-slate-500">
+            <p>No partners found.</p>
+          </div>
+        )}
       </div>
     </section>
   );

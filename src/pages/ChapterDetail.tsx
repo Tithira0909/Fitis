@@ -1,359 +1,180 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Users, 
-  Target, 
-  Activity, 
-  Mail, 
-  Phone, 
-  Linkedin,
-  MapPin 
-} from 'lucide-react';
-import { SubHeaderBar } from '../components/SubHeaderBar';
-import { chaptersData } from '../data/chapters';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { getImageUrl } from '../utils/getImageUrl';
+import { SectionHeader } from '../components/SectionHeader';
 
-const getImageUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${import.meta.env.VITE_API_URL}${url}`;
-};
-
-// Types to mirror our new database structure
-interface ChapterData {
-  id: number;
-  name: string;
-  slug: string;
-  icon_name: string;
-  icon_url: string;
-  summary: string;
-  objectives_json: string;
-  description_html: string;
-  chair_name: string;
-  chair_title: string;
-  contact_email: string;
-  contact_phone: string;
-  about_html: string;
-  president_name: string;
-  president_title: string;
-  president_company: string;
-  president_photo_url: string;
-  president_message_html: string;
-  member_count_manual: number;
-  member_count_text: string;
-  member_count_link: string;
-}
-
-interface CommitteeMember {
-  id: number;
-  name: string;
-  designation: string;
-  company: string;
-  role_badge: string;
-  photo_url: string;
-  linkedin_url: string;
-}
-
-export const ChapterDetail = () => {
+const ChapterDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-
-  const [chapter, setChapter] = useState<ChapterData | null>(null);
-  const [committee, setCommittee] = useState<CommitteeMember[]>([]);
+  const [chapter, setChapter] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Find fallback local data for icon
-  const localChapterData = chaptersData.find(c => c.slug === slug);
-  const Icon = localChapterData?.icon || Users;
-
   useEffect(() => {
-    const fetchChapterData = async () => {
-      try {
-        setLoading(true);
-        // 1. Fetch Chapter
-        const resChapter = await fetch(`${import.meta.env.VITE_API_URL}/api/chapters/${slug}`);
-        if (!resChapter.ok) {
-          throw new Error('Chapter not found');
-        }
-        const chapterData = await resChapter.json();
-        setChapter(chapterData);
-
-        // 2. Fetch Committee
-        const resCommittee = await fetch(`${import.meta.env.VITE_API_URL}/api/chapters/${slug}/committee`);
-        if (resCommittee.ok) {
-          const committeeData = await resCommittee.json();
-          setCommittee(committeeData);
-        }
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchChapterData();
-    }
+    fetchChapter();
   }, [slug]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin w-12 h-12 border-4 border-fitis-blue border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  const fetchChapter = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  if (error || !chapter) {
-    return <Navigate to="/Chapter/chapters" replace />;
-  }
+      const res = await fetch(`${apiUrl}/api/chapters/${slug}`);
+      if (!res.ok) throw new Error('Failed to fetch chapter details');
 
-  // Parse objectives safely
-  let objectives: string[] = [];
-  try {
-    objectives = chapter.objectives_json ? JSON.parse(chapter.objectives_json) : [];
-  } catch (e) {
-    console.error("Failed to parse objectives JSON", e);
-  }
+      const detailData = await res.json();
+      setChapter(detailData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="py-20 text-center text-gray-600">Loading chapter details...</div>;
+  if (error || !chapter) return <div className="py-20 text-center text-red-600">Chapter not found.</div>;
 
   return (
-    <div className="bg-white min-h-screen pb-0">
-
-      {/* Main Subheader */}
-      <SubHeaderBar
-        breadcrumbs={[
-          { label: 'HOME', href: '/' },
-          { label: 'CHAPTERS', href: '/Chapter/chapters' },
-          { label: chapter.name.toUpperCase() }
-        ]}
-        title={chapter.name.toUpperCase()}
-        showSearch={false}
-      />
-
-      {/* Top Section Layout: About (Left) and Objectives (Right) */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-            {/* LEFT: About */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-light text-slate-800 uppercase tracking-wide">
-                ABOUT THE {chapter.name.toUpperCase()}
-              </h2>
-              {chapter.about_html ? (
-                <div
-                  className="text-slate-600 leading-relaxed text-base prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: chapter.about_html }}
-                />
-              ) : chapter.description_html ? (
-                <div
-                  className="text-slate-600 leading-relaxed text-base prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: chapter.description_html }}
-                />
-              ) : (
-                <p className="text-slate-500 italic">No description available.</p>
-              )}
-            </div>
-
-            {/* RIGHT: Objectives */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-light text-slate-800 uppercase tracking-wide">
-                OBJECTIVES
-              </h2>
-              {objectives.length > 0 ? (
-                <ul className="space-y-4 text-slate-600">
-                  {objectives.map((obj, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="w-1.5 h-1.5 bg-slate-800 rounded-full mt-2.5 flex-shrink-0"></span>
-                      <span dangerouslySetInnerHTML={{ __html: obj }}></span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-slate-500 italic">No objectives listed.</p>
-              )}
+    <div className="bg-gray-50 min-h-screen">
+      {/* Banner / Header */}
+      {chapter.banner_image_url ? (
+        <div className="relative h-[400px] w-full">
+          <img src={getImageUrl(chapter.banner_image_url)} alt={chapter.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-8 lg:p-16">
+            <div className="max-w-7xl mx-auto w-full">
+              <nav className="text-sm text-gray-300 mb-4 font-medium flex space-x-2">
+                <Link to="/" className="hover:text-white transition">Home</Link>
+                <span>›</span>
+                <Link to="/Chapter/chapters" className="hover:text-white transition">Chapters</Link>
+                <span>›</span>
+                <span className="text-white">{chapter.name}</span>
+              </nav>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{chapter.name}</h1>
+              {chapter.summary && <p className="text-xl text-gray-200 max-w-3xl">{chapter.summary}</p>}
             </div>
           </div>
         </div>
-      </section>
+      ) : (
+        <SectionHeader
+          title={chapter.name}
+          subtitle={chapter.summary}
 
-      {/* CHAPTER PRESIDENT'S MESSAGE Section */}
-      {(chapter.president_message_html || chapter.president_photo_url) && (
-        <section className="py-0 mb-20">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="bg-[#0f2c4a] text-white py-3 px-6 mb-8 shadow-sm">
-              <h3 className="text-lg font-bold tracking-wide">CHAPTER PRESIDENT'S MESSAGE</h3>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
-              {chapter.president_photo_url && (
-                <div className="flex-shrink-0 w-full md:w-64 lg:w-80">
-                  <img
-                    src={getImageUrl(chapter.president_photo_url)}
-                    alt={chapter.president_name || 'President'}
-                    className="w-full h-auto rounded shadow-sm object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                  {chapter.president_name && (
-                    <div className="text-center mt-4">
-                      <p className="font-bold text-slate-800 text-lg">{chapter.president_name}</p>
-                      <p className="text-slate-500 text-sm">{chapter.president_title}</p>
-                      <p className="text-slate-500 text-xs">{chapter.president_company}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex-1">
-                {chapter.president_message_html ? (
-                  <div
-                    className="text-slate-700 leading-relaxed text-[15px] prose max-w-none prose-p:mb-6"
-                    dangerouslySetInnerHTML={{ __html: chapter.president_message_html }}
-                  />
-                ) : (
-                  <p className="text-slate-500 italic">Message coming soon.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
+        />
       )}
 
-      {/* Members Summary Band */}
-      {/* Either manual count or committee count */}
-      {((chapter.member_count_manual && chapter.member_count_manual > 0) || committee.length > 0) && (
-        <section className="bg-[#0f2c4a] py-12 border-y border-[#1a3a5c]">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 text-white">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
 
-              <div className="flex items-center gap-6">
-                <div className="text-5xl lg:text-7xl font-light text-[#4a90e2]">
-                  {chapter.member_count_manual || committee.length}
-                </div>
-                <div className="text-xl lg:text-2xl font-light tracking-wider uppercase">
-                  MEMBERS
-                </div>
-              </div>
-
-              <div className="flex-1 text-center md:text-left text-blue-100 max-w-2xl px-4 lg:px-8 text-sm lg:text-base border-l border-r border-[#1a3a5c]">
-                {chapter.member_count_text || `Join the thriving network of the ${chapter.name}. Leverage our platform to accelerate your growth and industry impact.`}
-              </div>
-
-              <div className="flex-shrink-0">
-                {chapter.member_count_link ? (
-                  <a
-                    href={chapter.member_count_link}
-                    className="px-8 py-3 border-2 border-[#4a90e2] text-white hover:bg-[#4a90e2] hover:text-white transition-all rounded font-medium tracking-wide uppercase text-sm inline-block"
-                  >
-                    View All
-                  </a>
-                ) : (
-                  <Link
-                    to="/Home/become-a-member"
-                    className="px-8 py-3 border-2 border-[#4a90e2] text-white hover:bg-[#4a90e2] hover:text-white transition-all rounded font-medium tracking-wide uppercase text-sm inline-block"
-                  >
-                    Join Us
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Chapter Executive Committee Section */}
-      {committee && committee.length > 0 && (
-        <section className="py-20 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-3xl font-light text-slate-800 text-center mb-16 uppercase tracking-wide">
-              Chapter Executive Committee
+        {/* About Section */}
+        {chapter.about_chapter && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12 mb-16"
+          >
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 relative inline-block">
+              About the Chapter
+              <div className="absolute -bottom-2 left-0 w-1/3 h-1 bg-blue-600 rounded-full"></div>
             </h2>
+            <div
+              className="prose prose-lg prose-blue max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: chapter.about_chapter }}
+            />
+          </motion.div>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {committee.map((member) => (
-                <div key={member.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex items-start gap-5 relative group">
-
-                  {/* Photo */}
-                  <div className="w-20 h-20 rounded-full bg-slate-200 flex-shrink-0 overflow-hidden relative border-2 border-white shadow-sm">
-                    {member.photo_url ? (
-                      <img
-                        src={getImageUrl(member.photo_url)}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=0f2c4a&color=fff`;
-                        }}
-                      />
+        {/* Chairman Message */}
+        {(chapter.chair_name || chapter.chair_message) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16"
+          >
+            <div className="bg-blue-900 rounded-3xl overflow-hidden shadow-xl text-white">
+              <div className="grid grid-cols-1 md:grid-cols-3">
+                <div className="col-span-1 bg-blue-800 p-8 flex flex-col items-center justify-center text-center">
+                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-blue-400 mb-6 shadow-lg">
+                    {chapter.chair_image_url ? (
+                      <img src={getImageUrl(chapter.chair_image_url)} alt={chapter.chair_name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-[#0f2c4a] text-white flex items-center justify-center font-bold text-xl">
-                        {member.name.charAt(0)}
+                      <div className="w-full h-full bg-blue-700 flex items-center justify-center text-5xl font-bold">
+                        {chapter.chair_name?.charAt(0) || 'C'}
                       </div>
                     )}
                   </div>
+                  <h3 className="text-2xl font-bold mb-2">{chapter.chair_name}</h3>
+                  <p className="text-blue-200 font-medium">{chapter.chair_title}</p>
+                </div>
 
-                  {/* Details */}
-                  <div className="flex-1 pr-6">
-                    <h4 className="font-bold text-slate-900 text-[15px] mb-1 leading-tight">{member.name}</h4>
-                    <p className="text-fitis-blue text-xs font-semibold mb-1 uppercase tracking-wide">{member.designation}</p>
-                    <p className="text-slate-500 text-xs">{member.company}</p>
+                <div className="col-span-2 p-8 md:p-12 flex flex-col justify-center">
+                  <svg className="w-12 h-12 text-blue-500 mb-6 opacity-50" fill="currentColor" viewBox="0 0 32 32">
+                    <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H6.3c.7-2.3 2.9-4 5.7-4V8zm16 0c-3.3 0-6 2.7-6 6v10h10V14h-7.7c.7-2.3 2.9-4 5.7-4V8z"></path>
+                  </svg>
+                  <div className="text-lg md:text-xl leading-relaxed text-blue-50 font-light italic whitespace-pre-wrap">
+                    {chapter.chair_message}
                   </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-                  {/* Role Badge Overlay */}
-                  {member.role_badge && (
-                    <div className="absolute top-4 right-4 px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded border border-slate-200">
-                      {member.role_badge}
+        {/* Executive Committee */}
+        {Boolean(chapter.has_committee) && chapter.committee && chapter.committee.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Executive Committee</h2>
+              <div className="w-24 h-1 bg-blue-600 rounded-full mx-auto"></div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {chapter.committee.map((member: any, index: number) => (
+                <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 group">
+                  <div className="h-2 bg-blue-600"></div>
+                  <div className="p-6 text-center">
+                    <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 border-4 border-gray-50 shadow-sm">
+                      {member.image_url ? (
+                        <img src={getImageUrl(member.image_url)} alt={member.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-400">
+                          {member.name.charAt(0)}
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {/* LinkedIn */}
-                  {member.linkedin_url && (
-                    <a
-                      href={member.linkedin_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="absolute bottom-4 right-4 text-slate-300 hover:text-[#0077b5] transition-colors"
-                      title="LinkedIn Profile"
-                    >
-                      <Linkedin size={18} />
-                    </a>
-                  )}
+                    {member.role_label && (
+                      <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full mb-3">
+                        {member.role_label}
+                      </span>
+                    )}
 
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
+                    {member.designation && <p className="text-gray-600 font-medium text-sm mb-1">{member.designation}</p>}
+                    {member.company && <p className="text-gray-500 text-sm mb-4">{member.company}</p>}
+
+                    {member.linkedin_url && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex justify-center">
+                        <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                          </svg>
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          </motion.div>
+        )}
 
-      {/* Fallback Contact / Original Footer Area */}
-      {(!committee || committee.length === 0) && (
-        <section className="py-20 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-6 text-center">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">Join the {chapter.name}</h2>
-            <p className="text-slate-600 text-lg mb-10 max-w-2xl mx-auto">
-              Collaborate with industry leaders and contribute to the growth of Sri Lanka's ICT sector.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/Home/become-a-member"
-                className="w-full sm:w-auto px-10 py-4 bg-fitis-blue text-white rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-xl active:scale-95"
-              >
-                Apply for Membership
-              </Link>
-              <Link
-                to="/Chapter/chapters"
-                className="w-full sm:w-auto px-10 py-4 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all active:scale-95"
-              >
-                Explore Other Chapters
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
+      </div>
     </div>
   );
 };
+
+export { ChapterDetail };

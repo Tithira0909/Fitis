@@ -42,9 +42,28 @@ const navLinks = [
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dynamicNavLinks, setDynamicNavLinks] = useState<any[]>(navLinks);
+  const [headerLogo, setHeaderLogo] = useState('/fitis-logo.png');
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/site-settings?t=${new Date().getTime()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.header_logo_url) {
+            setHeaderLogo(getImageUrl(data.header_logo_url));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch site settings', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchChapters = async () => {
@@ -91,7 +110,7 @@ export const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/fitis-logo.png" alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
+          <img src={headerLogo} alt="FITIS Logo" className="h-10 w-auto bg-white rounded p-1" />
         </Link>
 
         {/* Desktop Nav */}
@@ -100,8 +119,8 @@ export const Navbar = () => {
             <div
               key={link.name}
               className="relative group"
-              onMouseEnter={() => link.submenu && setIsIntroOpen(true)}
-              onMouseLeave={() => link.submenu && setIsIntroOpen(false)}
+              onMouseEnter={() => link.submenu && setActiveDropdown(link.name)}
+              onMouseLeave={() => link.submenu && setActiveDropdown(null)}
             >
               <Link
                 to={link.href}
@@ -113,13 +132,13 @@ export const Navbar = () => {
                 )}
               >
                 {link.name}
-                {link.submenu && <ChevronDown size={14} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />}
+                {link.submenu && <ChevronDown size={14} className={cn("transition-transform duration-200", activeDropdown === link.name && "rotate-180")} />}
               </Link>
 
               {/* Dropdown Menu */}
               {link.submenu && (
                 <AnimatePresence>
-                  {isIntroOpen && (
+                  {activeDropdown === link.name && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -131,7 +150,7 @@ export const Navbar = () => {
                         <Link
                           key={subItem.name}
                           to={subItem.href}
-                          onClick={() => setIsIntroOpen(false)}
+                          onClick={() => setActiveDropdown(null)}
                           className={cn(
                             "block px-5 py-2.5 text-sm transition-colors",
                             location.pathname === subItem.href
@@ -197,17 +216,17 @@ export const Navbar = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsIntroOpen(!isIntroOpen);
+                        setActiveDropdown(activeDropdown === link.name ? null : link.name);
                       }}
                       className="p-2 text-slate-500"
                     >
-                      <ChevronDown size={20} className={cn("transition-transform duration-200", isIntroOpen && "rotate-180")} />
+                      <ChevronDown size={20} className={cn("transition-transform duration-200", activeDropdown === link.name && "rotate-180")} />
                     </button>
                   )}
                 </div>
 
                 {/* Mobile Submenu Accordion */}
-                {link.submenu && isIntroOpen && (
+                {link.submenu && activeDropdown === link.name && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
