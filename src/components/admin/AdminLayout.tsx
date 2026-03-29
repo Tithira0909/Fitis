@@ -32,12 +32,14 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/secretariat-team', label: 'Secretariat Team', icon: <Contact size={20} /> },
     { path: '/admin/chairman-message', label: 'Chairman Message', icon: <UserSquare size={20} /> },
     { path: '/admin/partners', label: 'Partners', icon: <Handshake size={20} /> },
-    { path: '/admin/newsletter', label: 'Newsletter', icon: <Mail size={20} /> },
+    { path: '/admin/newsletter-publications', label: 'Newsletter Publications', icon: <Mail size={20} /> },
     { path: '/admin/gallery', label: 'Gallery', icon: <ImageIcon size={20} /> },
     { path: '/admin/site-settings', label: 'Site Settings', icon: <Settings size={20} /> },
     { path: '/admin/members', label: 'Member Apps', icon: <Contact size={20} /> },
     { path: '/admin/community-requests', label: 'Community Requests', icon: <Contact size={20} /> },
+    { path: '/admin/profile-updates', label: 'Profile Updates', icon: <UserSquare size={20} /> },
     { path: '/admin/member-benefits', label: 'Member Benefits', icon: <Briefcase size={20} /> },
+
   ];
 
   return (
@@ -49,7 +51,7 @@ export const AdminLayout: React.FC = () => {
         </div>
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+            const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(`${item.path}/`));
             return (
               <Link
                 key={item.path}

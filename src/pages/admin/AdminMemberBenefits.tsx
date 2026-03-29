@@ -18,17 +18,8 @@ const BENEFIT_CATEGORIES = [
 
 export const AdminMemberBenefits: React.FC = () => {
   const columns: ColumnDef[] = [
-    {
-      key: 'logo_url',
-      label: 'Logo',
-      render: (val: string) => (
-        <img src={getImageUrl(val)} alt="Logo" className="w-12 h-12 object-contain bg-gray-50 rounded border" />
-      )
-    },
-    { key: 'brand_name', label: 'Brand Name' },
-    { key: 'benefit_title', label: 'Benefit Title' },
     { key: 'category', label: 'Category' },
-    { key: 'offer_text', label: 'Offer' },
+    { key: 'benefit_title', label: 'Benefit' },
     {
       key: 'status',
       label: 'Status',
@@ -42,26 +33,8 @@ export const AdminMemberBenefits: React.FC = () => {
   ];
 
   const fields: FieldDef[] = [
-    { name: 'brand_name', label: 'Brand / Partner Name', type: 'text', required: true },
-    { name: 'benefit_title', label: 'Benefit Title', type: 'text', required: true },
-    {
-      name: 'category',
-      label: 'Category',
-      type: 'select',
-      required: true,
-      options: BENEFIT_CATEGORIES.map(c => ({ value: c, label: c }))
-    },
-    { name: 'offer_text', label: 'Offer / Discount Text', type: 'text', required: true },
-    { name: 'description', label: 'Short Description', type: 'textarea' },
-    { name: 'terms', label: 'Terms & Conditions', type: 'textarea' },
-    { name: 'link_url', label: 'Website / Redemption Link', type: 'text' },
-    {
-      name: 'logo_url',
-      label: 'Logo Image',
-      type: 'image',
-      required: true,
-      uploadUrl: '/api/admin/upload/member-benefit-logo'
-    },
+    { name: 'category', label: 'Category', type: 'text', required: true },
+    { name: 'benefit_title', label: 'Benefit Text', type: 'text', required: true },
     { name: 'sort_order', label: 'Sort Order', type: 'number' },
     {
       name: 'status',

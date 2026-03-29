@@ -181,18 +181,14 @@ const BoardSection = () => {
     middle: [
       { name: "Gnanam Sellathurrai", role: "President", sub: "ICT Infrastructure Chapter" },
       { name: "Sanjaya Dayananda", role: "President", sub: "Software Chapter" },
-      { name: "Amila Bandara", role: "President", sub: "Education & Training Chapter" },
-      { name: "Lakmal Embuldeniya", role: "President", sub: "Professional (ISACA) Chapter" },
-      { name: "Ramanan Devairakam", role: "President", sub: "Communication Chapter" },
       { name: "Omar Sahib", role: "President", sub: "Digital Services Chapter" },
-      { name: "Manjula Kulasuriya", role: "President", sub: "Office Automation Chapter" },
-      { name: "Nagarajah Nirmalan", role: "President", sub: "Professional Consultants Chapter" },
+      { name: "Amila Bandara", role: "President", sub: "Education & Training Chapter" },
+      { name: "Ramanan Devairakam", role: "President", sub: "Communication Chapter" },
     ],
     bottom: [
       { name: "Shanaka Fernando", role: "Vice President", sub: "Digital Trust Chapter" },
       { name: "Kalinga Ihalagedara", role: "Vice President", sub: "Software Chapter" },
       { name: "Dr. Sampath Kannangara", role: "Vice President", sub: "Education & Training Chapter" },
-      { name: "Ashane Jayasekara", role: "Vice President", sub: "Professional (ISACA) Chapter" },
     ]
   };
 
@@ -413,28 +409,28 @@ const MembershipCTA = () => {
 interface Partner {
   id: number;
   name: string;
-  category: 'government_partners' | 'fitis_corporate_partners' | 'industry_partners' | 'international_bodies' | 'premium_corporate_partners' | 'corporate_partners';
+  category: 'government' | 'industry' | 'international' | 'premium_corporate' | 'corporate' | 'supporting';
   logo_url: string;
   website_url: string;
   sort_order: number;
 }
 
 const CATEGORY_ORDER = [
-  'government_partners',
-  'fitis_corporate_partners',
-  'industry_partners',
-  'international_bodies',
-  'premium_corporate_partners',
-  'corporate_partners',
+  'government',
+  'corporate',
+  'industry',
+  'international',
+  'premium_corporate',
+  'supporting',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  government_partners: 'Government Partners',
-  fitis_corporate_partners: 'FITIS Corporate Partners',
-  industry_partners: 'Industry Partners',
-  international_bodies: 'International Bodies',
-  premium_corporate_partners: 'Premium Corporate Partners',
-  corporate_partners: 'Corporate Partners',
+  government: 'GOVERNMENT PARTNERS',
+  corporate: 'FITIS CORPORATE PARTNERS',
+  industry: 'INDUSTRY PARTNERS',
+  international: 'INTERNATIONAL BODIES',
+  premium_corporate: 'PREMIUM CORPORATE PARTNERS',
+  supporting: 'SUPPORTING PARTNERS',
 };
 
 const PartnersSection = () => {
@@ -494,7 +490,7 @@ const PartnersSection = () => {
                             <img
                               src={getImageUrl(partner.logo_url)}
                               alt={partner.name}
-                              className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                              className="max-w-full max-h-full object-contain transition-all duration-300"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                               title={partner.name}
                             />

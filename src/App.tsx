@@ -17,6 +17,7 @@ import { PastLeaders } from './pages/PastLeaders';
 
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
+import { Newsletters } from './pages/Newsletters';
 import { Gallery } from './pages/Gallery';
 import { Events } from './pages/Events';
 import { Chapters } from './pages/Chapters';
@@ -28,10 +29,15 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { BecomeAMember } from './pages/BecomeAMember';
 import { CompanySignup } from './pages/CompanySignup';
 import { MemberCommunity } from './pages/MemberCommunity';
+import { MemberProfile } from './pages/MemberProfile';
+import { MemberDashboard } from './pages/MemberDashboard';
 import { MemberBenefits } from './pages/MemberBenefits';
+
 import { AdminMembers } from './pages/admin/AdminMembers';
 import { AdminCommunityRequests } from './pages/admin/AdminCommunityRequests';
 import { AdminMemberBenefits } from './pages/admin/AdminMemberBenefits';
+import { AdminProfileUpdates } from './pages/admin/AdminProfileUpdates';
+
 
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminOverview } from './pages/admin/AdminOverview';
@@ -43,7 +49,7 @@ import { AdminEvents } from './pages/admin/AdminEvents';
 import { AdminChapters } from './pages/admin/AdminChapters';
 import { AdminLeadership } from './pages/admin/AdminLeadership';
 import { AdminPartners } from './pages/admin/AdminPartners';
-import { AdminNewsletter } from './pages/admin/AdminNewsletter';
+import { AdminNewsletterPublications } from './pages/admin/AdminNewsletterPublications';
 import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 import { AdminGallery } from './pages/admin/AdminGallery';
 import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
@@ -115,9 +121,11 @@ export default function App() {
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="members" element={<AdminMembers />} />
           <Route path="community-requests" element={<AdminCommunityRequests />} />
+          <Route path="profile-updates" element={<AdminProfileUpdates />} />
           <Route path="member-benefits" element={<AdminMemberBenefits />} />
+
           <Route path="partners" element={<AdminPartners />} />
-          <Route path="newsletter" element={<AdminNewsletter />} />
+          <Route path="newsletter-publications" element={<AdminNewsletterPublications />} />
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="chairman-message" element={<AdminChairmanMessage />} />
           <Route path="secretariat-team" element={<AdminSecretariat />} />
@@ -139,7 +147,10 @@ export default function App() {
               <Route path="/Home/become-a-member" element={<BecomeAMember />} />
               <Route path="/signup" element={<CompanySignup />} />
               <Route path="/Home/member-community" element={<MemberCommunity />} />
+              <Route path="/member/:id" element={<MemberProfile />} />
+              <Route path="/member-dashboard" element={<MemberDashboard />} />
               <Route path="/Home/member-benefits" element={<MemberBenefits />} />
+
               <Route path="/Home/partnerships" element={<Partners />} />
               <Route path="/Home/code-of-conduct" element={<CodeOfConduct />} />
               <Route path="/Home/code-of-ethics" element={<CodeOfEthics />} />
@@ -148,6 +159,7 @@ export default function App() {
               <Route path="/Home/programs/:slug" element={<ProgramDetail />} />
               <Route path="/Home/news" element={<News />} />
               <Route path="/Home/news/:slug" element={<NewsDetail />} />
+              <Route path="/Home/newsletters" element={<Newsletters />} />
               <Route path="/Home/gallery" element={<Gallery />} />
               <Route path="/Home/events" element={<Events />} />
               <Route path="/Chapter/chapters" element={<Chapters />} />

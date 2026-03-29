@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import fs from 'fs';
+import nodemailer from 'nodemailer';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +43,8 @@ const storage = multer.diskStorage({
       dest += 'news-banner';
     } else if (req.path.includes('/upload/news-pdf')) {
       dest += 'news-pdf';
+    } else if (req.path.includes('/upload/newsletter-pdf') || req.path.includes('/upload/newsletter-cover')) {
+      dest += 'newsletters';
     } else if (req.path.includes('/gallery') || req.path.includes('/upload/gallery')) {
       dest += 'gallery';
     } else if (req.path.includes('/upload/event-flyer')) {
@@ -147,6 +151,25 @@ const uploadProgramBanner = multer({
   }
 });
 
+const uploadNewsletterPdf = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Invalid file type for PDF'));
+  }
+});
+
+const uploadNewsletterCover = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type for newsletter cover'));
+  }
+});
+
 const uploadChairmanPhoto = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -208,6 +231,18 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Nodemailer Transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: parseInt(process.env.EMAIL_PORT || '587', 10),
+  secure: process.env.EMAIL_SECURE === 'true',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+
 // Test DB Connection Route
 app.get('/api/health', async (req, res) => {
   try {
@@ -237,6 +272,74 @@ const authenticateToken = (req, res, next) => {
 
 // Admin Login
 
+// OTP Verification Endpoints
+app.post('/api/membership/send-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store in DB
+    await pool.execute(
+      'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?',
+      [email, otp, expiresAt, otp, expiresAt]
+    );
+
+    // Send email
+    const mailOptions = {
+      from: `"FITIS Membership" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your OTP for FITIS Membership Application',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #00529B;">FITIS Membership OTP</h2>
+          <p>Thank you for starting your membership application with FITIS.</p>
+          <p>Please use the following One-Time Password (OTP) to verify your email address. This code is valid for 10 minutes.</p>
+          <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-bold; letter-spacing: 5px; color: #333; border-radius: 5px; margin: 20px 0;">
+            ${otp}
+          </div>
+          <p>If you did not request this code, please ignore this email.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #777;">Federation of Information Technology Industry Sri Lanka (FITIS)</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+app.post('/api/membership/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM otp_verifications WHERE email = ? AND otp = ? AND expires_at > NOW()',
+      [email, otp]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    // Success - optionally delete the OTP record
+    await pool.execute('DELETE FROM otp_verifications WHERE email = ?', [email]);
+
+    res.json({ message: 'OTP verified successfully' });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ error: 'Failed to verify OTP' });
+  }
+});
+
+
 // POST /api/membership/apply - Public endpoint for new member applications
 app.post('/api/membership/apply', multer({
   storage: multer.diskStorage({
@@ -251,7 +354,7 @@ app.post('/api/membership/apply', multer({
   { name: 'business_registration', maxCount: 1 },
   { name: 'audited_accounts', maxCount: 1 },
   { name: 'company_profile', maxCount: 1 },
-  { name: 'other_documents', maxCount: 1 }
+  { name: 'form_20', maxCount: 1 }
 ]), async (req, res) => {
   try {
     const data = req.body;
@@ -266,14 +369,14 @@ app.post('/api/membership/apply', multer({
     const br_url = fileUrl('business_registration');
     const aa_url = fileUrl('audited_accounts');
     const cp_url = fileUrl('company_profile');
-    const od_url = fileUrl('other_documents');
+    const form20_url = fileUrl('form_20');
 
     const sql = `
       INSERT INTO member_applications (
         primary_chapter, chapters_applied, company_name, membership_category, ceo_name, company_address,
         phone, fax, website, email, br_number, year_incorporation, boi_no, ownership_local, ownership_foreign,
         business_activities, industry_focus, revenue_local, revenue_foreign, employees_count,
-        primary_nominee, secondary_nominee, business_registration, audited_accounts, company_profile, other_documents,
+        primary_nominee, secondary_nominee, business_registration, audited_accounts, company_profile, form_20,
         declaration_applicant_name, declaration_applicant_designation, declaration_date, agree_checkbox, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
     `;
@@ -283,7 +386,7 @@ app.post('/api/membership/apply', multer({
       data.phone, data.fax, data.website, data.email, data.br_number, data.year_incorporation, data.boi_no, data.ownership_local, data.ownership_foreign,
       data.business_activities, data.industry_focus_json, data.revenue_local, data.revenue_foreign, data.employees_count,
       data.primary_nominee_json, data.secondary_nominee_json,
-      br_url, aa_url, cp_url, od_url,
+      br_url, aa_url, cp_url, form20_url,
       data.declaration_applicant_name, data.declaration_applicant_designation, data.declaration_date, data.agree_checkbox === 'true' ? 1 : 0
     ];
 
@@ -324,14 +427,14 @@ app.post('/api/community/apply', multer({
 
     const sql = `
       INSERT INTO member_community_requests (
-        company_name, company_logo_url, company_id, official_email,
+        company_name, primary_chapter, secondary_chapter, fitis_membership_id, services, company_logo_url, company_id, official_email,
         company_linkedin, website_link, rep_image_url, rep_name,
         rep_email, rep_mobile, rep_designation, password, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
     `;
 
     const values = [
-      data.company_name, logo_url, data.company_id, data.official_email,
+      data.company_name, data.primary_chapter, data.secondary_chapter, data.fitis_membership_id, data.services, logo_url, data.company_id, data.official_email,
       data.company_linkedin, data.website_link, rep_img_url, data.rep_name,
       data.rep_email, data.rep_mobile, data.rep_designation, data.password
     ];
@@ -347,11 +450,230 @@ app.post('/api/community/apply', multer({
 // GET /api/community-members - Public endpoint to get approved community members
 app.get('/api/community-members', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
     res.json(rows);
+
   } catch (error) {
     console.error('Error fetching community members:', error);
     res.status(500).json({ error: 'Failed to fetch community members' });
+  }
+});
+
+// GET /api/community-members/:id - Public endpoint to get a single approved member
+
+app.get('/api/community-members/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE id = ? AND status = "Approved"', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Member not found' });
+    res.json(rows[0]);
+
+  } catch (error) {
+    console.error('Error fetching member details:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/community-members/:id/posts - Public endpoint to get posts for a member
+app.get('/api/community-members/:id/posts', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_posts WHERE member_id = ? ORDER BY created_at DESC', [req.params.id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member posts:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/community/posts - Protected endpoint to create a post
+app.post('/api/community/posts', authenticateToken, multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(process.cwd(), 'uploads', 'posts');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+  })
+}).single('image'), async (req, res) => {
+  try {
+    const { content } = req.body;
+    const member_id = req.user.id;
+    const image_url = req.file ? `/uploads/posts/${req.file.filename}` : null;
+
+    if (!content && !image_url) {
+      return res.status(400).json({ error: 'Post content or image is required' });
+    }
+
+    const [result] = await pool.execute(
+      'INSERT INTO member_posts (member_id, content, image_url) VALUES (?, ?, ?)',
+      [member_id, content, image_url]
+    );
+
+    res.json({ id: result.insertId, member_id, content, image_url, created_at: new Date() });
+  } catch (error) {
+    console.error('Error creating post:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/community/posts/:id - Protected endpoint to delete a post
+app.delete('/api/community/posts/:id', authenticateToken, async (req, res) => {
+  try {
+    const post_id = req.params.id;
+    const member_id = req.user.id;
+
+    // Ensure member owns the post
+    const [rows] = await pool.execute('SELECT member_id FROM member_posts WHERE id = ?', [post_id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    if (rows[0].member_id !== member_id) return res.status(403).json({ error: 'Unauthorized to delete this post' });
+
+    await pool.execute('DELETE FROM member_posts WHERE id = ?', [post_id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/community/profile-update - Member submits a profile update for approval
+app.post('/api/community/profile-update', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    const updated_data = req.body;
+
+    // Check if there's already a pending update
+    const [pending] = await pool.execute('SELECT id FROM member_profile_updates WHERE member_id = ? AND status = "Pending"', [member_id]);
+    if (pending.length > 0) {
+      return res.status(400).json({ error: 'You already have a pending profile update request' });
+    }
+
+    await pool.execute(
+      'INSERT INTO member_profile_updates (member_id, updated_data) VALUES (?, ?)',
+      [member_id, JSON.stringify(updated_data)]
+    );
+
+    res.json({ message: 'Profile update request submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting profile update:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/community/profile-update/status - Member checks their update status
+app.get('/api/community/profile-update/status', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    const [rows] = await pool.execute('SELECT * FROM member_profile_updates WHERE member_id = ? ORDER BY created_at DESC LIMIT 1', [member_id]);
+    res.json(rows[0] || null);
+  } catch (error) {
+    console.error('Error fetching update status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN ENDPOINTS FOR PROFILE UPDATES
+app.get('/api/admin/profile-updates', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT u.*, m.company_name, m.official_email 
+      FROM member_profile_updates u
+      JOIN member_community_requests m ON u.member_id = m.id
+      WHERE u.status = "Pending"
+      ORDER BY u.created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching profile updates:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/admin/profile-updates/:id/approve', async (req, res) => {
+  try {
+    const update_id = req.params.id;
+    
+    // Get the update data
+    const [updates] = await pool.execute('SELECT * FROM member_profile_updates WHERE id = ?', [update_id]);
+    if (updates.length === 0) return res.status(404).json({ error: 'Update request not found' });
+    
+    const update = updates[0];
+    const data = typeof update.updated_data === 'string' ? JSON.parse(update.updated_data) : update.updated_data;
+    
+    // Apply updates to member_community_requests
+    const allowedFields = [
+      'company_name', 'official_email', 'company_id', 'company_logo_url', 'services', 
+      'website_link', 'company_linkedin', 'primary_chapter', 'secondary_chapter', 
+      'rep_name', 'rep_designation', 'rep_email', 'rep_mobile', 'rep_image_url'
+    ];
+
+    let updateQuery = 'UPDATE member_community_requests SET ';
+    const updateValues = [];
+    const fieldsToUpdate = [];
+
+    Object.keys(data).forEach(key => {
+      if (allowedFields.includes(key)) {
+        fieldsToUpdate.push(`${key} = ?`);
+        updateValues.push(data[key]);
+      }
+    });
+
+    if (fieldsToUpdate.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
+
+    updateQuery += fieldsToUpdate.join(', ') + ' WHERE id = ?';
+    updateValues.push(update.member_id);
+
+    await pool.execute(updateQuery, updateValues);
+    
+    // Mark as approved
+    await pool.execute('UPDATE member_profile_updates SET status = "Approved" WHERE id = ?', [update_id]);
+    
+    res.json({ message: 'Profile update approved and applied successfully' });
+  } catch (error) {
+    console.error('Error approving profile update:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/admin/profile-updates/:id/reject', async (req, res) => {
+  try {
+    const update_id = req.params.id;
+    await pool.execute('UPDATE member_profile_updates SET status = "Rejected" WHERE id = ?', [update_id]);
+    res.json({ message: 'Profile update rejected' });
+  } catch (error) {
+    console.error('Error rejecting profile update:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+// POST /api/auth/community/reset-password - Reset password using OTP
+app.post('/api/auth/community/reset-password', async (req, res) => {
+  const { email, otp, new_password } = req.body;
+  if (!email || !otp || !new_password) return res.status(400).json({ error: 'Missing required fields' });
+
+  try {
+    const [otpRows] = await pool.execute(
+      'SELECT * FROM otp_verifications WHERE email = ? AND otp = ? AND expires_at > NOW()',
+      [email, otp]
+    );
+
+    if (otpRows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    const [userRows] = await pool.execute('SELECT id FROM member_community_requests WHERE official_email = ?', [email]);
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'No member account found with this email' });
+    }
+
+    await pool.execute('UPDATE member_community_requests SET password = ? WHERE official_email = ?', [new_password, email]);
+    await pool.execute('DELETE FROM otp_verifications WHERE email = ?', [email]);
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -439,9 +761,10 @@ const TABLE_COLUMNS = {
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
     secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
-  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'other_documents', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
+  member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'form_20', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
   member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status'],
-  member_community_requests: ['company_name', 'company_logo_url', 'company_id', 'official_email', 'company_linkedin', 'website_link', 'rep_image_url', 'rep_name', 'rep_email', 'rep_mobile', 'rep_designation', 'status']
+  member_community_requests: ['company_name', 'primary_chapter', 'secondary_chapter', 'fitis_membership_id', 'services', 'company_logo_url', 'company_id', 'official_email', 'company_linkedin', 'website_link', 'rep_image_url', 'rep_name', 'rep_email', 'rep_mobile', 'rep_designation', 'password', 'status'],
+  newsletters: ['title', 'pdf_url', 'cover_image_url', 'published_date', 'status', 'sort_order']
 };
 const ALLOWED_TABLES = Object.keys(TABLE_COLUMNS);
 
@@ -757,7 +1080,7 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
   try {
     const [chapters] = await pool.execute('SELECT COUNT(*) as count FROM chapters');
     const [events] = await pool.execute('SELECT COUNT(*) as count FROM events WHERE event_date >= CURDATE()');
-    const [members] = await pool.execute('SELECT SUM(member_count) as count FROM chapters');
+    const [members] = await pool.execute('SELECT COUNT(*) as count FROM member_applications WHERE status = "Approved"');
     const [partners] = await pool.execute('SELECT COUNT(*) as count FROM partners');
 
     // Also fetch recent activity (e.g., recent news or events)
@@ -1245,7 +1568,8 @@ app.get('/api/admin/:table', authenticateToken, async (req, res) => {
   if (!ALLOWED_TABLES.includes(table)) return res.status(404).json({ message: 'Route not found' });
 
   try {
-    const [rows] = await pool.execute(`SELECT * FROM ${table} ORDER BY created_at DESC`);
+    const orderColumn = table === 'newsletter_subscribers' ? 'subscribed_at' : 'created_at';
+    const [rows] = await pool.execute(`SELECT * FROM ${table} ORDER BY ${orderColumn} DESC`);
     res.json(rows);
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
@@ -1317,6 +1641,31 @@ app.post('/api/admin/upload/secretariat-photo', authenticateToken, uploadSecreta
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const relativePath = `/uploads/secretariat/${req.file.filename}`;
   res.json({ url: relativePath });
+});
+
+// Upload Newsletter Cover
+app.post('/api/admin/upload/newsletter-cover', authenticateToken, uploadNewsletterCover.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/newsletters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Upload Newsletter PDF
+app.post('/api/admin/upload/newsletter-pdf', authenticateToken, uploadNewsletterPdf.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const relativePath = `/uploads/newsletters/${req.file.filename}`;
+  res.json({ url: relativePath });
+});
+
+// Public GET Newsletters
+app.get('/api/newsletters', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM newsletters WHERE status = "published" ORDER BY published_date DESC, sort_order ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching newsletters:', error);
+    res.status(500).json({ error: 'Failed to fetch newsletters' });
+  }
 });
 
 // Upload Partner Logo

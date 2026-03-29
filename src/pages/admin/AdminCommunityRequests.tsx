@@ -16,6 +16,10 @@ interface CommunityRequest {
   rep_email: string;
   rep_mobile: string;
   rep_designation: string;
+  services: string;
+  primary_chapter: string;
+  secondary_chapter: string;
+  fitis_membership_id: string;
   status: 'Pending' | 'Approved' | 'Rejected';
   created_at: string;
 }
@@ -235,7 +239,29 @@ export const AdminCommunityRequests = () => {
                         {selectedReq.company_linkedin ? <a href={selectedReq.company_linkedin} target="_blank" rel="noreferrer" className="flex items-center"><LinkIcon size={14} className="mr-1"/>{selectedReq.company_linkedin}</a> : 'N/A'}
                       </dd>
                     </div>
+                    <div>
+                      <dt className="text-gray-500 font-medium">Primary Chapter</dt>
+                      <dd className="text-gray-900 font-semibold">{selectedReq.primary_chapter || 'N/A'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-500 font-medium">Secondary Chapter</dt>
+                      <dd className="text-gray-900">{selectedReq.secondary_chapter || 'N/A'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-500 font-medium">FITIS Membership ID</dt>
+                      <dd className="text-gray-900">{selectedReq.fitis_membership_id || 'N/A'}</dd>
+                    </div>
                   </dl>
+                </div>
+
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
+                  <div className="flex items-center mb-6 border-b pb-4">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mr-4"><Building2 size={24} /></div>
+                    <h4 className="font-bold text-xl text-gray-800">Services Offered</h4>
+                  </div>
+                  <div className="text-gray-700 leading-relaxed italic whitespace-pre-wrap">
+                    {selectedReq.services || "No services listed."}
+                  </div>
                 </div>
 
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">

@@ -64,7 +64,7 @@ const initializeDB = async () => {
     business_registration VARCHAR(600),
     audited_accounts VARCHAR(600),
     company_profile VARCHAR(600),
-    other_documents VARCHAR(600),
+    form_20 VARCHAR(600),
     declaration_applicant_name VARCHAR(255),
     declaration_applicant_designation VARCHAR(255),
     declaration_date DATE,
@@ -301,11 +301,41 @@ const initializeDB = async () => {
         rep_email VARCHAR(255),
         rep_mobile VARCHAR(50),
         rep_designation VARCHAR(150),
+        primary_chapter VARCHAR(255),
+        secondary_chapter VARCHAR(255),
+        fitis_membership_id VARCHAR(150),
+        services TEXT,
         password VARCHAR(255) NOT NULL,
         status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS otp_verifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        otp VARCHAR(10) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS member_posts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        member_id INT NOT NULL,
+        content TEXT NOT NULL,
+        image_url VARCHAR(600),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (member_id) REFERENCES member_community_requests(id) ON DELETE CASCADE
+      )`,
+      `CREATE TABLE IF NOT EXISTS member_profile_updates (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        member_id INT NOT NULL,
+        updated_data JSON NOT NULL,
+        status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (member_id) REFERENCES member_community_requests(id) ON DELETE CASCADE
       )`
+
+
+
     ];
 
     for (const query of tables) {
@@ -472,8 +502,30 @@ const initializeDB = async () => {
       if (migErr.code === 'ER_DUP_FIELDNAME') {
         console.log('Migration skipped: password already exists in member_community_requests');
       } else {
-        console.error('Migration error (member_community_requests password):', migErr.message);
+      console.error('Migration error (member_community_requests password):', migErr.message);
       }
+    }
+
+    // Migration: Add new columns to member_community_requests
+    try {
+      const colsToAdd = [
+        "ADD COLUMN primary_chapter VARCHAR(255)",
+        "ADD COLUMN secondary_chapter VARCHAR(255)",
+        "ADD COLUMN fitis_membership_id VARCHAR(150)",
+        "ADD COLUMN services TEXT"
+      ];
+      for (const col of colsToAdd) {
+        try {
+          await connection.execute(`ALTER TABLE member_community_requests ${col}`);
+        } catch (migErr) {
+          if (migErr.code !== 'ER_DUP_FIELDNAME') {
+            console.error(`Migration error adding column ${col} to member_community_requests:`, migErr.message);
+          }
+        }
+      }
+      console.log('Migration for member_community_requests columns completed.');
+    } catch (migErr) {
+      console.error('Migration error (member_community_requests columns):', migErr.message);
     }
 
     // Seed default privacy policy
@@ -512,7 +564,21 @@ const initializeDB = async () => {
       console.log('Disclaimer page already exists.');
     }
 
+    // Migration for otp_verifications unique email
+    try {
+      const [otpRows] = await connection.execute('SHOW INDEX FROM otp_verifications WHERE Column_name = "email"');
+      if (otpRows.length === 0) {
+        await connection.execute('ALTER TABLE otp_verifications ADD UNIQUE (email)');
+        console.log('Migration for otp_verifications unique email completed.');
+      } else {
+        console.log('Migration skipped: email already unique in otp_verifications');
+      }
+    } catch (otpErr) {
+      console.error('Error during otp_verifications migration:', otpErr.message);
+    }
+
     console.log('Database initialization complete.');
+
   } catch (error) {
     console.error('Error initializing database:', error);
   } finally {

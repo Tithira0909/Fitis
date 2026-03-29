@@ -35,16 +35,21 @@ export const BecomeAMember = () => {
     business_registration: null as File | null,
     audited_accounts: null as File | null,
     company_profile: null as File | null,
-    other_documents: null as File | null,
+    form_20: null as File | null,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<'filling' | 'verifying'>('filling');
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [otpError, setOtpError] = useState('');
 
-  const CHAPTER_OPTIONS = ['Software Chapter', 'Digital Trust Chapter', 'ICT Infrastructure Chapter', 'Education & Training Chapter', 'Communication Chapter', 'Professional Chapter'];
+
+  const CHAPTER_OPTIONS = ['ICT Infrastructure Chapter', 'Software Chapter', 'Digital Services Chapter', 'Education & Training Chapter', 'Communication Chapter', 'Digital Trust Chapter'];
   const INDUSTRY_OPTIONS = ['BFI/Banking', 'Telecommunications', 'Logistics & Transportation', 'Healthcare', 'Education', 'Retail/E-commerce', 'Manufacturing'];
   const EMPLOYEES_OPTIONS = ['1-10', '11-50', '51-200', '201-500', '500+'];
-  const CATEGORY_OPTIONS = ['Corporate', 'Associate', 'Affiliate'];
+  const CATEGORY_OPTIONS = ['Full member', 'Associate Member', 'Premier corporate partner', 'Corporate Partner'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -92,23 +97,70 @@ export const BecomeAMember = () => {
     }
 
     setIsSubmitting(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${baseUrl}/api/membership/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
 
-    const payload = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key === 'chapters_applied' || key === 'industry_focus' || key === 'primary_nominee' || key === 'secondary_nominee') {
-        payload.append(`${key}_json`, JSON.stringify(value));
+      if (response.ok) {
+        setStep('verifying');
+        window.scrollTo(0, 0);
       } else {
-        payload.append(key, String(value));
+        const errorData = await response.json();
+        alert(`Failed to send OTP: ${errorData.error}`);
       }
-    });
+    } catch (error) {
+      console.error('OTP Error:', error);
+      alert('An error occurred while sending OTP.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    if (files.business_registration) payload.append('business_registration', files.business_registration);
-    if (files.audited_accounts) payload.append('audited_accounts', files.audited_accounts);
-    if (files.company_profile) payload.append('company_profile', files.company_profile);
-    if (files.other_documents) payload.append('other_documents', files.other_documents);
+  const handleVerifyAndSubmit = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    setIsVerifying(true);
+    setOtpError('');
 
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      // 1. Verify OTP
+      const verifyRes = await fetch(`${baseUrl}/api/membership/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, otp: otpCode }),
+      });
+
+      if (!verifyRes.ok) {
+        const err = await verifyRes.json();
+        setOtpError(err.error || 'Invalid OTP');
+        setIsVerifying(false);
+        return;
+      }
+
+      // 2. Proceed with Final Submission
+      const payload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'chapters_applied' || key === 'industry_focus' || key === 'primary_nominee' || key === 'secondary_nominee') {
+          payload.append(`${key}_json`, JSON.stringify(value));
+        } else {
+          payload.append(key, String(value));
+        }
+      });
+
+      if (files.business_registration) payload.append('business_registration', files.business_registration);
+      if (files.audited_accounts) payload.append('audited_accounts', files.audited_accounts);
+      if (files.company_profile) payload.append('company_profile', files.company_profile);
+      if (files.form_20) payload.append('form_20', files.form_20);
+
       const response = await fetch(`${baseUrl}/api/membership/apply`, {
         method: 'POST',
         body: payload,
@@ -119,21 +171,45 @@ export const BecomeAMember = () => {
         window.scrollTo(0, 0);
       } else {
         const errorData = await response.json();
-        alert(`Failed to submit: ${errorData.error}`);
+        alert(`Failed to submit application: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Submission error:', error);
-      alert('An error occurred during submission.');
+      alert('An error occurred during final submission.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsSubmitting(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${baseUrl}/api/membership/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      if (response.ok) {
+        alert('OTP resent successfully!');
+      } else {
+        alert('Failed to resend OTP.');
+      }
+    } catch (e) {
+      alert('Error resending OTP.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   // Reusable Tailwind CSS classes for the sleek redesign
   const inputClass = "w-full border border-slate-200 rounded-xl p-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-fitis-blue/10 focus:border-fitis-blue transition-all outline-none shadow-sm hover:border-slate-300 text-slate-800 placeholder:text-slate-400";
   const labelClass = "block text-sm font-bold text-slate-700 mb-2 tracking-wide uppercase text-xs";
-  const sectionClass = "bg-white p-8 md:p-12 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-slate-200/70 transition-shadow duration-500";
-  const sectionTitleClass = "text-2xl font-black text-slate-800 border-b-2 border-slate-100 pb-5 mb-8 text-fitis-blue flex items-center gap-4";
+  const sectionClass = "bg-white p-6 md:p-12 rounded-[1.5rem] md:rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-slate-200/70 transition-shadow duration-500";
+
+  const sectionTitleClass = "text-xl md:text-2xl font-black text-slate-800 border-b-2 border-slate-100 pb-3 md:pb-5 mb-6 md:mb-8 text-fitis-blue flex items-center gap-4";
+
   const fileInputClass = "w-full text-sm text-slate-600 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-fitis-blue/10 file:text-fitis-blue hover:file:bg-fitis-blue/20 transition-all cursor-pointer focus:outline-none";
   const badgeClass = "flex items-center space-x-3 p-3 rounded-xl border border-slate-200 hover:border-fitis-blue hover:bg-fitis-blue/5 transition-all cursor-pointer group";
 
@@ -160,19 +236,72 @@ export const BecomeAMember = () => {
       <section className="py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-6">
 
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">NEW MEMBER REGISTRATION</h2>
-            <div className="text-slate-600 leading-relaxed space-y-4 max-w-2xl mx-auto text-lg">
+          <div className="text-center mb-10 md:mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 md:mb-6 tracking-tight">NEW MEMBER REGISTRATION</h2>
+            <div className="text-slate-600 leading-relaxed space-y-4 max-w-2xl mx-auto text-base md:text-lg">
               <p>A body corporate should satisfy the eligibility criteria set out for the respective Chapter to become a prestigious member of FITIS.</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-10">
 
-            {/* Section A */}
+          <form onSubmit={handleSubmit} className="space-y-10">
+            {step === 'verifying' ? (
+              <div className={`${sectionClass} text-center py-16`}>
+                <div className="w-20 h-20 bg-fitis-blue/10 text-fitis-blue rounded-full flex items-center justify-center mx-auto mb-8">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Verify Your Email</h2>
+                <p className="text-slate-600 mb-10 max-w-md mx-auto">
+                  We've sent a 6-digit verification code to <span className="font-bold text-fitis-blue">{formData.email}</span>. Please enter it below to complete your application.
+                </p>
+
+                <div className="max-w-xs mx-auto mb-8">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="w-full text-center text-3xl md:text-4xl font-black tracking-[0.3em] md:tracking-[0.5em] py-5 border-2 border-slate-200 rounded-2xl focus:border-fitis-blue focus:ring-4 focus:ring-fitis-blue/10 transition-all outline-none"
+
+                    placeholder="000000"
+                  />
+                  {otpError && <p className="text-red-500 text-sm font-bold mt-4">{otpError}</p>}
+                </div>
+
+                <div className="flex flex-col gap-4 max-w-xs mx-auto">
+                  <button
+                    type="button"
+                    onClick={handleVerifyAndSubmit}
+                    disabled={isVerifying}
+                    className={`w-full py-5 rounded-full font-black text-lg shadow-xl transition-all ${isVerifying ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-fitis-blue to-blue-800 text-white hover:shadow-fitis-blue/40 hover:-translate-y-1 active:scale-95'}`}
+                  >
+                    {isVerifying ? 'Verifying...' : 'Complete Application'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep('filling')}
+                    className="text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
+                  >
+                    ← Back to form
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    className="text-fitis-blue font-bold hover:underline text-sm"
+                  >
+                    Resend Code
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Section A */}
             <div className={sectionClass}>
               <h3 className={sectionTitleClass}>A. Membership Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
                 <div>
                   <label className={labelClass}>Primary Chapter *</label>
                   <div className="relative">
@@ -198,8 +327,12 @@ export const BecomeAMember = () => {
                   </div>
                 </div>
                 <div className="md:col-span-2 mt-2">
-                  <label className={labelClass}>Chapter(s) you are applying for *</label>
+                  <label className={labelClass}>Secondary chapter *</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                    <label className={badgeClass}>
+                      <input type="checkbox" checked={formData.chapters_applied.includes('No secondary chapter')} onChange={() => handleArrayChange('chapters_applied', 'No secondary chapter')} className="w-5 h-5 text-fitis-blue rounded-md border-slate-300 focus:ring-fitis-blue focus:ring-offset-2 transition-all" />
+                      <span className="text-sm font-semibold text-slate-700 group-hover:text-fitis-blue transition-colors">No secondary chapter</span>
+                    </label>
                     {CHAPTER_OPTIONS.map(opt => (
                       <label key={opt} className={badgeClass}>
                         <input type="checkbox" checked={formData.chapters_applied.includes(opt)} onChange={() => handleArrayChange('chapters_applied', opt)} className="w-5 h-5 text-fitis-blue rounded-md border-slate-300 focus:ring-fitis-blue focus:ring-offset-2 transition-all" />
@@ -226,7 +359,8 @@ export const BecomeAMember = () => {
             {/* Section B */}
             <div className={sectionClass}>
               <h3 className={sectionTitleClass}>B. Organization Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
                 <div>
                   <label className={labelClass}>Phone Number *</label>
                   <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputClass} placeholder="+94 11 234 5678" required />
@@ -249,7 +383,8 @@ export const BecomeAMember = () => {
             {/* Section C */}
             <div className={sectionClass}>
               <h3 className={sectionTitleClass}>C. Organization Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
                 <div>
                   <label className={labelClass}>Business Registration Number *</label>
                   <input type="text" name="br_number" value={formData.br_number} onChange={handleChange} className={inputClass} placeholder="PV 12345" required />
@@ -386,8 +521,8 @@ export const BecomeAMember = () => {
                   <input type="file" onChange={(e) => handleFileChange(e, 'company_profile')} className={fileInputClass} required />
                 </div>
                 <div className="p-6 border-2 border-dashed border-slate-200 hover:border-fitis-blue/50 rounded-2xl bg-white transition-colors group">
-                  <label className="block text-sm font-bold text-slate-800 mb-3">Other Documents <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <input type="file" onChange={(e) => handleFileChange(e, 'other_documents')} className={fileInputClass} />
+                  <label className="block text-sm font-bold text-slate-800 mb-3">FORM 20 *</label>
+                  <input type="file" onChange={(e) => handleFileChange(e, 'form_20')} className={fileInputClass} required={true} />
                 </div>
               </div>
             </div>
@@ -403,16 +538,54 @@ export const BecomeAMember = () => {
                 <p>We declare that the information provided in this application is true and correct to the best of our knowledge and belief. We understand that any false information may result in the rejection of this application or subsequent termination of membership.</p>
               </div>
 
-              <div className="bg-slate-800 text-white p-8 rounded-2xl shadow-xl mb-12 max-w-md">
-                <h4 className="font-bold text-slate-100 text-lg mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-fitis-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  Applicable Fees Structure
-                </h4>
-                <ul className="space-y-3 text-slate-300">
-                  <li className="flex justify-between items-center border-b border-slate-700 pb-2"><span>Entrance Fee:</span> <span className="font-bold text-white tracking-wide">LKR 25,000</span></li>
-                  <li className="flex justify-between items-center border-b border-slate-700 pb-2"><span>Membership Fee (Annual):</span> <span className="font-bold text-white tracking-wide">LKR 25,000</span></li>
-                  <li className="flex justify-between items-center pt-1 text-slate-400"><span>Administration Fee:</span> <span className="font-bold text-white tracking-wide">LKR 5,000</span></li>
-                </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+                {/* Full Member */}
+                <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
+                  <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Full Member Fee Structure
+                  </h4>
+                  <ul className="space-y-2 text-xs">
+                    <li className="flex justify-between border-b border-white/10 pb-1"><span>Joining Fee (One-time):</span> <span className="font-bold">25,000</span></li>
+                    <li className="flex justify-between border-b border-white/10 pb-1"><span>Membership (Annual):</span> <span className="font-bold">50,000</span></li>
+                    <li className="flex justify-between"><span>Secondary Chapter (Annual):</span> <span className="font-bold">25,000</span></li>
+                  </ul>
+                </div>
+
+                {/* Associate Member */}
+                <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
+                  <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Associate Fee Structure
+                  </h4>
+                  <ul className="space-y-2 text-xs">
+                    <li className="flex justify-between border-b border-white/10 pb-1"><span>Joining Fee (One-time):</span> <span className="font-bold">10,000</span></li>
+                    <li className="flex justify-between border-b border-white/10 pb-1"><span>Membership (Annual):</span> <span className="font-bold">30,000</span></li>
+                    <li className="flex justify-between"><span>Secondary Chapter (Annual):</span> <span className="font-bold">10,000</span></li>
+                  </ul>
+                </div>
+
+                {/* Premier Corporate Partner */}
+                <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
+                  <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Premier Corporate Partner
+                  </h4>
+                  <ul className="space-y-2 text-xs">
+                    <li className="flex justify-between"><span>Membership (Annual):</span> <span className="font-bold">500,000</span></li>
+                  </ul>
+                </div>
+
+                {/* Corporate Partner */}
+                <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
+                  <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Corporate Partner Fee Structure
+                  </h4>
+                  <ul className="space-y-2 text-xs">
+                    <li className="flex justify-between"><span>Membership (Annual):</span> <span className="font-bold">300,000</span></li>
+                  </ul>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -435,20 +608,23 @@ export const BecomeAMember = () => {
                 <span className="text-base font-bold text-slate-800 group-hover:text-fitis-blue transition-colors pt-0.5">I hereby certify that I am authorized to sign this application on behalf of the organization.</span>
               </label>
 
-              <div className="text-center pt-4">
-                <button type="submit" disabled={isSubmitting} className={`relative inline-flex items-center justify-center px-16 py-5 text-white font-extrabold text-xl rounded-full shadow-2xl transition-all duration-300 overflow-hidden ${isSubmitting ? 'bg-slate-400 cursor-not-allowed scale-95' : 'bg-gradient-to-r from-fitis-blue to-blue-800 hover:from-blue-600 hover:to-blue-900 hover:scale-105 hover:shadow-blue-900/30'}`}>
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-3">
-                      <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Submitting Application...
-                    </span>
-                  ) : 'Submit Member Application'}
-                </button>
+                <div className="text-center pt-4">
+                  <button type="submit" disabled={isSubmitting} className={`relative inline-flex items-center justify-center px-16 py-5 text-white font-extrabold text-xl rounded-full shadow-2xl transition-all duration-300 overflow-hidden ${isSubmitting ? 'bg-slate-400 cursor-not-allowed scale-95' : 'bg-gradient-to-r from-fitis-blue to-blue-800 hover:from-blue-600 hover:to-blue-900 hover:scale-105 hover:shadow-blue-900/30'}`}>
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-3">
+                        <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending OTP...
+                      </span>
+                    ) : 'Submit Member Application'}
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
+          )}
+
 
           </form>
         </div>

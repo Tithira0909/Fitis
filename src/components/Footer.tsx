@@ -4,9 +4,9 @@ import { getImageUrl } from '../utils/getImageUrl';
 
 export const Footer = () => {
   const [settings, setSettings] = useState<any>({
-    site_location: "No. 123, Galle Road, Colombo 03, Sri Lanka.",
+    site_location: "No.9A, 1/3, Fourth Floor, St. Anthony’s Mawatha, Colombo 03",
     site_email: "info@fitis.lk",
-    site_phone: "+94 11 234 5678",
+    site_phone: "(+94) 112 577 103",
   });
 
   useEffect(() => {
@@ -63,12 +63,12 @@ export const Footer = () => {
         <div>
           <h4 className="font-bold text-lg mb-6 text-white">Our Chapters</h4>
           <ul className="space-y-4 text-slate-400">
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Trust Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">ICT Infrastructure Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Software Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Services Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Education & Training Chapter</a></li>
             <li><a href="#" className="hover:text-fitis-gold transition-colors">Communication Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Professional Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">ICT Infrastructure Chapter</a></li>
+            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Trust Chapter</a></li>
           </ul>
         </div>
 

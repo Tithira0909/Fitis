@@ -14,14 +14,12 @@ export const codeOfEthicsData: PolicySection[] = [
       <p>The associations subscribed as members of FITIS as at the date of first adoption of this Code are and to whom this Code becomes applicable as from the date of first adoption are:</p>
 
       <ul class="list-decimal pl-6 space-y-2 font-medium">
+        <li>The ICT Infrastructure Chapter</li>
         <li>The Software Chapter</li>
-        <li>The Digital Trust Chapter</li>
+        <li>The Digital Services Chapter</li>
         <li>The Education & Training Chapter</li>
         <li>The Communication Chapter</li>
-        <li>The Digital Services Chapter</li>
-        <li>The Office Automation Chapter</li>
-        <li>The Professional Chapter</li>
-        <li>The ICT Infrastructure Chapter</li>
+        <li>The Digital Trust Chapter</li>
       </ul>
     `
   },

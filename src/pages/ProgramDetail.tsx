@@ -67,7 +67,7 @@ export const ProgramDetail = () => {
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Banner Area */}
-      <div className="bg-slate-900 pt-24 pb-32 px-6">
+      <div className="bg-slate-900 pt-32 pb-32 px-6">
         <div className="max-w-4xl mx-auto">
           <Link to="/Home/programs" className="inline-flex items-center text-slate-300 hover:text-white font-medium mb-8 transition-colors">
             <ArrowLeft size={20} className="mr-2" /> Back to Programs

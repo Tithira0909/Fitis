@@ -85,26 +85,6 @@ export const chaptersData: Chapter[] = [
     ]
   },
   {
-    name: "Telecommunications Chapter",
-    slug: "telecommunications",
-    description: "Shaping policies and standards for advanced telecommunication networks.",
-    longDescription: "The Telecommunications Chapter brings together major telcos and network providers to drive the next generation of connectivity in Sri Lanka. We focus on spectrum management, 5G deployment, and ensuring affordable, high-speed access for all.",
-    tags: ["5G", "Broadband", "Spectrum"],
-    icon: Radio,
-    focusAreas: [
-      "5G Roadmap & Deployment",
-      "Spectrum Policy Advocacy",
-      "Rural Connectivity Initiatives",
-      "Network Security & Resilience"
-    ],
-    activities: [
-      "Telco Leadership Roundtables",
-      "Regulatory Compliance Workshops",
-      "Connectivity Impact Assessments",
-      "Public-Private Partnership Forums"
-    ]
-  },
-  {
     name: "Education & Training Chapter",
     slug: "education-training",
     description: "Bridging the skills gap by fostering world-class ICT education and professional development.",
@@ -125,6 +105,26 @@ export const chaptersData: Chapter[] = [
     ]
   },
   {
+    name: "Communication Chapter",
+    slug: "communication",
+    description: "Shaping policies and standards for advanced telecommunication networks.",
+    longDescription: "The Communication Chapter brings together major telcos and network providers to drive the next generation of connectivity in Sri Lanka. We focus on spectrum management, 5G deployment, and ensuring affordable, high-speed access for all.",
+    tags: ["5G", "Broadband", "Spectrum"],
+    icon: Radio,
+    focusAreas: [
+      "5G Roadmap & Deployment",
+      "Spectrum Policy Advocacy",
+      "Rural Connectivity Initiatives",
+      "Network Security & Resilience"
+    ],
+    activities: [
+      "Telco Leadership Roundtables",
+      "Regulatory Compliance Workshops",
+      "Connectivity Impact Assessments",
+      "Public-Private Partnership Forums"
+    ]
+  },
+  {
     name: "Digital Trust Chapter",
     slug: "digital-trust",
     description: "Representing the interests of hardware vendors, distributors, and manufacturers.",
@@ -142,26 +142,6 @@ export const chaptersData: Chapter[] = [
       "Vendor Networking Events",
       "Policy Briefings on Trade Regulations",
       "IoT Innovation Showcases"
-    ]
-  },
-  {
-    name: "Professional Consultants Chapter",
-    slug: "consultants",
-    description: "A network of expert consultants driving strategic digital transformation projects.",
-    longDescription: "The Professional Consultants Chapter provides a platform for ICT consultants and advisory firms to collaborate and drive high-impact digital transformation projects. We focus on maintaining high professional standards and promoting strategic ICT governance.",
-    tags: ["Strategy", "Governance", "Advisory"],
-    icon: Briefcase,
-    focusAreas: [
-      "Digital Strategy Frameworks",
-      "ICT Governance & Compliance",
-      "Project Management Excellence",
-      "Change Management Strategies"
-    ],
-    activities: [
-      "Consultant Certification Programs",
-      "Strategic Advisory Forums",
-      "Digital Transformation Case Studies",
-      "Ethics & Standards Workshops"
     ]
   }
 ];

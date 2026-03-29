@@ -21,21 +21,21 @@ export const Contact = () => {
               <div className="w-12 h-12 bg-fitis-blue/10 text-fitis-blue rounded-full flex items-center justify-center">
                 <MapPin size={24} />
               </div>
-              <span className="font-medium text-lg">Colombo, Sri Lanka</span>
+              <span className="font-medium text-lg leading-tight">No.9A, 1/3, Fourth Floor, St. Anthony’s Mawatha, Colombo 03</span>
             </div>
 
             <div className="flex flex-col items-center gap-3">
               <div className="w-12 h-12 bg-fitis-blue/10 text-fitis-blue rounded-full flex items-center justify-center">
                 <Mail size={24} />
               </div>
-              <span className="font-medium text-lg">info@fitis.org</span>
+              <span className="font-medium text-lg">info@fitis.lk</span>
             </div>
 
             <div className="flex flex-col items-center gap-3">
               <div className="w-12 h-12 bg-fitis-blue/10 text-fitis-blue rounded-full flex items-center justify-center">
                 <Phone size={24} />
               </div>
-              <span className="font-medium text-lg">+94 11 205 8500</span>
+              <span className="font-medium text-lg">(+94) 112 577 103</span>
             </div>
           </div>
         </div>

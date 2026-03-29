@@ -12,10 +12,11 @@ export interface ColumnDef {
 export interface FieldDef {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'select' | 'number' | 'email' | 'checkbox' | 'image' | 'time';
+  type: 'text' | 'textarea' | 'date' | 'select' | 'number' | 'email' | 'checkbox' | 'image' | 'time' | 'file';
   options?: { value: string; label: string }[];
   required?: boolean;
   uploadUrl?: string; // e.g. /api/admin/upload/event-flyer
+  accept?: string;
 }
 
 interface GenericAdminCrudProps {
@@ -250,6 +251,21 @@ export const GenericAdminCrud: React.FC<GenericAdminCrudProps> = ({ title, table
                       <input
                         type="file"
                         accept="image/*"
+                        onChange={(e) => field.uploadUrl && handleImageUpload(e, field.name, field.uploadUrl)}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        required={field.required && !formData[field.name]}
+                      />
+                    </div>
+                  ) : field.type === 'file' ? (
+                    <div className="space-y-2">
+                       {formData[field.name] && (
+                        <a href={getImageUrl(formData[field.name])} target="_blank" rel="noreferrer" className="text-blue-600 underline text-sm font-medium hover:text-blue-800">
+                          View Current File
+                        </a>
+                      )}
+                      <input
+                        type="file"
+                        accept={field.accept || "*/*"}
                         onChange={(e) => field.uploadUrl && handleImageUpload(e, field.name, field.uploadUrl)}
                         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         required={field.required && !formData[field.name]}

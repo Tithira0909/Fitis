@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
+
 import { cn } from '../lib/utils';
 import { getImageUrl } from '../utils/getImageUrl';
 
@@ -20,7 +21,14 @@ const navLinks = [
       { name: 'Secretariat Team', href: '/Home/secretariat-team' },
     ]
   },
-  { name: 'News', href: '/Home/news' },
+  {
+    name: 'News',
+    href: '#',
+    submenu: [
+      { name: 'Press Room', href: '/Home/news' },
+      { name: 'Newsletters', href: '/Home/newsletters' }
+    ]
+  },
   { name: 'Events', href: '/Home/events' },
   { name: 'Programs', href: '/Home/programs' },
   {
@@ -187,12 +195,17 @@ export const Navbar = () => {
           ))}
           {communityToken && communityUser ? (
             <div className="flex items-center gap-4 ml-2">
-              <span className={cn(
-                "hidden lg:block text-sm font-bold tracking-tight",
-                isScrolled || location.pathname !== '/' ? "text-slate-700" : "text-white/90"
-              )}>
-                {communityUser.company_name}
-              </span>
+              <Link 
+                to="/member-dashboard"
+                className={cn(
+                  "hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border",
+                  isScrolled || location.pathname !== '/' 
+                    ? "bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100" 
+                    : "bg-white/10 border-white/20 backdrop-blur-md text-white hover:bg-white/20"
+                )}
+              >
+                <LayoutDashboard size={16} /> Dashboard
+              </Link>
               <button 
                 onClick={handleLogout} 
                 className={cn(
@@ -206,6 +219,7 @@ export const Navbar = () => {
               </button>
             </div>
           ) : (
+
             <div 
               className={cn(
                 "relative flex items-center rounded-full p-1 shadow-sm border transition-colors duration-300 gap-1",
@@ -327,14 +341,26 @@ export const Navbar = () => {
                 )}
               </div>
             ))}
-            <div className="flex gap-3 pt-2">
-              <Link to="/login" className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-center hover:bg-slate-200 shadow-sm transition-colors border border-slate-200">
-                Sign In
-              </Link>
-              <Link to="/Home/become-a-member" className="flex-1 bg-fitis-blue text-white py-3 rounded-xl font-bold text-center shadow-lg shadow-fitis-blue/20 hover:bg-blue-700 transition-colors">
-                Sign Up
-              </Link>
-            </div>
+            {communityToken && communityUser ? (
+              <div className="flex flex-col gap-3 pt-2">
+                <Link to="/member-dashboard" onClick={() => setIsMobileMenuOpen(false)} className="bg-blue-50 text-blue-600 py-3 rounded-xl font-bold text-center border border-blue-100 flex items-center justify-center gap-2">
+                  <LayoutDashboard size={18} /> Member Dashboard
+                </Link>
+                <button onClick={handleLogout} className="bg-red-50 text-red-600 py-3 rounded-xl font-bold text-center border border-red-100">
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-3 pt-2">
+                <Link to="/login" className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-center hover:bg-slate-200 shadow-sm transition-colors border border-slate-200">
+                  Sign In
+                </Link>
+                <Link to="/signup" className="flex-1 bg-fitis-blue text-white py-3 rounded-xl font-bold text-center shadow-lg shadow-fitis-blue/20 hover:bg-blue-700 transition-colors">
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
           </motion.div>
         )}
       </AnimatePresence>

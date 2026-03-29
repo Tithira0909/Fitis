@@ -17,12 +17,12 @@ export const SubHeaderBar: React.FC<SubHeaderBarProps> = ({
   onSearchChange,
   title = "FITIS PRESS ROOM",
   onSearchSubmit,
-  showSearch = true
+  showSearch = false
 }) => {
   const crumbs = breadcrumbs ?? [];
 
   return (
-    <div className="bg-[#0b1a30] text-white py-3 px-6 mt-20 z-40 relative">
+    <div className="bg-[#0b1a30] text-white py-3 px-6 mt-24 md:mt-28 z-40 relative">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
 
         {/* Breadcrumbs */}

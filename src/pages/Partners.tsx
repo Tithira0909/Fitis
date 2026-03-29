@@ -5,28 +5,28 @@ import { getImageUrl } from '../utils/getImageUrl';
 interface Partner {
   id: number;
   name: string;
-  category: 'government_partners' | 'fitis_corporate_partners' | 'industry_partners' | 'international_bodies' | 'premium_corporate_partners' | 'corporate_partners';
+  category: 'government' | 'industry' | 'international' | 'premium_corporate' | 'corporate' | 'supporting';
   logo_url: string;
   website_url: string;
   sort_order: number;
 }
 
 const CATEGORY_ORDER = [
-  'government_partners',
-  'fitis_corporate_partners',
-  'industry_partners',
-  'international_bodies',
-  'premium_corporate_partners',
-  'corporate_partners',
+  'government',
+  'corporate',
+  'industry',
+  'international',
+  'premium_corporate',
+  'supporting',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  government_partners: 'Government Partners',
-  fitis_corporate_partners: 'FITIS Corporate Partners',
-  industry_partners: 'Industry Partners',
-  international_bodies: 'International Bodies',
-  premium_corporate_partners: 'Premium Corporate Partners',
-  corporate_partners: 'Corporate Partners',
+  government: 'GOVERNMENT PARTNERS',
+  corporate: 'FITIS CORPORATE PARTNERS',
+  industry: 'INDUSTRY PARTNERS',
+  international: 'INTERNATIONAL BODIES',
+  premium_corporate: 'PREMIUM CORPORATE PARTNERS',
+  supporting: 'SUPPORTING PARTNERS',
 };
 
 export const Partners = () => {
@@ -101,7 +101,7 @@ export const Partners = () => {
                               <img
                                 src={getImageUrl(partner.logo_url)}
                                 alt={partner.name}
-                                className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
+                                className="max-w-full max-h-full object-contain transition-all duration-300"
                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 title={partner.name}
                               />

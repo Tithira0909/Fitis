@@ -97,7 +97,7 @@ const ChapterDetail = () => {
                       <img src={getImageUrl(chapter.chair_image_url)} alt={chapter.chair_name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-blue-700 flex items-center justify-center text-5xl font-bold">
-                        {chapter.chair_name?.charAt(0) || 'C'}
+                        {chapter.chair_name?.charAt(0) || 'P'}
                       </div>
                     )}
                   </div>
