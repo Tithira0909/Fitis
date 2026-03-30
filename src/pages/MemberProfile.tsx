@@ -98,7 +98,7 @@ export const MemberProfile = () => {
         {/* Sidebar: Member Info */}
         <aside className="w-full lg:w-1/3 flex flex-col gap-8">
           {/* Company Card */}
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 lg:sticky lg:top-32 transition-all">
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 transition-all">
 
             <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-3xl border-2 border-slate-50 p-4 shadow-sm mb-8 mx-auto flex items-center justify-center overflow-hidden">
               {member.company_logo_url ? (
@@ -174,11 +174,12 @@ export const MemberProfile = () => {
                <div className="flex flex-col gap-3 w-full mt-6">
                 <div className="flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold backdrop-blur-md transition-colors hover:bg-white/10">
                    <Mail size={16} className="text-blue-400 shrink-0" /> 
-                   <span className="truncate">{member.rep_email}</span>
+                   <span className="break-all whitespace-normal">{member.rep_email}</span>
                 </div>
                 {member.rep_mobile && (
                   <div className="flex items-center justify-center gap-3 py-3.5 px-4 bg-white/5 border border-white/10 rounded-2xl text-[13px] font-bold backdrop-blur-md transition-colors hover:bg-white/10">
-                    <Phone size={16} className="text-blue-400 shrink-0" /> {member.rep_mobile}
+                    <Phone size={16} className="text-blue-400 shrink-0" />
+                    <span className="break-all whitespace-normal">{member.rep_mobile}</span>
                   </div>
                 )}
               </div>

@@ -19,6 +19,7 @@ import { ContactQuickBar } from '../components/ContactQuickBar';
 import { SectionHeader } from '../components/SectionHeader';
 import { getImageUrl } from '../utils/getImageUrl';
 import { useEffect, useState } from 'react';
+import { LatestEventsPrograms } from '../components/LatestEventsPrograms';
 
 const ChairmanMessage = () => {
   const [data, setData] = useState<any>(null);
@@ -594,6 +595,7 @@ export const Home = () => {
       )}
       <ChairmanMessage />
       <BoardMembers />
+      <LatestEventsPrograms />
       <ServicesSection />
       <MembershipCTA />
       <PartnersSection />

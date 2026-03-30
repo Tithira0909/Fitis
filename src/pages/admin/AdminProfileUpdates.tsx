@@ -51,8 +51,6 @@ export const AdminProfileUpdates = () => {
   }, [token, navigate]);
 
   const handleAction = async (id: number, action: 'approve' | 'reject') => {
-    if (!window.confirm(`Are you sure you want to ${action} this update?`)) return;
-    
     setActionLoading(true);
     try {
       const res = await fetch(`${baseUrl}/api/admin/profile-updates/${id}/${action}`, {
