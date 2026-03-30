@@ -287,7 +287,7 @@ export const CompanySignup = () => {
                 <div className="space-y-2 md:col-span-2">
 
                   <label className="text-sm font-semibold text-gray-700">Company Name *</label>
-                  <input type="text" name="company_name" required value={formData.company_name} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" placeholder="e.g. Acme Corporation" />
+                  <input type="text" name="company_name" required value={formData.company_name} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" placeholder="e.g. FITIS (Guarantee) LTD" />
                 </div>
 
                 <div className="space-y-2">
@@ -321,7 +321,7 @@ export const CompanySignup = () => {
                   <label className="text-sm font-semibold text-gray-700">FITIS Membership ID</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Hash size={18} className="text-gray-400" /></div>
-                    <input type="text" name="fitis_membership_id" value={formData.fitis_membership_id} onChange={handleChange} className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" placeholder="e.g. FITIS-2026-XXXX" />
+                    <input type="text" name="fitis_membership_id" value={formData.fitis_membership_id} onChange={handleChange} className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" placeholder="e.g. FM0000" />
                   </div>
                 </div>
 
@@ -366,7 +366,7 @@ export const CompanySignup = () => {
                     onChange={handleChange as any} 
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none resize-none" 
-                    placeholder="Briefly describe the services your company provides..."
+                    placeholder="Software Services | Digital Solutions | IT Consultancy | Cloud Services | etc."
                   />
                 </div>
 

@@ -92,7 +92,7 @@ export const Footer = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-        <p>© {new Date().getFullYear()} FITIS. All Rights Reserved.</p>
+        <p>Copyright © {new Date().getFullYear()} FITIS Guarantee Limited.</p>
         <div className="flex gap-8">
           <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
           <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

@@ -31,7 +31,7 @@ export const Introduction = () => {
                   The Federation of Information Technology Industry Sri Lanka (FITIS) is the apex body of the ICT industry in Sri Lanka. Established in 1996 with the purpose of providing a unified voice for the technology sector, FITIS represents a diverse range of stakeholders including hardware vendors, software developers, education providers, and digital service companies.
                 </p>
                 <p className="text-slate-600 leading-relaxed text-lg">
-                  With over 25 years of experience, we have been at the forefront of driving digital transformation across the nation. We serve as the primary interface between the industry and the government, working closely with the Ministry of Technology, ICTA, and other key agencies to foster a robust and inclusive digital economy.
+                  With over 25 years of experience, we have been at the forefront of driving digital transformation across the nation. We serve as the primary interface between the industry and the government, working closely with the Ministry of Digital Economy, ICTA, and other key agencies to foster a robust and inclusive digital economy.
                 </p>
                 <p className="text-slate-600 leading-relaxed text-lg">
                   Our membership comprises over 200 leading technology firms, providing us with the collective expertise and influence to shape the future of Sri Lanka's digital landscape.
@@ -44,7 +44,7 @@ export const Introduction = () => {
                   <h2 className="text-2xl font-bold">Our Mission</h2>
                 </div>
                 <p className="text-slate-600 leading-relaxed text-lg">
-                  To lead and facilitate the growth of the ICT industry in Sri Lanka by fostering innovation, enhancing global competitiveness, and advocating for policies that support a thriving digital ecosystem for all citizens and businesses.
+                  To make Sri Lanka the leading innovation and digital economic hub in Asia by fostering emerging technologies, enabling a future-ready workforce, and driving sustainable digital transformation that enhances global competitiveness and inclusive prosperity.
                 </p>
               </div>
 
@@ -54,7 +54,7 @@ export const Introduction = () => {
                   <h2 className="text-2xl font-bold">Our Vision</h2>
                 </div>
                 <p className="text-slate-600 leading-relaxed text-lg">
-                  To position Sri Lanka as a globally recognized hub for technology and innovation, where digital integration drives sustainable economic growth and social empowerment.
+                 To be the trusted and unified voice of the ICT industry in Sri Lanka.
                 </p>
               </div>
 
@@ -104,7 +104,7 @@ export const Introduction = () => {
                     
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Chapters</p>
-                      <p className="text-lg font-bold text-slate-900">8 Specialized Chapters</p>
+                      <p className="text-lg font-bold text-slate-900">6 Specialized Chapters</p>
                     </div>
 
                     <div>
