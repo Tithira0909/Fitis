@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GlobeHero } from '../components/GlobeHero';
+import Logo from '../assets/images/logo.jpeg';
 
 const ChairmanMessage = () => {
   return (
@@ -127,26 +128,13 @@ const NetworkMesh = () => {
   );
 };
 
-const FitisLogoWhite = () => (
-  <div className="flex items-center gap-3">
-    <div className="relative w-12 h-12">
-      <svg viewBox="0 0 100 100" className="w-full h-full text-white">
-        <path d="M20 20 L80 20 L80 35 L40 35 L40 50 L70 50 L70 65 L40 65 L40 85 L20 85 Z" fill="currentColor" />
-        {/* Mesh dots to the left of F */}
-        <g fill="currentColor" opacity="0.8">
-          <circle cx="10" cy="30" r="2" />
-          <circle cx="5" cy="45" r="2" />
-          <circle cx="12" cy="60" r="2" />
-          <circle cx="8" cy="75" r="2" />
-          <circle cx="15" cy="40" r="1.5" />
-          <circle cx="18" cy="55" r="1.5" />
-        </g>
-      </svg>
-    </div>
-    <div className="text-white">
-      <p className="font-black text-3xl leading-none tracking-tighter">FITIS</p>
-      <p className="text-[7px] uppercase tracking-[0.2em] font-bold opacity-70">Federation of IT Industry Sri Lanka</p>
-    </div>
+const BrandLogo = () => (
+  <div className="flex items-center">
+    <img
+      src={Logo}
+      alt="MK Event & Media Solutions Logo"
+      className="h-16 w-auto rounded-md object-contain"
+    />
   </div>
 );
 
@@ -219,7 +207,7 @@ const BoardSection = () => {
         {/* Poster Header */}
         <div className="flex flex-col lg:flex-row justify-between items-center mb-20 gap-10">
           <div className="lg:w-1/3">
-            <FitisLogoWhite />
+            <BrandLogo />
           </div>
           
           <div className="lg:w-1/3 text-center">
