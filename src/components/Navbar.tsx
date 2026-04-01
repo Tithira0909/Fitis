@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X } from 'lucide-react';
 import { cn } from '../lib/utils';
+import Logo from '../assets/images/logo.jpeg';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,11 +36,11 @@ export const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-fitis-blue rounded-lg flex items-center justify-center text-white font-bold text-xl">F</div>
-          <span className={cn(
-            "font-display font-bold text-2xl tracking-tighter",
-            isScrolled || location.pathname !== '/' ? "text-fitis-blue" : "text-white"
-          )}>FITIS</span>
+          <img
+            src={Logo}
+            alt="MK Event & Media Solutions Logo"
+            className="h-10 w-auto rounded-md object-contain bg-slate-900/50 p-1"
+          />
         </Link>
 
         {/* Desktop Nav */}
