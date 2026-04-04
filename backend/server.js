@@ -473,10 +473,10 @@ app.get('/api/community-members/:id', async (req, res) => {
   }
 });
 
-// GET /api/community-members/:id/posts - Public endpoint to get posts for a member
+// GET /api/community-members/:id/posts - Public endpoint to get APPROVED posts for a member
 app.get('/api/community-members/:id/posts', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM member_posts WHERE member_id = ? ORDER BY created_at DESC', [req.params.id]);
+    const [rows] = await pool.execute('SELECT * FROM member_posts WHERE member_id = ? AND status = \'Approved\' ORDER BY created_at DESC', [req.params.id]);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching member posts:', error);
@@ -484,7 +484,7 @@ app.get('/api/community-members/:id/posts', async (req, res) => {
   }
 });
 
-// POST /api/community/posts - Protected endpoint to create a post
+// POST /api/community/posts - Protected endpoint to create a post (defaults to Pending for admin approval)
 app.post('/api/community/posts', authenticateToken, multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -505,13 +505,25 @@ app.post('/api/community/posts', authenticateToken, multer({
     }
 
     const [result] = await pool.execute(
-      'INSERT INTO member_posts (member_id, content, image_url) VALUES (?, ?, ?)',
+      'INSERT INTO member_posts (member_id, content, image_url, status) VALUES (?, ?, ?, \'Pending\')',
       [member_id, content, image_url]
     );
 
-    res.json({ id: result.insertId, member_id, content, image_url, created_at: new Date() });
+    res.json({ id: result.insertId, member_id, content, image_url, status: 'Pending', created_at: new Date() });
   } catch (error) {
     console.error('Error creating post:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/community/my-posts - Protected endpoint for a member to see their own posts (all statuses)
+app.get('/api/community/my-posts', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    const [rows] = await pool.execute('SELECT * FROM member_posts WHERE member_id = ? ORDER BY created_at DESC', [member_id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching own posts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -531,6 +543,47 @@ app.delete('/api/community/posts/:id', authenticateToken, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting post:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN: GET /api/admin/wall-posts - Get all wall posts with member info
+app.get('/api/admin/wall-posts', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT mp.*, m.company_name, m.company_logo_url, m.official_email
+      FROM member_posts mp
+      JOIN member_community_requests m ON mp.member_id = m.id
+      ORDER BY mp.created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching admin wall posts:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN: PUT /api/admin/wall-posts/:id - Approve or take down a post
+app.put('/api/admin/wall-posts/:id', authenticateToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['Pending', 'Approved', 'TakenDown'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+    await pool.execute('UPDATE member_posts SET status = ? WHERE id = ?', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating post status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN: DELETE /api/admin/wall-posts/:id - Permanently delete a post
+app.delete('/api/admin/wall-posts/:id', authenticateToken, async (req, res) => {
+  try {
+    await pool.execute('DELETE FROM member_posts WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting post (admin):', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -646,6 +699,97 @@ app.post('/api/admin/profile-updates/:id/reject', async (req, res) => {
 });
 
 
+// =====================================================
+// ADMIN NOTIFICATIONS (Admin → Member Messages)
+// =====================================================
+
+// ADMIN: POST /api/admin/notifications - Send a notification/message to a member
+app.post('/api/admin/notifications', authenticateToken, async (req, res) => {
+  try {
+    const { member_id, title, message } = req.body;
+    if (!member_id || !title || !message) {
+      return res.status(400).json({ error: 'member_id, title, and message are required' });
+    }
+    const [result] = await pool.execute(
+      'INSERT INTO admin_notifications (member_id, title, message) VALUES (?, ?, ?)',
+      [member_id, title, message]
+    );
+    res.json({ id: result.insertId, member_id, title, message, is_read: false, created_at: new Date() });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN: GET /api/admin/notifications/:member_id - Get all notifications sent to a specific member
+app.get('/api/admin/notifications/:member_id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM admin_notifications WHERE member_id = ? ORDER BY created_at DESC',
+      [req.params.member_id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ADMIN: DELETE /api/admin/notifications/:id - Delete a notification
+app.delete('/api/admin/notifications/:id', authenticateToken, async (req, res) => {
+  try {
+    await pool.execute('DELETE FROM admin_notifications WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// MEMBER: GET /api/community/notifications - Fetch all notifications for the logged-in member
+app.get('/api/community/notifications', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    const [rows] = await pool.execute(
+      'SELECT * FROM admin_notifications WHERE member_id = ? ORDER BY created_at DESC',
+      [member_id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching member notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// MEMBER: PUT /api/community/notifications/:id/read - Mark a notification as read
+app.put('/api/community/notifications/:id/read', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    await pool.execute(
+      'UPDATE admin_notifications SET is_read = TRUE WHERE id = ? AND member_id = ?',
+      [req.params.id, member_id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// MEMBER: PUT /api/community/notifications/read-all - Mark all notifications as read
+app.put('/api/community/notifications/read-all', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    await pool.execute(
+      'UPDATE admin_notifications SET is_read = TRUE WHERE member_id = ?',
+      [member_id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // POST /api/auth/community/reset-password - Reset password using OTP
 app.post('/api/auth/community/reset-password', async (req, res) => {

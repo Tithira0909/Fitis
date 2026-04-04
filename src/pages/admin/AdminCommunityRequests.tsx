@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../utils/getImageUrl';
-import { Eye, Trash2, X, Building2, Link as LinkIcon } from 'lucide-react';
+import { Eye, Trash2, X, Building2, Link as LinkIcon, MessageSquarePlus, Bell, Send, Loader2, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CommunityRequest {
   id: number;
@@ -24,6 +24,237 @@ interface CommunityRequest {
   created_at: string;
 }
 
+interface AdminNotification {
+  id: number;
+  member_id: number;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+// ─── SEND MESSAGE MODAL ──────────────────────────────────────────────────────
+const SendMessageModal = ({
+  req,
+  onClose,
+}: {
+  req: CommunityRequest;
+  onClose: () => void;
+}) => {
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [history, setHistory] = useState<AdminNotification[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [showHistory, setShowHistory] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch(`${baseUrl}/api/admin/notifications/${req.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) setHistory(await res.json());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, [req.id]);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !message.trim()) return;
+    setSending(true);
+    setSendError('');
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(`${baseUrl}/api/admin/notifications`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ member_id: req.id, title: title.trim(), message: message.trim() })
+      });
+      if (!res.ok) throw new Error('Failed to send notification');
+      const newNotif = await res.json();
+      setHistory(prev => [newNotif, ...prev]);
+      setSent(true);
+      setTitle('');
+      setMessage('');
+      setTimeout(() => setSent(false), 3000);
+    } catch (err: any) {
+      setSendError(err.message);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleDeleteNotif = async (id: number) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${baseUrl}/api/admin/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setHistory(prev => prev.filter(n => n.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              {req.company_logo_url ? (
+                <img src={getImageUrl(req.company_logo_url)} alt="" className="w-8 h-8 object-contain rounded-lg" />
+              ) : (
+                <Bell size={20} />
+              )}
+            </div>
+            <div>
+              <h3 className="font-black text-lg leading-tight">Send Notification</h3>
+              <p className="text-blue-100 text-sm truncate max-w-[280px]">{req.company_name} · {req.official_email}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-xl transition-colors shrink-0">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {/* Compose New Message */}
+          <div className="p-6 border-b border-slate-100">
+            <h4 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Compose Message</h4>
+            <form onSubmit={handleSend} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Title / Subject</label>
+                <input
+                  required
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="e.g. Your Account Has Been Approved"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all font-medium text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Message</label>
+                <textarea
+                  required
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Write your message to this partner..."
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all text-slate-700 resize-none"
+                />
+              </div>
+
+              {sendError && (
+                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
+                  {sendError}
+                </div>
+              )}
+              {sent && (
+                <div className="p-3 bg-green-50 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2 border border-green-100">
+                  <CheckCircle2 size={16} /> Notification sent! It will appear in the member's dashboard.
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={sending || !title.trim() || !message.trim()}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+              >
+                {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                {sending ? 'Sending...' : 'Send Notification to Member'}
+              </button>
+            </form>
+          </div>
+
+          {/* Message History */}
+          <div className="p-6">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center justify-between w-full mb-4"
+            >
+              <h4 className="text-sm font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Bell size={14} /> Sent Message History
+                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  {history.length}
+                </span>
+              </h4>
+              {showHistory
+                ? <ChevronUp size={18} className="text-slate-400" />
+                : <ChevronDown size={18} className="text-slate-400" />
+              }
+            </button>
+
+            {showHistory && (
+              loadingHistory ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 size={24} className="text-slate-300 animate-spin" />
+                </div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-100 rounded-2xl">
+                  <Bell size={32} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-sm font-medium">No messages sent to this member yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {history.map(notif => (
+                    <div
+                      key={notif.id}
+                      className={`p-4 rounded-xl border ${notif.is_read ? 'bg-slate-50 border-slate-100' : 'bg-blue-50 border-blue-100'}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full shrink-0" />}
+                            <p className="font-bold text-slate-900 text-sm truncate">{notif.title}</p>
+                          </div>
+                          <p className="text-slate-600 text-sm leading-relaxed">{notif.message}</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <p className="text-xs text-slate-400">{new Date(notif.created_at).toLocaleString()}</p>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${notif.is_read ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              {notif.is_read ? '✓ Read' : 'Unread'}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteNotif(notif.id)}
+                          className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                          title="Delete this message"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 export const AdminCommunityRequests = () => {
   const [requests, setRequests] = useState<CommunityRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +262,8 @@ export const AdminCommunityRequests = () => {
 
   const [selectedReq, setSelectedReq] = useState<CommunityRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [msgTarget, setMsgTarget] = useState<CommunityRequest | null>(null);
 
   const navigate = useNavigate();
 
@@ -131,24 +364,30 @@ export const AdminCommunityRequests = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Representative</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {requests.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No requests found.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-4 text-center text-gray-500">No requests found.</td></tr>
               ) : (
                 requests.map(req => (
                   <tr key={req.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                      {req.company_logo_url ? (
-                        <img src={getImageUrl(req.company_logo_url)} alt="Logo" className="w-8 h-8 rounded-full mr-3 object-cover border" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3"><Building2 size={16} /></div>
-                      )}
-                      {req.company_name}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <div className="flex items-center gap-2">
+                        {req.company_logo_url ? (
+                          <img src={getImageUrl(req.company_logo_url)} alt="Logo" className="w-8 h-8 rounded-full object-cover border shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0"><Building2 size={16} /></div>
+                        )}
+                        {req.company_name}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.rep_name} <br/><span className="text-xs text-gray-400">{req.official_email}</span></td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {req.rep_name}<br/>
+                      <span className="text-xs text-gray-400">{req.official_email}</span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(req.created_at).toLocaleDateString()}
                     </td>
@@ -160,6 +399,16 @@ export const AdminCommunityRequests = () => {
                       }`}>
                         {req.status || 'Pending'}
                       </span>
+                    </td>
+                    {/* ── Send Message Button ── */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => setMsgTarget(req)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-bold transition-colors border border-indigo-100"
+                        title="Send a notification / popup message to this member"
+                      >
+                        <MessageSquarePlus size={14} /> Send Msg
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button onClick={() => openModal(req)} className="text-fitis-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-3">
@@ -177,6 +426,7 @@ export const AdminCommunityRequests = () => {
         </div>
       </div>
 
+      {/* Detail Modal */}
       {isModalOpen && selectedReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black bg-opacity-50 p-4">
           <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col">
@@ -215,6 +465,7 @@ export const AdminCommunityRequests = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Company Info */}
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
                   <div className="flex items-center mb-6 border-b pb-4">
                     {selectedReq.company_logo_url && (
@@ -239,21 +490,13 @@ export const AdminCommunityRequests = () => {
                         {selectedReq.company_linkedin ? <a href={selectedReq.company_linkedin} target="_blank" rel="noreferrer" className="flex items-center"><LinkIcon size={14} className="mr-1"/>{selectedReq.company_linkedin}</a> : 'N/A'}
                       </dd>
                     </div>
-                    <div>
-                      <dt className="text-gray-500 font-medium">Primary Chapter</dt>
-                      <dd className="text-gray-900 font-semibold">{selectedReq.primary_chapter || 'N/A'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-gray-500 font-medium">Secondary Chapter</dt>
-                      <dd className="text-gray-900">{selectedReq.secondary_chapter || 'N/A'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-gray-500 font-medium">FITIS Membership ID</dt>
-                      <dd className="text-gray-900">{selectedReq.fitis_membership_id || 'N/A'}</dd>
-                    </div>
+                    <div><dt className="text-gray-500 font-medium">Primary Chapter</dt><dd className="text-gray-900 font-semibold">{selectedReq.primary_chapter || 'N/A'}</dd></div>
+                    <div><dt className="text-gray-500 font-medium">Secondary Chapter</dt><dd className="text-gray-900">{selectedReq.secondary_chapter || 'N/A'}</dd></div>
+                    <div><dt className="text-gray-500 font-medium">FITIS Membership ID</dt><dd className="text-gray-900">{selectedReq.fitis_membership_id || 'N/A'}</dd></div>
                   </dl>
                 </div>
 
+                {/* Services */}
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
                   <div className="flex items-center mb-6 border-b pb-4">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-lg mr-4"><Building2 size={24} /></div>
@@ -264,6 +507,7 @@ export const AdminCommunityRequests = () => {
                   </div>
                 </div>
 
+                {/* Representative */}
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
                   <div className="flex items-center mb-6 border-b pb-4">
                     {selectedReq.rep_image_url ? (
@@ -284,10 +528,15 @@ export const AdminCommunityRequests = () => {
                   </dl>
                 </div>
               </div>
-
             </div>
 
-            <div className="border-t p-4 flex justify-end bg-gray-50 rounded-b-xl">
+            <div className="border-t p-4 flex justify-between items-center bg-gray-50 rounded-b-xl">
+              <button
+                onClick={() => { setIsModalOpen(false); setMsgTarget(selectedReq); }}
+                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 font-bold px-5 py-2.5 rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100"
+              >
+                <MessageSquarePlus size={16} /> Send Message
+              </button>
               <button onClick={() => setIsModalOpen(false)} className="bg-slate-100 text-slate-700 font-bold px-6 py-2.5 rounded-xl hover:bg-slate-200 transition-colors">
                 Close
               </button>
@@ -296,6 +545,10 @@ export const AdminCommunityRequests = () => {
         </div>
       )}
 
+      {/* Send Message Modal */}
+      {msgTarget && (
+        <SendMessageModal req={msgTarget} onClose={() => setMsgTarget(null)} />
+      )}
     </div>
   );
 };

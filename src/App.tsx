@@ -54,6 +54,7 @@ import { AdminSiteSettings } from './pages/admin/AdminSiteSettings';
 import { AdminGallery } from './pages/admin/AdminGallery';
 import { AdminChairmanMessage } from './pages/admin/AdminChairmanMessage';
 import { AdminSecretariat } from './pages/admin/AdminSecretariat';
+import { AdminWallPosts } from './pages/admin/AdminWallPosts';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -121,6 +122,7 @@ export default function App() {
           <Route path="leadership" element={<AdminLeadership />} />
           <Route path="members" element={<AdminMembers />} />
           <Route path="community-requests" element={<AdminCommunityRequests />} />
+          <Route path="wall-posts" element={<AdminWallPosts />} />
           <Route path="profile-updates" element={<AdminProfileUpdates />} />
           <Route path="member-benefits" element={<AdminMemberBenefits />} />
 
@@ -131,6 +133,9 @@ export default function App() {
           <Route path="secretariat-team" element={<AdminSecretariat />} />
           <Route path="site-settings" element={<AdminSiteSettings />} />
         </Route>
+
+        {/* Member Dashboard — standalone, no public navbar/footer */}
+        <Route path="/member-dashboard" element={<MemberDashboard />} />
 
         {/* Public Routes */}
         <Route path="/*" element={
@@ -148,7 +153,6 @@ export default function App() {
               <Route path="/signup" element={<CompanySignup />} />
               <Route path="/Home/member-community" element={<MemberCommunity />} />
               <Route path="/member/:id" element={<MemberProfile />} />
-              <Route path="/member-dashboard" element={<MemberDashboard />} />
               <Route path="/Home/member-benefits" element={<MemberBenefits />} />
 
               <Route path="/Home/partnerships" element={<Partners />} />

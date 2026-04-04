@@ -15,8 +15,7 @@ const navLinks = [
       { name: 'Introduction', href: '/Home/introduction' },
       { name: 'Leadership Team', href: '/Home/leadership-team' },
       { name: 'Chairman\'s Message', href: '/Home/chairman-message' },
-      { name: 'Code of Conduct', href: '/Home/code-of-conduct' },
-      { name: 'Code of Ethics', href: '/Home/code-of-ethics' },
+      { name: 'Code of Conduct', href: '/Home/code-of-ethics' },
       { name: 'Past Leaders', href: '/Home/past-leaders' },
       { name: 'Secretariat Team', href: '/Home/secretariat-team' },
     ]

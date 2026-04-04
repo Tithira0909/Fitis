@@ -322,6 +322,7 @@ const initializeDB = async () => {
         member_id INT NOT NULL,
         content TEXT NOT NULL,
         image_url VARCHAR(600),
+        status ENUM('Pending', 'Approved', 'TakenDown') DEFAULT 'Pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (member_id) REFERENCES member_community_requests(id) ON DELETE CASCADE
       )`,
@@ -330,6 +331,16 @@ const initializeDB = async () => {
         member_id INT NOT NULL,
         updated_data JSON NOT NULL,
         status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (member_id) REFERENCES member_community_requests(id) ON DELETE CASCADE
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS admin_notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        member_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (member_id) REFERENCES member_community_requests(id) ON DELETE CASCADE
       )`
@@ -575,6 +586,19 @@ const initializeDB = async () => {
       }
     } catch (otpErr) {
       console.error('Error during otp_verifications migration:', otpErr.message);
+    }
+
+    // Migration: Add status column to member_posts if it doesn't exist
+    try {
+      const [postStatusCol] = await connection.execute("SHOW COLUMNS FROM member_posts LIKE 'status'");
+      if (postStatusCol.length === 0) {
+        await connection.execute("ALTER TABLE member_posts ADD COLUMN status ENUM('Pending', 'Approved', 'TakenDown') DEFAULT 'Pending'");
+        console.log('Migration: Added status column to member_posts');
+      } else {
+        console.log('Migration skipped: status already exists in member_posts');
+      }
+    } catch (postErr) {
+      console.error('Error during member_posts status migration:', postErr.message);
     }
 
     console.log('Database initialization complete.');

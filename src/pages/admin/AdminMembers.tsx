@@ -6,7 +6,7 @@ import { Eye, Trash2, X, Download, FileText } from 'lucide-react';
 interface MemberApplication {
   id: number;
   primary_chapter: string;
-  chapters_applied: string | string[]; // comes as stringified JSON from generic crud usually, or parsed
+  chapters_applied: string | string[];
   company_name: string;
   membership_category: string;
   ceo_name: string;
