@@ -9,8 +9,8 @@ import multer from 'multer';
 import fs from 'fs';
 import { BrevoClient } from '@getbrevo/brevo';
 import crypto from 'crypto';
-import * as otplib from 'otplib';
-const { authenticator } = otplib;
+import otplib from 'otplib';
+const authenticator = otplib.authenticator || otplib.default.authenticator;
 import QRCode from 'qrcode';
 
 
