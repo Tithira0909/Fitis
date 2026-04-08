@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -24,6 +24,7 @@ import { Chapters } from './pages/Chapters';
 import { ChapterDetail } from './pages/ChapterDetail';
 import { Contact } from './pages/Contact';
 import { Login } from './pages/Login';
+import { SetPassword } from './pages/SetPassword';
 
 import { AdminLayout } from './components/admin/AdminLayout';
 import { BecomeAMember } from './pages/BecomeAMember';
@@ -37,6 +38,7 @@ import { AdminMembers } from './pages/admin/AdminMembers';
 import { AdminCommunityRequests } from './pages/admin/AdminCommunityRequests';
 import { AdminMemberBenefits } from './pages/admin/AdminMemberBenefits';
 import { AdminProfileUpdates } from './pages/admin/AdminProfileUpdates';
+import { AdminCommunityMemberCreation } from './pages/admin/AdminCommunityMemberCreation';
 
 
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -70,7 +72,7 @@ const useSiteSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         // Add cache busting to ensure we get latest settings
         const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
         if (res.ok) {
@@ -111,8 +113,10 @@ export default function App() {
     <Router>
       <ScrollToTop />
       <Routes>
-        {/* Admin Routes */}
+        {/* Standalone full-screen routes (no navbar/footer) */}
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/set-password" element={<SetPassword />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminOverview />} />
           <Route path="programs" element={<AdminPrograms />} />
@@ -124,6 +128,7 @@ export default function App() {
           <Route path="community-requests" element={<AdminCommunityRequests />} />
           <Route path="wall-posts" element={<AdminWallPosts />} />
           <Route path="profile-updates" element={<AdminProfileUpdates />} />
+          <Route path="community-member-creation" element={<AdminCommunityMemberCreation />} />
           <Route path="member-benefits" element={<AdminMemberBenefits />} />
 
           <Route path="partners" element={<AdminPartners />} />
@@ -148,7 +153,7 @@ export default function App() {
               <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
               <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
-              <Route path="/login" element={<Login />} />
+              {/* /login moved to standalone routes above */}
               <Route path="/Home/become-a-member" element={<BecomeAMember />} />
               <Route path="/signup" element={<CompanySignup />} />
               <Route path="/Home/member-community" element={<MemberCommunity />} />
@@ -176,3 +181,4 @@ export default function App() {
     </Router>
   );
 }
+

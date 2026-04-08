@@ -27,7 +27,7 @@ export const AdminGallery: React.FC = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     loadPosts();
@@ -89,17 +89,24 @@ export const AdminGallery: React.FC = () => {
     setIsLoading(true);
     try {
       let savedPost;
+      
+      // Ensure date is strict YYYY-MM-DD for MySQL
+      const payload = { ...formData };
+      if (payload.event_date && typeof payload.event_date === 'string') {
+        payload.event_date = payload.event_date.split('T')[0];
+      }
+
       if (editingPost) {
         await fetchApi(`/api/admin/gallery/${editingPost.id}`, {
           method: 'PUT',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         savedPost = editingPost;
         showToast('Gallery details updated');
       } else {
         savedPost = await fetchApi('/api/admin/gallery', {
           method: 'POST',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         setEditingPost(savedPost); // Transition to edit mode so images can be added
         setFormData(savedPost);
@@ -333,7 +340,7 @@ export const AdminGallery: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     <div className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-6 text-center">
-                      <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleUploadImages} className="hidden" id="multi-upload" disabled={isLoading} />
+                      <input type="file" multiple accept="image/*" onChange={handleUploadImages} className="hidden" id="multi-upload" disabled={isLoading} />
                       <label htmlFor="multi-upload" className="cursor-pointer flex flex-col items-center">
                          <Plus size={32} className="text-blue-500 mb-2" />
                          <span className="font-semibold text-blue-700">Click to upload multiple images</span>
@@ -371,3 +378,4 @@ export const AdminGallery: React.FC = () => {
     </div>
   );
 };
+

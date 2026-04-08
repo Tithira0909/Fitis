@@ -1,3 +1,5 @@
+import { Preloader } from '../components/Preloader';
+import { AnimatePresence } from 'motion/react';
 import { BoardMembers } from '../components/BoardMembers';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -26,7 +28,7 @@ const ChairmanMessage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/chairman-message`);
         if (res.ok) {
           const json = await res.json();
@@ -64,13 +66,16 @@ const ChairmanMessage = () => {
               className="md:col-span-4 lg:col-span-3"
             >
               <div className="relative group">
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-xl border-4 border-white">
                   <img 
                     src={`${getImageUrl(data.photo_url)}?v=${data.updated_at || ''}`}
                     alt={data.name}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-full object-cover object-top transition-all duration-700"
                     referrerPolicy="no-referrer"
-                    onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/600x600?text=No+Photo'; }}
+                    onError={(e) => { 
+                      e.currentTarget.onerror = null; 
+                      e.currentTarget.src = 'https://placehold.co/600x600?text=No+Photo'; 
+                    }}
                   />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-fitis-gold rounded-full flex items-center justify-center shadow-lg border-4 border-white">
@@ -371,9 +376,9 @@ const MembershipCTA = () => {
                   </div>
                 ))}
               </div>
-              <button className="bg-white text-fitis-blue px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl active:scale-95">
+              <Link to="/Home/become-a-member" className="inline-block bg-white text-fitis-blue px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl active:scale-95 text-center">
                 Apply for Membership
-              </button>
+              </Link>
             </div>
             <div className="hidden lg:block">
               <div className="grid grid-cols-2 gap-4">
@@ -417,19 +422,19 @@ interface Partner {
 
 const CATEGORY_ORDER = [
   'government',
+  'premium_corporate',
   'corporate',
   'industry',
   'international',
-  'premium_corporate',
   'supporting',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
   government: 'GOVERNMENT PARTNERS',
-  corporate: 'FITIS CORPORATE PARTNERS',
-  industry: 'INDUSTRY PARTNERS',
-  international: 'INTERNATIONAL BODIES',
   premium_corporate: 'PREMIUM CORPORATE PARTNERS',
+  corporate: 'CORPORATE PARTNERS',
+  industry: 'INDUSTRY PARTNERS',
+  international: 'INTERNATIONAL PARTNERS',
   supporting: 'SUPPORTING PARTNERS',
 };
 
@@ -439,7 +444,7 @@ const PartnersSection = () => {
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/partners`);
         if (res.ok) {
           const data = await res.json();
@@ -561,11 +566,45 @@ const Newsletter = () => {
 
 export const Home = () => {
   const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    let minTimePassed = false;
+    let windowLoaded = document.readyState === 'complete';
+
+    const finishPreload = () => {
+      if (minTimePassed && windowLoaded) {
+        setIsLoaded(true);
+        setTimeout(() => {
+          window.dispatchEvent(new Event('site-visible'));
+        }, 800);
+      }
+    };
+
+    const handleLoad = () => {
+      windowLoaded = true;
+      finishPreload();
+    };
+
+    if (!windowLoaded) {
+      window.addEventListener('load', handleLoad);
+    }
+
+    const timer = setTimeout(() => {
+      minTimePassed = true;
+      finishPreload();
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('load', handleLoad);
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/site-settings`);
         if (res.ok) {
           const data = await res.json();
@@ -580,6 +619,9 @@ export const Home = () => {
 
   return (
     <>
+      <AnimatePresence mode="wait">
+        {!isLoaded && <Preloader key="preloader" />}
+      </AnimatePresence>
       <GlobeHero />
       {siteSettings && (
         <ContactQuickBar
@@ -601,3 +643,4 @@ export const Home = () => {
     </>
   );
 };
+

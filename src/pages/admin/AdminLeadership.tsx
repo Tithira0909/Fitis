@@ -25,19 +25,44 @@ export const AdminLeadership: React.FC = () => {
   const [editingItem, setEditingItem] = useState<LeadershipMember | null>(null);
   const [formData, setFormData] = useState<Partial<LeadershipMember>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
+  const [leadershipYear, setLeadershipYear] = useState('2023/2024');
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
+  
   useEffect(() => {
     loadMembers();
+    loadSettings();
   }, []);
 
   const loadMembers = async () => {
     try {
-      // The generic API endpoint is GET /api/admin/leadership_members
       const data = await fetchApi('/api/admin/leadership_members');
       if (data) setMembers(data);
     } catch (error) {
       console.error('Failed to load members', error);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const data = await fetchApi('/api/admin/site-settings');
+      if (data && data.leadership_year) {
+        setLeadershipYear(data.leadership_year);
+      }
+    } catch (error) {
+      console.error('Failed to load settings', error);
+    }
+  };
+
+  const handleUpdateYear = async () => {
+    try {
+      await fetchApi('/api/admin/site-settings/leadership-year', {
+        method: 'PUT',
+        body: JSON.stringify({ leadership_year: leadershipYear }),
+      });
+      alert('Leadership year updated securely!');
+    } catch (error) {
+      console.error('Failed to update leadership year', error);
+      alert('Failed to update year.');
     }
   };
 
@@ -137,13 +162,22 @@ export const AdminLeadership: React.FC = () => {
     .filter(m => m.type === activeTab)
     .sort((a, b) => {
       if (activeTab === 'past') {
+        // Higher priority: sort_order if it exists and is not 0
+        const orderA = a.sort_order || 0;
+        const orderB = b.sort_order || 0;
+        
+        if (orderA !== orderB) {
+           return orderA - orderB; // ASC (1 comes before 2)
+        }
+        // Fallback: year_end (DESC)
         if (a.year_end !== b.year_end) {
           return (b.year_end || 0) - (a.year_end || 0); // DESC
         }
+        // Fallback: year_start (DESC)
         if (a.year_start !== b.year_start) {
           return (b.year_start || 0) - (a.year_start || 0); // DESC
         }
-        return (a.sort_order || 0) - (b.sort_order || 0);
+        return 0;
       } else {
         if (a.hierarchy_level !== b.hierarchy_level) {
           return a.hierarchy_level - b.hierarchy_level;
@@ -154,15 +188,33 @@ export const AdminLeadership: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Leadership Management</h1>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-        >
-          <Plus size={20} />
-          <span>Add New</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+            <span className="text-sm font-medium text-slate-600">Year:</span>
+            <input 
+              type="text" 
+              value={leadershipYear}
+              onChange={(e) => setLeadershipYear(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1 w-28 text-sm focus:outline-none focus:ring-1 focus:ring-fitis-blue"
+              placeholder="e.g. 2023/2024"
+            />
+            <button 
+              onClick={handleUpdateYear}
+              className="bg-slate-800 text-white text-xs px-3 py-1.5 rounded hover:bg-slate-700 transition"
+            >
+              Save
+            </button>
+          </div>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-sm"
+          >
+            <Plus size={20} />
+            <span>Add New</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -418,7 +470,7 @@ export const AdminLeadership: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*"
                   onChange={handleFileUpload}
                   className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   disabled={isLoading}
@@ -453,3 +505,4 @@ export const AdminLeadership: React.FC = () => {
     </div>
   );
 };
+

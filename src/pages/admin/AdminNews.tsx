@@ -23,7 +23,7 @@ export const AdminNews: React.FC = () => {
   const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
   const [formData, setFormData] = useState<Partial<NewsItem>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     loadItems();
@@ -265,7 +265,7 @@ export const AdminNews: React.FC = () => {
 
               <div className="border-2 border-slate-100 p-6 rounded-2xl bg-slate-50/50">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image (Required)</label>
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => handleFileUpload(e, 'banner')} className="w-full text-sm mb-2" disabled={isLoading} />
+                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner')} className="w-full text-sm mb-2" disabled={isLoading} />
                 {formData.banner_image_url && (
                   <img src={getImageUrl(formData.banner_image_url)} alt="Preview" className="h-20 object-cover rounded border bg-slate-100" onError={(e) => { e.currentTarget.src = 'https://picsum.photos/160/100'; }} />
                 )}
@@ -290,3 +290,4 @@ export const AdminNews: React.FC = () => {
     </div>
   );
 };
+

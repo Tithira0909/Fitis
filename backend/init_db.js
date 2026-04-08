@@ -313,7 +313,7 @@ const initializeDB = async () => {
       `CREATE TABLE IF NOT EXISTS otp_verifications (
         id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) NOT NULL UNIQUE,
-        otp VARCHAR(10) NOT NULL,
+        otp VARCHAR(255) NOT NULL,
         expires_at TIMESTAMP NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`,
@@ -586,6 +586,14 @@ const initializeDB = async () => {
       }
     } catch (otpErr) {
       console.error('Error during otp_verifications migration:', otpErr.message);
+    }
+
+    // Migration for otp_verifications column length to support 64-char hex tokens
+    try {
+      await connection.execute('ALTER TABLE otp_verifications MODIFY COLUMN otp VARCHAR(255) NOT NULL');
+      console.log('Migration for otp_verifications column length completed.');
+    } catch (lengthErr) {
+      console.error('Error during otp_verifications length migration:', lengthErr.message);
     }
 
     // Migration: Add status column to member_posts if it doesn't exist

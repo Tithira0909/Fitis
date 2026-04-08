@@ -53,7 +53,7 @@ export const MemberDashboard = () => {
   const notifPanelRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   const user = React.useMemo(() => {
     const userStr = localStorage.getItem('communityUser');
@@ -702,3 +702,4 @@ export const MemberDashboard = () => {
     </div>
   );
 };
+

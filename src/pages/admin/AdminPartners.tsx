@@ -15,10 +15,10 @@ interface Partner {
 
 const CATEGORY_LABELS: Record<string, string> = {
   government: 'Government Partners',
-  industry: 'Industry Partners',
-  international: 'International Bodies',
   premium_corporate: 'Premium Corporate Partners',
-  corporate: 'FITIS Corporate Partners',
+  corporate: 'Corporate Partners',
+  industry: 'Industry Partners',
+  international: 'International Partners',
   supporting: 'Supporting Partners',
 };
 
@@ -35,7 +35,7 @@ export const AdminPartners: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     loadMembers();
@@ -345,7 +345,7 @@ export const AdminPartners: React.FC = () => {
                   <label className="block text-sm font-bold text-gray-700 mb-2">Partner Logo *</label>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    accept="image/*"
                     onChange={handleFileUpload}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                     disabled={isLoading}
@@ -387,3 +387,4 @@ export const AdminPartners: React.FC = () => {
     </div>
   );
 };
+

@@ -11,7 +11,7 @@ export const fetchApi = async (url: string, options: RequestInit = {}) => {
     ...options.headers,
   };
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
   const response = await fetch(`${baseUrl}${url}`, {
     ...options,
     headers,
@@ -34,3 +34,4 @@ export const fetchApi = async (url: string, options: RequestInit = {}) => {
 
   return response.json();
 };
+

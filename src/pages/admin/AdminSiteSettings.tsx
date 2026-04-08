@@ -63,7 +63,7 @@ export const AdminSiteSettings: React.FC = () => {
     sections: []
   });
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     loadSettings();
@@ -409,7 +409,7 @@ export const AdminSiteSettings: React.FC = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">Header Logo</label>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'header_logo')}
                     className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     disabled={isLoading}
@@ -429,7 +429,7 @@ export const AdminSiteSettings: React.FC = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">Footer Logo (Optional)</label>
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'footer_logo')}
                     className="mb-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     disabled={isLoading}
@@ -742,3 +742,4 @@ export const AdminSiteSettings: React.FC = () => {
     </div>
   );
 };
+

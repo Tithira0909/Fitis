@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle2, ArrowRight, Info, Target, Eye, Activity, Globe } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Info, Target, Eye, Activity, Globe, History } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
 import { SubHeaderBar } from '../components/SubHeaderBar';
 
 export const Introduction = () => {
@@ -18,22 +19,22 @@ export const Introduction = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-12 gap-16 items-start">
-            
+
             {/* Left Side: Content Blocks */}
             <div className="lg:col-span-8 space-y-12">
-              
+
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-fitis-blue mb-2">
                   <Info size={24} />
                   <h2 className="text-2xl font-bold">Who We Are</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   The Federation of Information Technology Industry Sri Lanka (FITIS) is the apex body of the ICT industry in Sri Lanka. Established in 1996 with the purpose of providing a unified voice for the technology sector, FITIS represents a diverse range of stakeholders including hardware vendors, software developers, education providers, and digital service companies.
                 </p>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   With over 25 years of experience, we have been at the forefront of driving digital transformation across the nation. We serve as the primary interface between the industry and the government, working closely with the Ministry of Technology, ICTA, and other key agencies to foster a robust and inclusive digital economy.
                 </p>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   Our membership comprises over 200 leading technology firms, providing us with the collective expertise and influence to shape the future of Sri Lanka's digital landscape.
                 </p>
               </div>
@@ -43,7 +44,7 @@ export const Introduction = () => {
                   <Target size={24} />
                   <h2 className="text-2xl font-bold">Our Mission</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   To lead and facilitate the growth of the ICT industry in Sri Lanka by fostering innovation, enhancing global competitiveness, and advocating for policies that support a thriving digital ecosystem for all citizens and businesses.
                 </p>
               </div>
@@ -53,7 +54,7 @@ export const Introduction = () => {
                   <Eye size={24} />
                   <h2 className="text-2xl font-bold">Our Vision</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   To position Sri Lanka as a globally recognized hub for technology and innovation, where digital integration drives sustainable economic growth and social empowerment.
                 </p>
               </div>
@@ -63,7 +64,7 @@ export const Introduction = () => {
                   <Activity size={24} />
                   <h2 className="text-2xl font-bold">What We Do</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-lg">
+                <p className="text-slate-600 leading-relaxed text-lg text-justify">
                   FITIS operates through several specialized chapters, each focusing on a key area of the ICT landscape. Our activities include:
                 </p>
                 <ul className="grid md:grid-cols-2 gap-4 mt-6">
@@ -95,16 +96,18 @@ export const Introduction = () => {
 
                 <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl relative z-10">
                   <h3 className="text-xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100">Quick Facts</h3>
-                  
+
                   <div className="space-y-6 mb-10">
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Founded</p>
-                      <p className="text-lg font-bold text-slate-900">1996 (Placeholder)</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                        <History size={14} className="text-fitis-blue" /> Founded
+                      </p>
+                      <p className="text-lg font-bold text-slate-900">1996</p>
                     </div>
-                    
+
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Chapters</p>
-                      <p className="text-lg font-bold text-slate-900">8 Specialized Chapters</p>
+                      <p className="text-lg font-bold text-slate-900">7 Specialized Chapters</p>
                     </div>
 
                     <div>
@@ -119,9 +122,9 @@ export const Introduction = () => {
                     </div>
                   </div>
 
-                  <button className="w-full bg-fitis-blue text-white py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-lg shadow-fitis-blue/20 active:scale-95 flex items-center justify-center gap-2">
+                  <Link to="/Home/become-a-member" className="w-full bg-fitis-blue text-white py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-lg shadow-fitis-blue/20 active:scale-95 flex items-center justify-center gap-2 border-2 border-transparent">
                     Become a Member <ArrowRight size={20} />
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Additional small card */}

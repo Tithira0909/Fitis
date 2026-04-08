@@ -49,7 +49,7 @@ export const BecomeAMember = () => {
   const CHAPTER_OPTIONS = ['ICT Infrastructure Chapter', 'Software Chapter', 'Digital Services Chapter', 'Education & Training Chapter', 'Communication Chapter', 'Digital Trust Chapter'];
   const INDUSTRY_OPTIONS = ['BFI/Banking', 'Telecommunications', 'Logistics & Transportation', 'Healthcare', 'Education', 'Retail/E-commerce', 'Manufacturing'];
   const EMPLOYEES_OPTIONS = ['1-10', '11-50', '51-200', '201-500', '500+'];
-  const CATEGORY_OPTIONS = ['Full member', 'Associate Member', 'Premier corporate partner', 'Corporate Partner'];
+  const CATEGORY_OPTIONS = ['Full Member (Annual | Revenue >= LKR 12M)', 'Associate Member (Annual Revenue < LKR 12 M)', 'Premier corporate partner', 'Corporate Partner'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -98,7 +98,7 @@ export const BecomeAMember = () => {
 
     setIsSubmitting(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/membership/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,7 +130,7 @@ export const BecomeAMember = () => {
     setOtpError('');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       
       // 1. Verify OTP
       const verifyRes = await fetch(`${baseUrl}/api/membership/verify-otp`, {
@@ -184,7 +184,7 @@ export const BecomeAMember = () => {
   const handleResendOTP = async () => {
     setIsSubmitting(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/membership/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -543,7 +543,7 @@ export const BecomeAMember = () => {
                 <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
                   <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Full Member Fee Structure
+                    Full Member (Annual | Revenue &gt;= LKR 12M) Fee Structure
                   </h4>
                   <ul className="space-y-2 text-xs">
                     <li className="flex justify-between border-b border-white/10 pb-1"><span>Joining Fee (One-time):</span> <span className="font-bold">25,000</span></li>
@@ -556,7 +556,7 @@ export const BecomeAMember = () => {
                 <div className="bg-slate-800 text-white p-6 rounded-2xl shadow-xl border border-slate-700">
                   <h4 className="font-bold text-fitis-gold text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Associate Fee Structure
+                    Associate Member (Annual Revenue &lt; LKR 12 M) Fee Structure
                   </h4>
                   <ul className="space-y-2 text-xs">
                     <li className="flex justify-between border-b border-white/10 pb-1"><span>Joining Fee (One-time):</span> <span className="font-bold">10,000</span></li>
@@ -632,3 +632,4 @@ export const BecomeAMember = () => {
     </div>
   );
 };
+

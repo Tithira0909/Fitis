@@ -38,7 +38,7 @@ export const MemberProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     const fetchMemberData = async () => {
@@ -271,3 +271,4 @@ export const MemberProfile = () => {
     </div>
   );
 };
+

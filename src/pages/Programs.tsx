@@ -23,7 +23,7 @@ export const Programs = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -144,3 +144,4 @@ export const Programs = () => {
     </div>
   );
 };
+

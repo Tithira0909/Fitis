@@ -28,7 +28,7 @@ export const NewsDetail = () => {
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   useEffect(() => {
@@ -253,3 +253,4 @@ export const NewsDetail = () => {
     </article>
   );
 };
+

@@ -24,7 +24,7 @@ export const PrivacyPolicy = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/privacy-policy`);
         if (res.ok) {
           const json = await res.json();
@@ -166,3 +166,4 @@ export const PrivacyPolicy = () => {
     </div>
   );
 };
+

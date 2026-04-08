@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // --- Constants ---
 const GLOBE_RADIUS = 2.5;
@@ -270,13 +271,35 @@ const GlobeScene = () => {
   );
 };
 
+let hasSiteLoaded = false;
+window.addEventListener('site-visible', () => { hasSiteLoaded = true; });
+
 const HeroOverlay = () => {
+  const [startAnim, setStartAnim] = useState(hasSiteLoaded);
+
+  useEffect(() => {
+    if (hasSiteLoaded) {
+      setStartAnim(true);
+      return;
+    }
+    const handle = () => {
+      hasSiteLoaded = true;
+      setStartAnim(true);
+    };
+    window.addEventListener('site-visible', handle);
+    const fallback = setTimeout(() => handle(), 3000);
+    return () => {
+      window.removeEventListener('site-visible', handle);
+      clearTimeout(fallback);
+    };
+  }, []);
+
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-end pointer-events-none">
       <div className="max-w-7xl w-full px-6 md:px-12 flex flex-col items-center md:items-end text-center md:text-right">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={startAnim ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 1, ease: "easeOut" }}
           className="max-w-3xl pointer-events-auto"
         >
@@ -287,20 +310,20 @@ const HeroOverlay = () => {
           </h1>
           
           <div className="flex flex-wrap gap-4 justify-center md:justify-end mt-12">
-            <button className="bg-fitis-blue text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-xl shadow-fitis-blue/20 active:scale-95">
-              Join the Federation
-            </button>
-            <button className="bg-white/5 text-white border border-white/10 px-10 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all active:scale-95">
+            <Link to="/Home/become-a-member" className="bg-fitis-blue text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-xl shadow-fitis-blue/20 active:scale-95 inline-block border-2 border-transparent">
+              Apply Membership
+            </Link>
+            <Link to="/Home/member-benefits" className="bg-white/5 text-white border border-white/10 px-10 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all active:scale-95 inline-block text-center border-2 border-transparent">
               Explore Impact
-            </button>
+            </Link>
           </div>
         </motion.div>
       </div>
 
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
+        animate={startAnim ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ delay: startAnim ? 1 : 0, duration: 1 }}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
       >
         <span className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-bold">Scroll to explore</span>
@@ -318,6 +341,25 @@ const HeroOverlay = () => {
 export const GlobeHero = () => {
   const [isWebGLSupported, setIsWebGLSupported] = useState(true);
   const [settings, setSettings] = useState<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const handleSiteVisible = () => {
+      if (videoRef.current) {
+        videoRef.current.play().catch(e => console.error('Video play blocked:', e));
+      }
+    };
+    window.addEventListener('site-visible', handleSiteVisible);
+    
+    const safetyTimer = setTimeout(() => {
+      handleSiteVisible();
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('site-visible', handleSiteVisible);
+      clearTimeout(safetyTimer);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -331,7 +373,7 @@ export const GlobeHero = () => {
     // Fetch site settings
     const fetchSettings = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
@@ -350,11 +392,11 @@ export const GlobeHero = () => {
 
     return (
       <section className="relative h-screen w-full bg-[#000d1a] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-60 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#001a33] via-[#000d1a] to-[#001a33] opacity-20 z-10 pointer-events-none" />
         {settings.hero_type === 'video' ? (
            <video
+             ref={videoRef}
              src={mediaUrl}
-             autoPlay
              muted
              loop
              playsInline
@@ -430,3 +472,4 @@ export const GlobeHero = () => {
     </section>
   );
 };
+

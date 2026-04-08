@@ -41,7 +41,7 @@ const SendMessageModal = ({
   req: CommunityRequest;
   onClose: () => void;
 }) => {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -272,7 +272,7 @@ export const AdminCommunityRequests = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_community_requests`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -306,7 +306,7 @@ export const AdminCommunityRequests = () => {
     if (!window.confirm('Are you sure you want to delete this application?')) return;
     try {
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_community_requests/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -321,7 +321,7 @@ export const AdminCommunityRequests = () => {
   const handleUpdateStatus = async (id: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_community_requests/${id}`, {
         method: 'PUT',
         headers: {
@@ -552,3 +552,4 @@ export const AdminCommunityRequests = () => {
     </div>
   );
 };
+

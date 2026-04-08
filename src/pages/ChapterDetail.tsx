@@ -16,7 +16,7 @@ const ChapterDetail = () => {
 
   const fetchChapter = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
       const res = await fetch(`${apiUrl}/api/chapters/${slug}`);
       if (!res.ok) throw new Error('Failed to fetch chapter details');
@@ -49,15 +49,12 @@ const ChapterDetail = () => {
                 <span className="text-white">{chapter.name}</span>
               </nav>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{chapter.name}</h1>
-              {chapter.summary && <p className="text-xl text-gray-200 max-w-3xl">{chapter.summary}</p>}
             </div>
           </div>
         </div>
       ) : (
         <SectionHeader
           title={chapter.name}
-          subtitle={chapter.summary}
-
         />
       )}
 
@@ -75,7 +72,7 @@ const ChapterDetail = () => {
               <div className="absolute -bottom-2 left-0 w-1/3 h-1 bg-blue-600 rounded-full"></div>
             </h2>
             <div
-              className="prose prose-lg prose-blue max-w-none text-gray-700 break-words whitespace-pre-wrap overflow-hidden"
+              className="prose prose-lg prose-blue max-w-none text-gray-700 break-words overflow-hidden text-justify [&_p]:mb-4 [&_p:last-child]:mb-0 [&_p:empty]:h-6"
               dangerouslySetInnerHTML={{ __html: chapter.about_chapter }}
             />
           </motion.div>
@@ -109,7 +106,7 @@ const ChapterDetail = () => {
                   <svg className="w-12 h-12 text-blue-500 mb-6 opacity-50" fill="currentColor" viewBox="0 0 32 32">
                     <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H6.3c.7-2.3 2.9-4 5.7-4V8zm16 0c-3.3 0-6 2.7-6 6v10h10V14h-7.7c.7-2.3 2.9-4 5.7-4V8z"></path>
                   </svg>
-                  <div className="text-lg md:text-xl leading-relaxed text-blue-50 font-light italic whitespace-pre-wrap">
+                  <div className="text-lg md:text-xl leading-relaxed text-blue-50 font-light italic whitespace-pre-wrap text-justify">
                     {chapter.chair_message}
                   </div>
                 </div>
@@ -178,3 +175,4 @@ const ChapterDetail = () => {
 };
 
 export { ChapterDetail };
+

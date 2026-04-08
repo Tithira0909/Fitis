@@ -13,19 +13,19 @@ interface Partner {
 
 const CATEGORY_ORDER = [
   'government',
+  'premium_corporate',
   'corporate',
   'industry',
   'international',
-  'premium_corporate',
   'supporting',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
   government: 'GOVERNMENT PARTNERS',
-  corporate: 'FITIS CORPORATE PARTNERS',
-  industry: 'INDUSTRY PARTNERS',
-  international: 'INTERNATIONAL BODIES',
   premium_corporate: 'PREMIUM CORPORATE PARTNERS',
+  corporate: 'CORPORATE PARTNERS',
+  industry: 'INDUSTRY PARTNERS',
+  international: 'INTERNATIONAL PARTNERS',
   supporting: 'SUPPORTING PARTNERS',
 };
 
@@ -36,7 +36,7 @@ export const Partners = () => {
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/partners`);
         if (res.ok) {
           const data = await res.json();
@@ -143,3 +143,4 @@ export const Partners = () => {
     </div>
   );
 };
+

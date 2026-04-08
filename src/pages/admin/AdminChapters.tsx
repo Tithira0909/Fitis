@@ -22,6 +22,7 @@ interface Chapter {
   summary: string;
   about_chapter: string;
   banner_image_url: string;
+  thumbnail_image_url: string;
   chair_name: string;
   chair_title: string;
   chair_message: string;
@@ -31,6 +32,7 @@ interface Chapter {
   has_committee: boolean;
   status: string;
   committee: CommitteeMember[];
+  sort_order: number;
 }
 
 const emptyChapter: Chapter = {
@@ -39,6 +41,7 @@ const emptyChapter: Chapter = {
   summary: '',
   about_chapter: '',
   banner_image_url: '',
+  thumbnail_image_url: '',
   chair_name: '',
   chair_title: '',
   chair_message: '',
@@ -48,6 +51,7 @@ const emptyChapter: Chapter = {
   has_committee: false,
   status: 'active',
   committee: [],
+  sort_order: 0,
 };
 
 const AdminChapters = () => {
@@ -61,7 +65,7 @@ const AdminChapters = () => {
   const [view, setView] = useState<'list' | 'form'>('list');
 
   const token = localStorage.getItem('adminToken');
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   useEffect(() => {
     fetchChapters();
@@ -372,15 +376,16 @@ const AdminChapters = () => {
                     placeholder="e.g. software-chapter"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Display Sort Order</label>
+                  <input
+                    type="number" name="sort_order" value={formData.sort_order ?? 0} onChange={handleChange}
+                    className="w-full border-slate-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 p-3 bg-white"
+                    placeholder="e.g. 1"
+                  />
+                </div>
               </div>
 
-              <div className="mb-8">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Short Summary</label>
-                <textarea
-                  name="summary" value={formData.summary} onChange={handleChange} rows={2}
-                  className="w-full border-slate-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 p-3 bg-white"
-                />
-              </div>
 
               <div className="mb-8">
                 <label className="block text-sm font-bold text-slate-700 mb-4">About the Chapter (Detailed)</label>
@@ -400,10 +405,48 @@ const AdminChapters = () => {
                         <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={24} /></div>
                       )}
                     </div>
-                    <input
-                      type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'banner_image_url')}
-                      className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'banner_image_url')}
+                        className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {formData.banner_image_url && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, banner_image_url: '' }))}
+                          className="text-xs text-red-500 font-bold hover:text-red-700 self-start"
+                        >
+                          Remove Banner
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-4">Thumbnail Image</label>
+                  <div className="flex items-center space-x-6 bg-white p-6 rounded-2xl border border-slate-300">
+                    <div className="w-20 h-20 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                      {formData.thumbnail_image_url ? (
+                        <img src={`${apiUrl}${formData.thumbnail_image_url}`} alt="Thumbnail" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={24} /></div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'thumbnail_image_url')}
+                        className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {formData.thumbnail_image_url && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, thumbnail_image_url: '' }))}
+                          className="text-xs text-red-500 font-bold hover:text-red-700 self-start"
+                        >
+                          Remove Thumbnail
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -601,3 +644,4 @@ const AdminChapters = () => {
 };
 
 export { AdminChapters };
+

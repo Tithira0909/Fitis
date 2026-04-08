@@ -71,7 +71,7 @@ export const Navbar = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/site-settings?t=${new Date().getTime()}`;
+        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5004'}/api/site-settings?t=${new Date().getTime()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
@@ -89,7 +89,7 @@ export const Navbar = () => {
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
         const res = await fetch(`${baseUrl}/api/chapters`);
         if (res.ok) {
           const chaptersData = await res.json();
@@ -366,3 +366,4 @@ export const Navbar = () => {
     </nav>
   );
 };
+

@@ -10,7 +10,7 @@ export const getImageUrl = (url?: string | null, cacheBuster?: string | number):
     return finalUrl;
   }
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   // Ensure relative paths always have a leading slash
   const formattedUrl = url.startsWith('/') ? url : `/${url}`;
@@ -23,3 +23,4 @@ export const getImageUrl = (url?: string | null, cacheBuster?: string | number):
 
   return finalUrl;
 };
+

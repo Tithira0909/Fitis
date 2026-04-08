@@ -86,13 +86,23 @@ const MemberCard = ({ member }: { member: LeadershipMember }) => {
 
 export const BoardMembers = () => {
   const [members, setMembers] = useState<LeadershipMember[]>([]);
+  const [leadershipYear, setLeadershipYear] = useState('2023/2024');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLeadership = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
+        
+        // Fetch Settings for Year
+        fetch(`${baseUrl}/api/site-settings`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.leadership_year) setLeadershipYear(data.leadership_year);
+          })
+          .catch(err => console.error('Failed to load site settings', err));
+
         const res = await fetch(`${baseUrl}/api/leadership-members?t=${new Date().getTime()}`);
         if (!res.ok) throw new Error('Failed to fetch board members');
         const data = await res.json();
@@ -155,7 +165,7 @@ export const BoardMembers = () => {
 
           <div className="flex-1 flex justify-end">
             <span className="text-amber-500 font-bold text-xl md:text-2xl tracking-wider">
-              2023/2024
+              {leadershipYear}
             </span>
           </div>
         </div>
@@ -195,3 +205,4 @@ export const BoardMembers = () => {
     </section>
   );
 };
+

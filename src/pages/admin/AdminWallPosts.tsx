@@ -34,7 +34,7 @@ export const AdminWallPosts = () => {
   const [filter, setFilter] = useState<'all' | 'Pending' | 'Approved' | 'TakenDown'>('all');
   const [previewPost, setPreviewPost] = useState<WallPost | null>(null);
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
 
   const fetchPosts = async () => {
     try {
@@ -312,3 +312,4 @@ export const AdminWallPosts = () => {
     </div>
   );
 };
+

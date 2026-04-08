@@ -53,7 +53,7 @@ export const AdminMembers = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_applications`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,7 +95,7 @@ export const AdminMembers = () => {
     if (!window.confirm('Are you sure you want to delete this application?')) return;
     try {
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_applications/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -110,7 +110,7 @@ export const AdminMembers = () => {
   const handleUpdateStatus = async (id: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/admin/member_applications/${id}`, {
         method: 'PUT',
         headers: {
@@ -367,3 +367,4 @@ export const AdminMembers = () => {
     </div>
   );
 };
+

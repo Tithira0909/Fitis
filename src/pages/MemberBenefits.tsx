@@ -23,7 +23,7 @@ export const MemberBenefits = () => {
   const fetchBenefits = async () => {
     try {
       setLoading(true);
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/member-benefits`);
       if (response.ok) {
         const data = await response.json();
@@ -119,3 +119,4 @@ export const MemberBenefits = () => {
     </div>
   );
 };
+

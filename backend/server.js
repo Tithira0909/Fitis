@@ -7,7 +7,9 @@ import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import fs from 'fs';
-import nodemailer from 'nodemailer';
+import { BrevoClient } from '@getbrevo/brevo';
+import crypto from 'crypto';
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,12 +19,23 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5004;
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173', 'http://localhost:3005'],
+  origin: [
+    // Local development
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:5173',
+    'http://localhost:3005',
+    // Production
+    'https://qfactor.lk',
+    'https://www.qfactor.lk',
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 app.use(express.json());
 
@@ -231,16 +244,46 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Nodemailer Transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || '587', 10),
-  secure: process.env.EMAIL_SECURE === 'true',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+pool.query(`
+  CREATE TABLE IF NOT EXISTS newsletters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    pdf_url VARCHAR(500) NOT NULL,
+    cover_image_url VARCHAR(500) NULL,
+    published_date DATE,
+    status ENUM('draft', 'published') DEFAULT 'draft',
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+`).then(() => console.log('Newsletters table ensured')).catch(err => console.error('Error creating newsletters table:', err));
+
+pool.query(`ALTER TABLE site_settings ADD COLUMN leadership_year VARCHAR(50) DEFAULT '2023/2024'`).then(() => console.log('Added leadership_year')).catch(() => {});
+
+
+// Brevo (Sendinblue) API Client for Transactional Emails
+const brevoClient = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY || ''
 });
+
+/**
+ * Sends a transactional email via the Brevo API.
+ * @param {string} toEmail      - Recipient email address
+ * @param {string} toName       - Recipient display name
+ * @param {string} subject      - Email subject
+ * @param {string} htmlContent  - HTML body of the email
+ */
+async function sendBrevoEmail(toEmail, toName, subject, htmlContent) {
+  return brevoClient.transactionalEmails.sendTransacEmail({
+    sender: {
+      name: process.env.BREVO_SENDER_NAME || 'FITIS',
+      email: process.env.BREVO_SENDER_EMAIL || 'noreply@qfactor.lk'
+    },
+    to: [{ email: toEmail, name: toName }],
+    subject,
+    htmlContent
+  });
+}
 
 
 // Test DB Connection Route
@@ -253,6 +296,35 @@ app.get('/api/health', async (req, res) => {
   } catch (error) {
     console.error('Database connection failed:', error);
     res.status(500).json({ ok: false, status: 'error', message: 'Database connection failed' });
+  }
+});
+
+// POST /api/contact/chapter - Chapter contact inquiry endpoint
+app.post('/api/contact/chapter', async (req, res) => {
+  const { name, email, phone, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Name, email, and message are required' });
+  }
+
+  try {
+    await sendBrevoEmail(
+      'info@fitis.lk', 
+      'FITIS Info',
+      `New Chapter Inquiry from ${name}`,
+      `
+        <h3>New Chapter Inquiry</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
+        <hr/>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `
+    );
+    res.json({ success: true, message: 'Inquiry sent successfully' });
+  } catch (error) {
+    console.error('Error sending chapter inquiry email:', error);
+    res.status(500).json({ error: 'Failed to send inquiry' });
   }
 });
 
@@ -271,6 +343,67 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Admin Login
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Create JWT
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    // Success
+    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username } });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/community/set-password - Setup password from admin email link
+app.post('/api/auth/community/set-password', async (req, res) => {
+  const { email, token, new_password } = req.body;
+
+  if (!email || !token || !new_password) {
+    return res.status(400).json({ error: 'Email, token, and new password are required' });
+  }
+
+  try {
+    const [otpRows] = await pool.execute('SELECT * FROM otp_verifications WHERE email = ? AND otp = ? AND expires_at > NOW()', [email, token]);
+    if (otpRows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired setup token' });
+    }
+
+    const [userRows] = await pool.execute('SELECT * FROM member_community_requests WHERE official_email = ?', [email]);
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    await pool.execute('UPDATE member_community_requests SET password = ?, status = "Approved" WHERE official_email = ?', [new_password, email]);
+    await pool.execute('DELETE FROM otp_verifications WHERE email = ?', [email]);
+
+    res.json({ message: 'Password set successfully' });
+  } catch (err) {
+    console.error('Set password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // OTP Verification Endpoints
 app.post('/api/membership/send-otp', async (req, res) => {
@@ -287,12 +420,12 @@ app.post('/api/membership/send-otp', async (req, res) => {
       [email, otp, expiresAt, otp, expiresAt]
     );
 
-    // Send email
-    const mailOptions = {
-      from: `"FITIS Membership" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Your OTP for FITIS Membership Application',
-      html: `
+    // Send OTP email via Brevo
+    await sendBrevoEmail(
+      email,
+      email,
+      'Your OTP for FITIS Membership Application',
+      `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #00529B;">FITIS Membership OTP</h2>
           <p>Thank you for starting your membership application with FITIS.</p>
@@ -305,9 +438,7 @@ app.post('/api/membership/send-otp', async (req, res) => {
           <p style="font-size: 12px; color: #777;">Federation of Information Technology Industry Sri Lanka (FITIS)</p>
         </div>
       `
-    };
-
-    await transporter.sendMail(mailOptions);
+    );
     res.json({ message: 'OTP sent successfully' });
   } catch (error) {
     console.error('Error sending OTP:', error);
@@ -588,6 +719,22 @@ app.delete('/api/admin/wall-posts/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/community/profile - Member gets their own profile data
+app.get('/api/community/profile', authenticateToken, async (req, res) => {
+  try {
+    const member_id = req.user.id;
+    const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE id = ?', [member_id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
+    
+    // Do not return password
+    const { password, ...safeData } = rows[0];
+    res.json(safeData);
+  } catch (error) {
+    console.error('Error fetching member profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/community/profile-update - Member submits a profile update for approval
 app.post('/api/community/profile-update', authenticateToken, async (req, res) => {
   try {
@@ -847,11 +994,55 @@ app.post('/api/auth/community-login', async (req, res) => {
       return res.status(403).json({ error: 'Your account request was rejected.' });
     }
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    await pool.execute(
+      'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?',
+      [email, otp, expiresAt, otp, expiresAt]
+    );
+
+    await sendBrevoEmail(
+      email, 
+      user.company_name || 'Member', 
+      'FITIS Login Verification Code', 
+      `Your FITIS login verification code is: <strong style="font-size:24px;">${otp}</strong><br/>It expires in 15 minutes.`
+    );
+
+    res.json({ message: 'OTP sent to email', requiresOtp: true });
+  } catch (error) {
+    console.error('Community Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/community-login/verify - Verify OTP and login
+app.post('/api/auth/community-login/verify', async (req, res) => {
+  const { email, password, otp } = req.body;
+
+  if (!email || !password || !otp) {
+    return res.status(400).json({ error: 'Email, password, and OTP are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE official_email = ?', [email]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    const user = rows[0];
+    if (user.password !== password) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // Verify OTP
+    const [otpRows] = await pool.execute('SELECT * FROM otp_verifications WHERE email = ? AND otp = ? AND expires_at > NOW()', [email, otp]);
+    if (otpRows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    // Clear OTP
+    await pool.execute('DELETE FROM otp_verifications WHERE email = ?', [email]);
+
     // Create JWT
     const token = jwt.sign(
       { id: user.id, company_name: user.company_name, email: user.official_email },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     );
 
     res.json({ message: 'Login successful', token, user: { id: user.id, company_name: user.company_name, email: user.official_email } });
@@ -881,11 +1072,10 @@ app.post('/api/auth/login', async (req, res) => {
        return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Create JWT
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '2h' }
     );
 
     // Success
@@ -937,27 +1127,37 @@ app.get('/api/admin/site-settings', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/admin/site-settings', authenticateToken, async (req, res) => {
-  const { site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url } = req.body;
+  const { site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, leadership_year } = req.body;
   try {
     const [existing] = await pool.execute('SELECT id FROM site_settings WHERE id = 1');
     if (existing.length === 0) {
       await pool.execute(
-        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url)
-         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
+        `INSERT INTO site_settings (id, site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, leadership_year)
+         VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, leadership_year]
       );
     } else {
       await pool.execute(
         `UPDATE site_settings
-         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, header_logo_url=?, footer_logo_url=?, favicon_url=?, facebook_url=?, instagram_url=?, linkedin_url=?, twitter_url=?, youtube_url=?
+         SET site_email=?, site_phone=?, site_location=?, hero_type=?, hero_url=?, header_logo_url=?, footer_logo_url=?, favicon_url=?, facebook_url=?, instagram_url=?, linkedin_url=?, twitter_url=?, youtube_url=?, leadership_year=COALESCE(?, leadership_year)
          WHERE id=1`,
-        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url]
+        [site_email, site_phone, site_location, hero_type, hero_url, header_logo_url, footer_logo_url, favicon_url, facebook_url, instagram_url, linkedin_url, twitter_url, youtube_url, leadership_year]
       );
     }
     res.json({ message: 'Settings updated successfully' });
   } catch (error) {
     console.error('Error updating settings:', error);
     res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+app.put('/api/admin/site-settings/leadership-year', authenticateToken, async (req, res) => {
+  try {
+    await pool.execute('UPDATE site_settings SET leadership_year = ? WHERE id = 1', [req.body.leadership_year]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating leadership year:', error);
+    res.status(500).json({ error: 'Failed to update leadership year' });
   }
 });
 // Privacy Policy Public
@@ -1245,6 +1445,103 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// ADMIN: POST /api/admin/community-members - Admin direct creation of member
+const uploadCommunity = multer({ storage });
+app.post('/api/admin/community-members', authenticateToken, uploadCommunity.fields([{ name: 'company_logo', maxCount: 1 }, { name: 'rep_image', maxCount: 1 }]), async (req, res) => {
+  const {
+    company_name,
+    primary_chapter,
+    secondary_chapter,
+    fitis_membership_id,
+    company_id,
+    official_email,
+    company_linkedin,
+    website_link,
+    services,
+    rep_name,
+    rep_email,
+    rep_mobile,
+    rep_designation
+  } = req.body;
+
+  if (!company_name || !official_email || !rep_email) {
+    return res.status(400).json({ error: 'Company name, official email, and representative email are required' });
+  }
+
+  try {
+    // Check if email already exists
+    const [existing] = await pool.execute('SELECT * FROM member_community_requests WHERE official_email = ?', [official_email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'An account with this Official Email already exists' });
+    }
+
+    const setPasswordToken = crypto.randomBytes(32).toString('hex');
+
+    const company_logo_url = req.files && req.files['company_logo'] ? `/uploads/community/${req.files['company_logo'][0].filename}` : null;
+    const rep_image_url = req.files && req.files['rep_image'] ? `/uploads/community/${req.files['rep_image'][0].filename}` : null;
+
+    const [result] = await pool.execute(
+      `INSERT INTO member_community_requests (
+        company_name, primary_chapter, secondary_chapter, fitis_membership_id, company_id, 
+        official_email, company_linkedin, website_link, services, company_logo_url,
+        rep_name, rep_email, rep_mobile, rep_designation, rep_image_url, 
+        status, password
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved', ?)`,
+      [
+        company_name, 
+        primary_chapter || null, 
+        secondary_chapter || null,
+        fitis_membership_id || null, 
+        company_id || null,
+        official_email, 
+        company_linkedin || null,
+        website_link || null,
+        services || null,
+        company_logo_url,
+        rep_name || null, 
+        rep_email, 
+        rep_mobile || null,
+        rep_designation || null,
+        rep_image_url,
+        'PENDING_SETUP'
+      ]
+    );
+
+    // Save token to otp_verifications for temporary storage since it expires
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await pool.execute(
+      'INSERT INTO otp_verifications (email, otp, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE otp = ?, expires_at = ?',
+      [official_email, setPasswordToken, expiresAt, setPasswordToken, expiresAt]
+    );
+
+    // Send email to Representative
+    const frontendUrl = process.env.FRONTEND_URL || `http://${req.headers.host || 'localhost:3000'}`;
+    const setupLink = `${frontendUrl}/set-password?token=${setPasswordToken}&email=${encodeURIComponent(official_email)}`;
+    await sendBrevoEmail(
+      rep_email,
+      rep_name || company_name,
+      'Your FITIS Member Account has been Created',
+      `
+        <h3>Welcome to FITIS Community</h3>
+        <p>An administrator has created a member account for your company: <strong>${company_name}</strong>.</p>
+        <p>Your official login email is: <strong>${official_email}</strong></p>
+        <br/>
+        <p>Please click the link below to set up your password and access your account.</p>
+        <p><a href="${setupLink}" style="padding: 10px 20px; background-color: #004a99; color: white; text-decoration: none; border-radius: 5px;">Set My Password</a></p>
+        <br/>
+        <p>This link expires in 24 hours.</p>
+        <p>If the link above does not work, copy and paste the following URL into your browser:</p>
+        <p>${setupLink}</p>
+      `
+    );
+
+    res.json({ message: 'Member created successfully and setup email sent' });
+  } catch (error) {
+    console.error('Admin create member error:', error);
+    res.status(500).json({ error: 'Failed to create member' });
+  }
+});
+
 
 // ================= GALLERY APIs =================
 
@@ -1316,10 +1613,19 @@ app.post('/api/admin/gallery', authenticateToken, async (req, res) => {
   const { title, description, event_date, status } = req.body;
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
+  let formattedDate = null;
+  if (event_date && event_date.trim() !== '') {
+    try {
+      formattedDate = new Date(event_date).toISOString().split('T')[0];
+    } catch (e) {
+      formattedDate = null;
+    }
+  }
+
   try {
     const [result] = await pool.execute(
       `INSERT INTO gallery_posts (title, description, event_date, status) VALUES (?, ?, ?, ?)`,
-      [title, description || null, event_date || null, status || 'draft']
+      [title, description || null, formattedDate, status || 'draft']
     );
     const [newPost] = await pool.execute('SELECT * FROM gallery_posts WHERE id = ?', [result.insertId]);
     res.status(201).json(newPost[0]);
@@ -1332,14 +1638,25 @@ app.post('/api/admin/gallery', authenticateToken, async (req, res) => {
 app.put('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
   const { title, description, event_date, status } = req.body;
   const { id } = req.params;
+
+  let formattedDate = null;
+  if (event_date && event_date.trim() !== '') {
+    try {
+      formattedDate = new Date(event_date).toISOString().split('T')[0];
+    } catch (e) {
+      formattedDate = null;
+    }
+  }
+
   try {
     const [result] = await pool.execute(
       `UPDATE gallery_posts SET title=?, description=?, event_date=?, status=? WHERE id=?`,
-      [title, description || null, event_date || null, status || 'draft', id]
+      [title, description || null, formattedDate, status || 'draft', id]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Gallery post not found' });
     res.json({ message: 'Gallery post updated' });
   } catch (error) {
+    console.error('Error updating gallery post:', error);
     res.status(500).json({ error: 'Failed to update gallery post' });
   }
 });
@@ -1354,46 +1671,6 @@ app.delete('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Gallery post deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete gallery post' });
-  }
-});
-
-// Admin Image Upload (Multiple)
-app.post('/api/admin/gallery/:id/images', authenticateToken, uploadGallery.array('files', 20), async (req, res) => {
-  const { id } = req.params;
-  const files = req.files;
-
-  if (!files || files.length === 0) {
-    return res.status(400).json({ error: 'No files uploaded' });
-  }
-
-  try {
-    // Get current max sort_order
-    const [rows] = await pool.execute('SELECT MAX(sort_order) as maxOrder FROM gallery_images WHERE post_id = ?', [id]);
-    let currentMax = rows[0].maxOrder || 0;
-
-    const uploadedImages = [];
-
-    for (const file of files) {
-      currentMax += 1;
-      const relativeUrl = `/uploads/gallery/${file.filename}`;
-
-      const [result] = await pool.execute(
-        'INSERT INTO gallery_images (post_id, image_url, sort_order) VALUES (?, ?, ?)',
-        [id, relativeUrl, currentMax]
-      );
-
-      uploadedImages.push({
-        id: result.insertId,
-        post_id: id,
-        image_url: relativeUrl,
-        sort_order: currentMax
-      });
-    }
-
-    res.status(201).json({ urls: uploadedImages.map(img => img.image_url), images: uploadedImages });
-  } catch (error) {
-    console.error('Error uploading gallery images:', error);
-    res.status(500).json({ error: 'Failed to save uploaded images' });
   }
 });
 
@@ -1573,9 +1850,9 @@ app.post('/api/admin/chapters', authenticateToken, async (req, res) => {
     }
 
     const chapterFields = [
-      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url',
+      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url', 'thumbnail_image_url',
       'chair_name', 'chair_title', 'chair_message', 'chair_image_url',
-      'contact_email', 'contact_phone', 'has_committee', 'status'
+      'contact_email', 'contact_phone', 'has_committee', 'status', 'sort_order'
     ];
 
     const safeData = {};
@@ -1636,9 +1913,9 @@ app.put('/api/admin/chapters/:id', authenticateToken, async (req, res) => {
     const data = req.body;
 
     const chapterFields = [
-      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url',
+      'name', 'slug', 'summary', 'about_chapter', 'banner_image_url', 'thumbnail_image_url',
       'chair_name', 'chair_title', 'chair_message', 'chair_image_url',
-      'contact_email', 'contact_phone', 'has_committee', 'status'
+      'contact_email', 'contact_phone', 'has_committee', 'status', 'sort_order'
     ];
 
     const safeData = {};
@@ -2087,6 +2364,249 @@ app.get('/api/news/:slug/related', async (req, res) => {
   } catch (error) {
     console.error('Error fetching related news:', error);
     res.status(500).json({ error: 'Failed to fetch related news' });
+  }
+});
+
+// =====================================================
+// GALLERY MANAGEMENT
+// =====================================================
+
+// Ensure gallery tables exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS gallery_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    event_date DATE,
+    status ENUM('draft', 'published') DEFAULT 'draft',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )
+`).then(() => console.log('gallery_posts table ensured')).catch(err => console.error('Error creating gallery_posts table:', err));
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS gallery_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES gallery_posts(id) ON DELETE CASCADE
+  )
+`).then(() => console.log('gallery_images table ensured')).catch(err => console.error('Error creating gallery_images table:', err));
+
+// ADMIN: GET /api/admin/gallery - List all gallery posts
+app.get('/api/admin/gallery', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT id, title, description, event_date, status, created_at FROM gallery_posts ORDER BY event_date DESC, created_at DESC'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching gallery posts:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery posts' });
+  }
+});
+
+// ADMIN: GET /api/admin/gallery/:id - Get single gallery post with images
+app.get('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
+  try {
+    const [posts] = await pool.execute('SELECT * FROM gallery_posts WHERE id = ?', [req.params.id]);
+    if (posts.length === 0) return res.status(404).json({ error: 'Gallery post not found' });
+
+    const [images] = await pool.execute(
+      'SELECT * FROM gallery_images WHERE post_id = ? ORDER BY sort_order ASC',
+      [req.params.id]
+    );
+    res.json({ ...posts[0], images });
+  } catch (error) {
+    console.error('Error fetching gallery post:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery post' });
+  }
+});
+
+// ADMIN: POST /api/admin/gallery - Create new gallery post
+app.post('/api/admin/gallery', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, event_date, status } = req.body;
+    if (!title) return res.status(400).json({ error: 'Title is required' });
+
+    const [result] = await pool.execute(
+      'INSERT INTO gallery_posts (title, description, event_date, status) VALUES (?, ?, ?, ?)',
+      [title, description || null, event_date || null, status || 'draft']
+    );
+    const [rows] = await pool.execute('SELECT * FROM gallery_posts WHERE id = ?', [result.insertId]);
+    res.status(201).json({ ...rows[0], images: [] });
+  } catch (error) {
+    console.error('Error creating gallery post:', error);
+    res.status(500).json({ error: 'Failed to create gallery post' });
+  }
+});
+
+// ADMIN: PUT /api/admin/gallery/:id - Update gallery post
+app.put('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, status } = req.body;
+    // Sanitize event_date: accept YYYY-MM-DD strings, Date objects, or null
+    let event_date = req.body.event_date || null;
+    if (event_date) {
+      // Strip time component if present (e.g. from MySQL Date object serialized as ISO string)
+      if (typeof event_date === 'string') {
+        event_date = event_date.split('T')[0]; // keep only YYYY-MM-DD
+      } else if (event_date instanceof Date) {
+        event_date = event_date.toISOString().split('T')[0];
+      }
+    }
+
+    const validStatus = (status === 'published' || status === 'draft') ? status : 'draft';
+
+    await pool.execute(
+      'UPDATE gallery_posts SET title = ?, description = ?, event_date = ?, status = ? WHERE id = ?',
+      [title || '', description || null, event_date, validStatus, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating gallery post:', error);
+    res.status(500).json({ error: error.message || 'Failed to update gallery post' });
+  }
+});
+
+// IMPORTANT: DELETE /images/:imageId MUST come before DELETE /:id to avoid Express
+// matching 'images' as the :id param on the gallery post route.
+
+// ADMIN: DELETE /api/admin/gallery/images/:imageId - Delete a single image
+app.delete('/api/admin/gallery/images/:imageId', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT image_url FROM gallery_images WHERE id = ?', [req.params.imageId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Image not found' });
+
+    // Delete file from disk
+    const filePath = path.join(process.cwd(), rows[0].image_url);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    await pool.execute('DELETE FROM gallery_images WHERE id = ?', [req.params.imageId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting gallery image:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete image' });
+  }
+});
+
+// ADMIN: DELETE /api/admin/gallery/:id - Delete gallery post (images are cascade deleted)
+app.delete('/api/admin/gallery/:id', authenticateToken, async (req, res) => {
+  try {
+    // Fetch images to delete files from disk
+    const [images] = await pool.execute('SELECT image_url FROM gallery_images WHERE post_id = ?', [req.params.id]);
+    images.forEach(img => {
+      const filePath = path.join(process.cwd(), img.image_url);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    });
+
+    await pool.execute('DELETE FROM gallery_posts WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting gallery post:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete gallery post' });
+  }
+});
+
+// ADMIN: POST /api/admin/gallery/:id/images - Upload images for a post
+app.post('/api/admin/gallery/:id/images', authenticateToken, uploadGallery.array('files', 50), async (req, res) => {
+  try {
+    const post_id = req.params.id;
+
+    // Ensure post exists
+    const [posts] = await pool.execute('SELECT id FROM gallery_posts WHERE id = ?', [post_id]);
+    if (posts.length === 0) return res.status(404).json({ error: 'Gallery post not found' });
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    // Get current max sort_order
+    const [maxOrder] = await pool.execute(
+      'SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM gallery_images WHERE post_id = ?',
+      [post_id]
+    );
+    let currentOrder = maxOrder[0].max_order;
+
+    const insertedImages = [];
+    for (const file of req.files) {
+      currentOrder++;
+      const image_url = `/uploads/gallery/${file.filename}`;
+      const [result] = await pool.execute(
+        'INSERT INTO gallery_images (post_id, image_url, sort_order) VALUES (?, ?, ?)',
+        [post_id, image_url, currentOrder]
+      );
+      insertedImages.push({ id: result.insertId, post_id: parseInt(post_id), image_url, sort_order: currentOrder });
+    }
+
+    res.status(201).json({ images: insertedImages });
+  } catch (error) {
+    console.error('Error uploading gallery images:', error);
+    res.status(500).json({ error: 'Failed to upload images' });
+  }
+});
+
+// (DELETE /images/:imageId was moved above DELETE /:id to fix Express route ordering)
+
+// ADMIN: PUT /api/admin/gallery/:id/images/reorder - Reorder images
+app.put('/api/admin/gallery/:id/images/reorder', authenticateToken, async (req, res) => {
+  try {
+    const { images } = req.body; // Array of { id, sort_order }
+    if (!Array.isArray(images)) return res.status(400).json({ error: 'images array is required' });
+
+    for (const img of images) {
+      await pool.execute('UPDATE gallery_images SET sort_order = ? WHERE id = ? AND post_id = ?', [img.sort_order, img.id, req.params.id]);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error reordering gallery images:', error);
+    res.status(500).json({ error: 'Failed to reorder images' });
+  }
+});
+
+// PUBLIC: GET /api/gallery - List all published gallery posts
+app.get('/api/gallery', async (req, res) => {
+  try {
+    const [posts] = await pool.execute(
+      'SELECT id, title, description, event_date, status FROM gallery_posts WHERE status = ? ORDER BY event_date DESC, created_at DESC',
+      ['published']
+    );
+
+    // Attach first image as thumbnail for each post
+    const postsWithThumbs = await Promise.all(posts.map(async (post) => {
+      const [images] = await pool.execute(
+        'SELECT id, image_url FROM gallery_images WHERE post_id = ? ORDER BY sort_order ASC LIMIT 1',
+        [post.id]
+      );
+      return { ...post, thumbnail: images[0] || null };
+    }));
+
+    res.json(postsWithThumbs);
+  } catch (error) {
+    console.error('Error fetching public gallery:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery' });
+  }
+});
+
+// PUBLIC: GET /api/gallery/:id - Get single published gallery post with all images
+app.get('/api/gallery/:id', async (req, res) => {
+  try {
+    const [posts] = await pool.execute(
+      'SELECT id, title, description, event_date FROM gallery_posts WHERE id = ? AND status = ?',
+      [req.params.id, 'published']
+    );
+    if (posts.length === 0) return res.status(404).json({ error: 'Gallery not found' });
+
+    const [images] = await pool.execute(
+      'SELECT * FROM gallery_images WHERE post_id = ? ORDER BY sort_order ASC',
+      [req.params.id]
+    );
+    res.json({ ...posts[0], images });
+  } catch (error) {
+    console.error('Error fetching public gallery post:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery post' });
   }
 });
 

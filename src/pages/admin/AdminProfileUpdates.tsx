@@ -23,7 +23,7 @@ export const AdminProfileUpdates = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const navigate = useNavigate();
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
   const token = localStorage.getItem('adminToken');
 
   const fetchUpdates = async () => {
@@ -184,3 +184,4 @@ export const AdminProfileUpdates = () => {
     </div>
   );
 };
+

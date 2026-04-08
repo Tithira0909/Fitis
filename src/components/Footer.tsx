@@ -8,23 +8,37 @@ export const Footer = () => {
     site_email: "info@fitis.lk",
     site_phone: "(+94) 112 577 103",
   });
+  const [chapters, setChapters] = useState<{name: string, slug: string}[]>([]);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
+        const [settingsRes, chaptersRes] = await Promise.all([
+          fetch(`${baseUrl}/api/site-settings?t=${new Date().getTime()}`, { cache: 'no-store' }),
+          fetch(`${baseUrl}/api/chapters`)
+        ]);
+
+        if (settingsRes.ok) {
+          const data = await settingsRes.json();
           setSettings({
             site_location: data.site_location || settings.site_location,
             site_email: data.site_email || settings.site_email,
             site_phone: data.site_phone || settings.site_phone,
-            footer_logo_url: data.footer_logo_url
+            footer_logo_url: data.footer_logo_url,
+            facebook_url: data.facebook_url,
+            twitter_url: data.twitter_url,
+            linkedin_url: data.linkedin_url,
+            instagram_url: data.instagram_url,
           });
         }
+
+        if (chaptersRes.ok) {
+          const data = await chaptersRes.json();
+          setChapters(data);
+        }
       } catch (err) {
-        console.error('Failed to load site settings for footer', err);
+        console.error('Failed to load site settings or chapters for footer', err);
       }
     };
     fetchSettings();
@@ -63,12 +77,25 @@ export const Footer = () => {
         <div>
           <h4 className="font-bold text-lg mb-6 text-white">Our Chapters</h4>
           <ul className="space-y-4 text-slate-400">
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">ICT Infrastructure Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Software Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Services Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Education & Training Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Communication Chapter</a></li>
-            <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Trust Chapter</a></li>
+            {chapters.length > 0 ? (
+              chapters.map(chapter => (
+                <li key={chapter.slug}>
+                  <a href={`/Chapter/${chapter.slug}`} className="hover:text-fitis-gold transition-colors">
+                    {chapter.name}
+                  </a>
+                </li>
+              ))
+            ) : (
+              // Fallback if none exist
+              <>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">ICT Infrastructure Chapter</a></li>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">Software Chapter</a></li>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Services Chapter</a></li>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">Education & Training Chapter</a></li>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">Communication Chapter</a></li>
+                <li><a href="#" className="hover:text-fitis-gold transition-colors">Digital Trust Chapter</a></li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -93,12 +120,16 @@ export const Footer = () => {
 
       <div className="max-w-7xl mx-auto px-6 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
         <p>© {new Date().getFullYear()} FITIS. All Rights Reserved.</p>
-        <div className="flex gap-8">
-          <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-          <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
+        <div className="flex gap-8 items-center">
+          <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</a>
+          <a href="https://www.zeatralabs.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition-opacity ml-4 border-l border-white/10 pl-6">
+            <span className="text-xs tracking-wider text-slate-400">Powered by</span>
+            <img src="/zeatra-white.png" alt="Zeatra Labs" className="h-[25px] object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          </a>
         </div>
       </div>
     </footer>
   );
 };
+
