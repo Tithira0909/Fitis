@@ -21,6 +21,7 @@ interface CommunityMember {
   services: string;
   primary_chapter: string;
   secondary_chapter: string;
+  fitis_membership_id: string;
 }
 
 export const MemberCommunity = () => {
@@ -134,9 +135,12 @@ export const MemberCommunity = () => {
 
                 <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight line-clamp-1">{member.company_name}</h3>
                 
-                <div className="flex gap-2 mb-6">
+                <div className="flex flex-col gap-2 mb-6 w-full items-center">
                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100/50">
-                     ID: {member.company_id || 'N/A'}
+                     Reg No: {member.company_id || 'N/A'}
+                   </span>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 bg-purple-50 px-3 py-1 rounded-full border border-purple-100/50">
+                     FITIS ID: {member.fitis_membership_id || 'N/A'}
                    </span>
                 </div>
 
@@ -145,6 +149,14 @@ export const MemberCommunity = () => {
                       <Mail className="w-4 h-4 mr-2 text-blue-400" />
                       <span className="truncate max-w-[200px]">{member.official_email}</span>
                    </div>
+                   {member.website_link && (
+                     <div className="flex items-center justify-center text-slate-400 text-sm font-medium">
+                        <LinkIcon className="w-4 h-4 mr-2 text-blue-400" />
+                        <a href={member.website_link} target="_blank" rel="noreferrer" className="hover:text-blue-600 transition-colors truncate max-w-[200px]">
+                          {member.website_link.replace(/^https?:\/\//, '')}
+                        </a>
+                     </div>
+                   )}
                    
                    <Link 
                      to={`/member/${member.id}`}

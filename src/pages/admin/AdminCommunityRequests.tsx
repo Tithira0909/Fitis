@@ -318,6 +318,9 @@ export const AdminCommunityRequests = () => {
     }
   };
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReq, setEditingReq] = useState<CommunityRequest | null>(null);
+
   const handleUpdateStatus = async (id: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -341,9 +344,42 @@ export const AdminCommunityRequests = () => {
     }
   };
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReq) return;
+    try {
+      const token = localStorage.getItem('adminToken');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
+      const { id, created_at, ...updateData } = editingReq;
+      const response = await fetch(`${baseUrl}/api/admin/member_community_requests/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+      if (!response.ok) throw new Error('Failed to update member');
+
+      const updatedMember = await response.json();
+      setRequests(prev => prev.map(req => req.id === id ? updatedMember : req));
+      if (selectedReq && selectedReq.id === id) {
+        setSelectedReq(updatedMember);
+      }
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   const openModal = (req: CommunityRequest) => {
     setSelectedReq(req);
     setIsModalOpen(true);
+  };
+
+  const openEditModal = (req: CommunityRequest) => {
+    setEditingReq(req);
+    setIsEditModalOpen(true);
   };
 
   if (loading) return <div className="p-6">Loading requests...</div>;
@@ -411,8 +447,11 @@ export const AdminCommunityRequests = () => {
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => openModal(req)} className="text-fitis-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-3">
+                      <button onClick={() => openModal(req)} className="text-fitis-blue hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors mr-2">
                         <Eye className="w-5 h-5 inline" />
+                      </button>
+                      <button onClick={() => openEditModal(req)} className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors mr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                       </button>
                       <button onClick={() => handleDelete(req.id)} className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
                         <Trash2 className="w-5 h-5 inline" />
@@ -438,6 +477,72 @@ export const AdminCommunityRequests = () => {
             </div>
 
             <div className="p-6 overflow-y-auto flex-1 space-y-8 bg-gray-50">
+              {/* Edit Modal */}
+              {isEditModalOpen && editingReq && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black bg-opacity-50 p-4">
+                  <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl flex flex-col">
+                    <div className="flex items-center justify-between p-6 border-b">
+                      <h3 className="text-xl font-bold text-gray-900">Edit Community Member</h3>
+                      <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+                    <form onSubmit={handleEditSubmit} className="p-6 overflow-y-auto max-h-[70vh] space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                          <input type="text" value={editingReq.company_name} onChange={e => setEditingReq({...editingReq, company_name: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Company ID</label>
+                          <input type="text" value={editingReq.company_id || ''} onChange={e => setEditingReq({...editingReq, company_id: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">FITIS Membership ID</label>
+                          <input type="text" value={editingReq.fitis_membership_id || ''} onChange={e => setEditingReq({...editingReq, fitis_membership_id: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Official Email</label>
+                          <input type="email" value={editingReq.official_email} onChange={e => setEditingReq({...editingReq, official_email: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                          <input type="text" value={editingReq.website_link || ''} onChange={e => setEditingReq({...editingReq, website_link: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                          <input type="text" value={editingReq.company_linkedin || ''} onChange={e => setEditingReq({...editingReq, company_linkedin: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Rep Name</label>
+                          <input type="text" value={editingReq.rep_name} onChange={e => setEditingReq({...editingReq, rep_name: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Rep Designation</label>
+                          <input type="text" value={editingReq.rep_designation} onChange={e => setEditingReq({...editingReq, rep_designation: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Rep Email</label>
+                          <input type="email" value={editingReq.rep_email} onChange={e => setEditingReq({...editingReq, rep_email: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Rep Mobile</label>
+                          <input type="text" value={editingReq.rep_mobile} onChange={e => setEditingReq({...editingReq, rep_mobile: e.target.value})} className="w-full px-3 py-2 border rounded-md" />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Services</label>
+                          <textarea value={editingReq.services || ''} onChange={e => setEditingReq({...editingReq, services: e.target.value})} className="w-full px-3 py-2 border rounded-md" rows={3} />
+                        </div>
+                      </div>
+                      <div className="mt-6 flex justify-end gap-3">
+                        <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
               {/* Status Update */}
               <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200 flex items-center justify-between">
                 <div>

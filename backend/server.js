@@ -9,6 +9,9 @@ import multer from 'multer';
 import fs from 'fs';
 import { BrevoClient } from '@getbrevo/brevo';
 import crypto from 'crypto';
+import * as otplib from 'otplib';
+const { authenticator } = otplib;
+import QRCode from 'qrcode';
 
 
 
@@ -74,6 +77,8 @@ const storage = multer.diskStorage({
       dest += 'benefits';
     } else if (req.path.includes('/upload/chapter-icon')) {
       dest += 'chapters';
+    } else if (req.path.includes('/admin/community-members')) {
+      dest += 'community';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -344,7 +349,7 @@ const authenticateToken = (req, res, next) => {
 
 // Admin Login
 app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, otpToken } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
@@ -361,11 +366,25 @@ app.post('/api/auth/login', async (req, res) => {
        return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if (!user.two_factor_secret) {
+      // Return a flag indicating 2FA setup is required
+      return res.json({ requires2FASetup: true, message: '2FA setup required' });
+    }
+
+    if (!otpToken) {
+      return res.status(400).json({ error: 'Google Authenticator OTP is required' });
+    }
+
+    const isValid = authenticator.verify({ token: otpToken, secret: user.two_factor_secret });
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid OTP token' });
+    }
+
     // Create JWT
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
-      { expiresIn: '12h' }
+      { expiresIn: '24h' }
     );
 
     // Success
@@ -581,7 +600,7 @@ app.post('/api/community/apply', multer({
 // GET /api/community-members - Public endpoint to get approved community members
 app.get('/api/community-members', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url, fitis_membership_id FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
     res.json(rows);
 
   } catch (error) {
@@ -594,7 +613,7 @@ app.get('/api/community-members', async (req, res) => {
 
 app.get('/api/community-members/:id', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE id = ? AND status = "Approved"', [req.params.id]);
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url, fitis_membership_id FROM member_community_requests WHERE id = ? AND status = "Approved"', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Member not found' });
     res.json(rows[0]);
 
@@ -1042,7 +1061,7 @@ app.post('/api/auth/community-login/verify', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, company_name: user.company_name, email: user.official_email },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     res.json({ message: 'Login successful', token, user: { id: user.id, company_name: user.company_name, email: user.official_email } });
@@ -1052,39 +1071,6 @@ app.post('/api/auth/community-login/verify', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required' });
-  }
-
-  try {
-    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const user = rows[0];
-    // NOTE: In production, always compare hashed passwords (e.g. using bcrypt).
-    // The instructions don't explicitly ask for bcrypt, so we are keeping it simple for the requested seed data.
-    if (user.password !== password) {
-       return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '2h' }
-    );
-
-    // Success
-    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username } });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Allowed tables and columns for generic CRUD to prevent SQL injection
 const TABLE_COLUMNS = {
@@ -1444,6 +1430,80 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
+
+// POST /api/auth/setup-2fa - Admin setup 2FA
+app.post('/api/auth/setup-2fa', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate a new secret
+    const secret = authenticator.generateSecret();
+    const otpauthUrl = authenticator.keyuri(username, 'FITIS Admin', secret);
+
+    // Generate QR Code data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+    res.json({ secret, qrCodeDataUrl });
+  } catch (error) {
+    console.error('2FA Setup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/confirm-2fa - Admin confirm 2FA setup
+app.post('/api/auth/confirm-2fa', async (req, res) => {
+  const { username, password, secret, otpToken } = req.body;
+
+  if (!username || !password || !secret || !otpToken) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isValid = authenticator.verify({ token: otpToken, secret });
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid OTP token' });
+    }
+
+    // Save secret to database
+    await pool.execute('UPDATE admin_users SET two_factor_secret = ? WHERE id = ?', [secret, user.id]);
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ message: '2FA setup successful', token, user: { id: user.id, username: user.username } });
+  } catch (error) {
+    console.error('2FA Confirm error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // ADMIN: POST /api/admin/community-members - Admin direct creation of member
 const uploadCommunity = multer({ storage });
@@ -2194,7 +2254,7 @@ app.get('/api/leadership-members', async (req, res) => {
     let params = [];
 
     if (type === 'past') {
-      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC, sort_order ASC';
+      query += ' WHERE type = "past" AND status = "published" ORDER BY sort_order ASC';
     } else if (type === 'current') {
       query += ' WHERE type = "current" AND status = "published" ORDER BY hierarchy_level ASC, seat ASC';
     } else {
