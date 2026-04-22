@@ -366,7 +366,7 @@ export const CompanySignup = () => {
                         onChange={handleChange as any}
                         rows={3}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none resize-none"
-                        placeholder="Briefly describe the services your company provides..."
+                        placeholder="Software Services | Digital Services | etc."
                       />
                     </div>
 

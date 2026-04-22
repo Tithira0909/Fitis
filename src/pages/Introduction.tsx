@@ -45,7 +45,7 @@ export const Introduction = () => {
                   <h2 className="text-2xl font-bold">Our Mission</h2>
                 </div>
                 <p className="text-slate-600 leading-relaxed text-lg text-justify">
-                  To lead and facilitate the growth of the ICT industry in Sri Lanka by fostering innovation, enhancing global competitiveness, and advocating for policies that support a thriving digital ecosystem for all citizens and businesses.
+                  To make Sri Lanka the leading innovation and digital economic hub in Asia by fostering emerging technologies, enabling a future-ready workforce, and driving sustainable digital transformation that enhances global competitiveness and inclusive prosperity.
                 </p>
               </div>
 
@@ -55,7 +55,7 @@ export const Introduction = () => {
                   <h2 className="text-2xl font-bold">Our Vision</h2>
                 </div>
                 <p className="text-slate-600 leading-relaxed text-lg text-justify">
-                  To position Sri Lanka as a globally recognized hub for technology and innovation, where digital integration drives sustainable economic growth and social empowerment.
+                  To be the trusted and unified voice of the ICT industry in Sri Lanka.
                 </p>
               </div>
 

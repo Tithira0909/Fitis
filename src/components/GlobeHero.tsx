@@ -295,44 +295,25 @@ const HeroOverlay = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-end pointer-events-none">
-      <div className="max-w-7xl w-full px-6 md:px-12 flex flex-col items-center md:items-end text-center md:text-right">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={startAnim ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="max-w-3xl pointer-events-auto"
-        >
-          <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-bold leading-[1.1] mb-6 tracking-tight text-white">
-            Federation of <br />
-            IT Industry, <br />
-            Sri Lanka
-          </h1>
-          
-          <div className="flex flex-wrap gap-4 justify-center md:justify-end mt-12">
-            <Link to="/Home/become-a-member" className="bg-fitis-blue text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-xl shadow-fitis-blue/20 active:scale-95 inline-block border-2 border-transparent">
-              Apply Membership
-            </Link>
-            <Link to="/Home/member-benefits" className="bg-white/5 text-white border border-white/10 px-10 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all active:scale-95 inline-block text-center border-2 border-transparent">
-              Explore Impact
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-
+    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={startAnim ? { opacity: 1 } : { opacity: 0 }}
         transition={{ delay: startAnim ? 1 : 0, duration: 1 }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-auto"
       >
-        <span className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-bold">Scroll to explore</span>
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ChevronDown className="text-white/40" size={28} />
-        </motion.div>
+        <Link to="/Home/become-a-member" className="bg-fitis-blue text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-fitis-blue-light transition-all shadow-xl shadow-fitis-blue/20 active:scale-95 inline-block border-2 border-transparent">
+          Apply Membership
+        </Link>
+        <div className="flex flex-col items-center gap-2 pointer-events-none">
+          <span className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-bold">Scroll to explore</span>
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="text-white/40" size={28} />
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

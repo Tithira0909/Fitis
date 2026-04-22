@@ -1,7 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useCreateBlockNote } from '@blocknote/react';
+import { BlockNoteView } from '@blocknote/mantine';
+import '@blocknote/mantine/style.css';
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, CheckCircle, X } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
 import { getImageUrl } from '../../utils/getImageUrl';
+
+// Wrapper component for BlockNote editor that syncs HTML content
+const BlockNoteHtmlEditor: React.FC<{
+  value: string;
+  onChange: (html: string) => void;
+  minHeight?: number;
+}> = ({ value, onChange, minHeight = 200 }) => {
+  const editor = useCreateBlockNote();
+  const [initialized, setInitialized] = useState(false);
+
+  // Load initial HTML content once
+  useEffect(() => {
+    if (!initialized && value) {
+      (async () => {
+        const blocks = await editor.tryParseHTMLToBlocks(value);
+        editor.replaceBlocks(editor.document, blocks);
+        setInitialized(true);
+      })();
+    } else if (!initialized) {
+      setInitialized(true);
+    }
+  }, [value, editor, initialized]);
+
+  const handleChange = useCallback(async () => {
+    const html = await editor.blocksToHTMLLossy(editor.document);
+    onChange(html);
+  }, [editor, onChange]);
+
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white overflow-hidden" style={{ minHeight }}>
+      <BlockNoteView editor={editor} onChange={handleChange} theme="light" />
+    </div>
+  );
+};
 
 interface GalleryImage {
   id: number;
@@ -304,7 +341,11 @@ export const AdminGallery: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea name="description" value={formData.description || ''} onChange={handleInputChange} className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800" rows={4} required />
+                    <BlockNoteHtmlEditor
+                      value={formData.description || ''}
+                      onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
+                      minHeight={250}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

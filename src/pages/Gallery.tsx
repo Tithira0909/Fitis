@@ -143,9 +143,10 @@ export const Gallery = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-slate-600 text-lg leading-relaxed max-w-4xl">
-                    {post.description}
-                  </p>
+                  <div 
+                    className="text-slate-600 text-lg leading-relaxed max-w-4xl tinymce-content"
+                    dangerouslySetInnerHTML={{ __html: post.description }}
+                  />
                 </div>
 
                 {/* Media Section */}
@@ -247,7 +248,7 @@ export const Gallery = () => {
                         src={getImageUrl(selectedPost.images[currentImageIndex].image_url, selectedPost.images[currentImageIndex].id)}
                         alt={selectedPost.title}
                         onError={(e) => { e.currentTarget.src = 'https://picsum.photos/1200/800'; }}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
 
                       {/* Controls */}
@@ -299,9 +300,10 @@ export const Gallery = () => {
 
                     <div className="w-12 h-1 bg-[#2563EB] mb-6 rounded-full" />
 
-                    <p className="text-[#D1D5DB] leading-relaxed text-[15px]">
-                      {selectedPost.description}
-                    </p>
+                    <div 
+                      className="text-[#D1D5DB] leading-relaxed text-[15px] tinymce-content"
+                      dangerouslySetInnerHTML={{ __html: selectedPost.description }}
+                    />
                   </div>
                 </div>
 

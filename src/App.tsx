@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { BackToTop } from './components/BackToTop';
 import { Home } from './pages/Home';
 import { Introduction } from './pages/Introduction';
 
@@ -10,6 +11,7 @@ import { ChairmanMessage } from './pages/ChairmanMessage';
 import { SecretariatTeam } from './pages/SecretariatTeam';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { Disclaimer } from './pages/Disclaimer';
+import { TermsOfService } from './pages/TermsOfService';
 import { Partners } from './pages/Partners';
 import { CodeOfConduct } from './pages/CodeOfConduct';
 import { CodeOfEthics } from './pages/CodeOfEthics';
@@ -112,6 +114,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <BackToTop />
       <Routes>
         {/* Standalone full-screen routes (no navbar/footer) */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -151,7 +154,8 @@ export default function App() {
               <Route path="/Home/leadership-team" element={<LeadershipTeam />} />
               <Route path="/Home/chairman-message" element={<ChairmanMessage />} />
               <Route path="/Home/secretariat-team" element={<SecretariatTeam />} />
-              <Route path="/Home/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/Home/disclaimer" element={<Disclaimer />} />
               {/* /login moved to standalone routes above */}
               <Route path="/Home/become-a-member" element={<BecomeAMember />} />
