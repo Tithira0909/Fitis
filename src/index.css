@@ -17,6 +17,30 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
   }
+
+  /* Add support for html content from TinyMCE */
+  .tinymce-content ul {
+    list-style-type: disc !important;
+    margin-left: 1.5rem !important;
+    margin-bottom: 1rem;
+  }
+  .tinymce-content ol {
+    list-style-type: decimal !important;
+    margin-left: 1.5rem !important;
+    margin-bottom: 1rem;
+  }
+  .tinymce-content li {
+    margin-bottom: 0.5rem;
+  }
+  .tinymce-content a {
+    color: var(--color-fitis-blue);
+  }
+  .tinymce-content a:hover {
+    color: var(--color-fitis-blue-light);
+  }
+  .tinymce-content p {
+    margin-bottom: 1rem;
+  }
 }
 
 @layer components {

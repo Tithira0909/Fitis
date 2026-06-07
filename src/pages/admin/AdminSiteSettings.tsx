@@ -1,7 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useCreateBlockNote } from '@blocknote/react';
+import { BlockNoteView } from '@blocknote/mantine';
+import '@blocknote/mantine/style.css';
 import { fetchApi } from '../../lib/api';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
+
+// Reusable BlockNote HTML editor wrapper
+const BlockNoteHtmlEditor: React.FC<{
+  value: string;
+  onChange: (html: string) => void;
+  minHeight?: number;
+}> = ({ value, onChange, minHeight = 250 }) => {
+  const editor = useCreateBlockNote();
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!initialized && value) {
+      (async () => {
+        const blocks = await editor.tryParseHTMLToBlocks(value);
+        editor.replaceBlocks(editor.document, blocks);
+        setInitialized(true);
+      })();
+    } else if (!initialized) {
+      setInitialized(true);
+    }
+  }, [value, editor, initialized]);
+
+  const handleChange = useCallback(async () => {
+    const html = await editor.blocksToHTMLLossy(editor.document);
+    onChange(html);
+  }, [editor, onChange]);
+
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white overflow-hidden" style={{ minHeight }}>
+      <BlockNoteView editor={editor} onChange={handleChange} theme="light" />
+    </div>
+  );
+};
 
 interface PrivacySection {
   id?: number;
@@ -358,13 +394,14 @@ export const AdminSiteSettings: React.FC = () => {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Office Location</label>
-              <input
-                type="text"
+              <label className="block text-gray-700 text-sm font-bold mb-2">Office Location <span className="font-normal text-gray-500 text-xs">(Enter each line separately — use Enter/Return for a new line)</span></label>
+              <textarea
                 name="site_location"
                 value={data.site_location}
-                onChange={handleInputChange}
-                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
+                onChange={(e) => setData(prev => ({ ...prev, site_location: e.target.value }))}
+                rows={3}
+                className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800 resize-none"
+                placeholder={"No.9A, 3/1, Fourth Floor,\nSt. Anthony's MW,\nColombo 03"}
                 required
               />
             </div>
@@ -594,13 +631,9 @@ export const AdminSiteSettings: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Content (HTML Supported) *</label>
-                        <textarea
+                        <BlockNoteHtmlEditor
                           value={sec.section_html}
-                          onChange={(e) => updatePrivacySection(idx, 'section_html', e.target.value)}
-                          className="w-full text-sm p-2 border rounded shadow-inner"
-                          rows={6}
-                          placeholder="<p>This is the content...</p>"
-                          required
+                          onChange={(html) => updatePrivacySection(idx, 'section_html', html)}
                         />
                       </div>
                     </div>
@@ -711,13 +744,9 @@ export const AdminSiteSettings: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Content (HTML Supported) *</label>
-                        <textarea
+                        <BlockNoteHtmlEditor
                           value={sec.section_html}
-                          onChange={(e) => updateDisclaimerSection(idx, 'section_html', e.target.value)}
-                          className="w-full text-sm p-2 border rounded shadow-inner"
-                          rows={6}
-                          placeholder="<p>This is the content...</p>"
-                          required
+                          onChange={(html) => updateDisclaimerSection(idx, 'section_html', html)}
                         />
                       </div>
                     </div>

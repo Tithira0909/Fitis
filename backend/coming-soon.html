@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FITIS - Coming Soon</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0f4c5c, #007c91, #00a8c6);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    .logo {
+      width: 120px;
+      margin-bottom: 20px;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    h1 { font-size: 3rem; font-weight: 600; margin-bottom: 10px; }
+    p  { font-size: 1.2rem; opacity: 0.8; margin-bottom: 30px; }
+
+    .loader { display: flex; justify-content: center; gap: 10px; }
+
+    .dot {
+      width: 12px; height: 12px;
+      background: #00c9e6;
+      border-radius: 50%;
+      animation: bounce 1.5s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40%           { transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(0, 201, 230, 0.12);
+      animation: move 20s linear infinite;
+    }
+    .circle:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 20%; }
+    .circle:nth-child(2) { width: 300px; height: 300px; bottom: 15%; right: 25%; animation-duration: 25s; }
+    .circle:nth-child(3) { width: 150px; height: 150px; bottom: 30%; left: 10%; animation-duration: 18s; }
+
+    @keyframes move {
+      0%   { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-1000px) rotate(360deg); }
+    }
+
+    /* ── Password bypass ── */
+    #staff-link {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 2px;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    #staff-link:hover { color: rgba(255,255,255,0.7); }
+
+    #pw-box {
+      display: none;
+      position: fixed;
+      bottom: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 20px 24px;
+      width: 280px;
+      text-align: left;
+      animation: fadeIn 0.25s ease;
+      z-index: 999;
+    }
+    #pw-box label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 10px;
+    }
+    #pw-box input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+    #pw-box input:focus { border-color: #00c9e6; }
+    #pw-box input::placeholder { opacity: 0.4; font-size: 13px; }
+    #pw-box button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #00a8c6;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    #pw-box button:hover { background: #007c91; }
+    #pw-error {
+      color: #ff8080;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="circle"></div>
+  <div class="circle"></div>
+  <div class="circle"></div>
+
+  <div class="container">
+    <img src="/uploads/favicon/fitis-logo.png" alt="FITIS Logo" class="logo"
+         onerror="this.style.display='none'">
+    <h1>Coming Soon</h1>
+    <p>FITIS is under construction. Stay tuned for something amazing!</p>
+    <div class="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Staff preview link -->
+  <div id="staff-link" onclick="togglePwBox()">Staff Preview</div>
+
+  <!-- Password box -->
+  <div id="pw-box">
+    <label>🔒 Enter Preview Password</label>
+    <input id="pw-input" type="password" placeholder="Password"
+           onkeydown="if(event.key==='Enter') checkPw()" autofocus>
+    <button onclick="checkPw()">Access Site</button>
+    <div id="pw-error">Incorrect password. Try again.</div>
+  </div>
+
+  <script>
+    const CORRECT = 'Fitis-22';
+    const TARGET  = '/admin';
+
+    function togglePwBox() {
+      const box = document.getElementById('pw-box');
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+      if (box.style.display === 'block') document.getElementById('pw-input').focus();
+    }
+
+    function checkPw() {
+      const val = document.getElementById('pw-input').value;
+      const err = document.getElementById('pw-error');
+      if (val === CORRECT) {
+        document.cookie = "bypass_coming_soon=true; path=/; max-age=86400"; // 1 day bypass
+        window.location.href = TARGET;
+      } else {
+        err.style.display = 'block';
+        document.getElementById('pw-input').value = '';
+        setTimeout(() => { err.style.display = 'none'; }, 2500);
+      }
+    }
+  </script>
+
+</body>
+</html>

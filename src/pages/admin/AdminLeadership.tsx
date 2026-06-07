@@ -127,15 +127,21 @@ export const AdminLeadership: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Ensure empty number fields are sent as null to prevent MySQL errors
+      const payload = { ...formData };
+      if (payload.year_start === '') payload.year_start = null;
+      if (payload.year_end === '') payload.year_end = null;
+      if (payload.sort_order === '') payload.sort_order = null;
+
       if (editingItem) {
         await fetchApi(`/api/admin/leadership_members/${editingItem.id}`, {
           method: 'PUT',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
       } else {
         await fetchApi('/api/admin/leadership_members', {
           method: 'POST',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
       }
       loadMembers();
@@ -436,7 +442,6 @@ export const AdminLeadership: React.FC = () => {
                         onChange={handleInputChange}
                         className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                         placeholder="e.g. 2021"
-                        required={formData.type === 'past'}
                       />
                     </div>
                     <div>
@@ -448,7 +453,6 @@ export const AdminLeadership: React.FC = () => {
                         onChange={handleInputChange}
                         className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-fitis-blue/20 focus:border-fitis-blue transition-all outline-none shadow-sm text-slate-800"
                         placeholder="e.g. 2023"
-                        required={formData.type === 'past'}
                       />
                     </div>
                   </div>

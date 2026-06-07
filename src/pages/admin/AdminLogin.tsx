@@ -5,6 +5,11 @@ import { login } from '../../lib/auth';
 export const AdminLogin: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [otpToken, setOtpToken] = useState('');
+  const [setupMode, setSetupMode] = useState(false);
+  const [requireOtp, setRequireOtp] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [secret, setSecret] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -16,19 +21,67 @@ export const AdminLogin: React.FC = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    if (setupMode) {
+      // Confirm 2FA Setup
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
+        const response = await fetch(`${baseUrl}/api/auth/confirm-2fa`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, secret, otpToken }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          login(data.token);
+          navigate('/admin');
+        } else {
+          setError(data.error || 'Invalid OTP');
+        }
+      } catch (err) {
+        setError('Failed to connect to the server');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5004';
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, otpToken }),
       });
       const data = await response.json();
+
       if (response.ok) {
-        login(data.token);
-        navigate('/admin');
+        if (data.requires2FASetup) {
+          // Trigger setup 2FA
+          const setupResponse = await fetch(`${baseUrl}/api/auth/setup-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const setupData = await setupResponse.json();
+          if (setupResponse.ok) {
+            setQrCodeDataUrl(setupData.qrCodeDataUrl);
+            setSecret(setupData.secret);
+            setSetupMode(true);
+            setOtpToken('');
+          } else {
+            setError(setupData.error || 'Failed to start 2FA setup');
+          }
+        } else {
+          login(data.token);
+          navigate('/admin');
+        }
       } else {
-        setError(data.error || 'Invalid credentials');
+        if (response.status === 400 && data.error.includes('Google Authenticator OTP is required')) {
+          setRequireOtp(true);
+        } else {
+          setError(data.error || 'Invalid credentials');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -368,49 +421,100 @@ export const AdminLogin: React.FC = () => {
             )}
 
             <form onSubmit={handleLogin}>
-              <div>
-                <label className="al-label" htmlFor="admin-username">Email / Username</label>
-                <div className="al-input-wrap">
-                  <span className="al-input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </span>
-                  <input
-                    className="al-input"
-                    id="admin-username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    autoComplete="username"
-                    required
-                  />
-                </div>
-              </div>
+              {setupMode ? (
+                <div className="text-center mb-6">
+                  <h3 className="text-md font-bold mb-2">Set up Google Authenticator</h3>
+                  <p className="text-sm text-gray-500 mb-4">Scan the QR code below using Google Authenticator, then enter the 6-digit code.</p>
+                  <img src={qrCodeDataUrl} alt="2FA QR Code" className="mx-auto mb-4 border border-gray-200 rounded-lg shadow-sm" />
 
-              <div>
-                <label className="al-label" htmlFor="admin-password">Password</label>
-                <div className="al-input-wrap">
-                  <span className="al-input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </span>
-                  <input
-                    className="al-input"
-                    id="admin-password"
-                    type="password"
-                    placeholder="••••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                  />
+                  <div className="text-left">
+                    <label className="al-label" htmlFor="admin-otp-setup">Authentication Code</label>
+                    <div className="al-input-wrap">
+                      <input
+                        className="al-input"
+                        id="admin-otp-setup"
+                        type="text"
+                        placeholder="000000"
+                        value={otpToken}
+                        onChange={e => setOtpToken(e.target.value)}
+                        required
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div style={{ display: requireOtp ? 'none' : 'block' }}>
+                    <label className="al-label" htmlFor="admin-username">Email / Username</label>
+                    <div className="al-input-wrap">
+                      <span className="al-input-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <input
+                        className="al-input"
+                        id="admin-username"
+                        type="text"
+                        placeholder="Enter your username"
+                        value={username}
+                        onChange={e => setUsername(e.target.value)}
+                        autoComplete="username"
+                        required={!requireOtp}
+                      />
+                    </div>
+
+                    <label className="al-label" htmlFor="admin-password">Password</label>
+                    <div className="al-input-wrap">
+                      <span className="al-input-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </span>
+                      <input
+                        className="al-input"
+                        id="admin-password"
+                        type="password"
+                        placeholder="••••••••••"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        autoComplete="current-password"
+                        required={!requireOtp}
+                      />
+                    </div>
+                  </div>
+
+                  {requireOtp && (
+                    <div>
+                      <div className="mb-4">
+                        <button type="button" onClick={() => setRequireOtp(false)} className="text-sm text-blue-600 hover:text-blue-800 font-medium">← Back to login</button>
+                      </div>
+                      <label className="al-label" htmlFor="admin-otp">Google Authenticator Code</label>
+                      <div className="al-input-wrap">
+                        <span className="al-input-icon">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                          </svg>
+                        </span>
+                        <input
+                          className="al-input"
+                          id="admin-otp"
+                          type="text"
+                          placeholder="000000"
+                          value={otpToken}
+                          onChange={e => setOtpToken(e.target.value)}
+                          required
+                          maxLength={6}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
               <button
                 ref={btnRef}

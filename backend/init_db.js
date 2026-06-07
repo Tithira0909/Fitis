@@ -78,6 +78,7 @@ const initializeDB = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
+        two_factor_secret VARCHAR(255) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`,
       `CREATE TABLE IF NOT EXISTS news (
@@ -132,6 +133,7 @@ const initializeDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         banner_image_url VARCHAR(600),
+        thumbnail_image_url VARCHAR(600),
         about_chapter LONGTEXT,
         chair_message LONGTEXT,
         chair_image_url VARCHAR(600),
@@ -389,6 +391,7 @@ const initializeDB = async () => {
     try {
       const colsToAdd = [
         "ADD COLUMN banner_image_url VARCHAR(600)",
+        "ADD COLUMN thumbnail_image_url VARCHAR(600)",
         "ADD COLUMN about_chapter LONGTEXT",
         "ADD COLUMN chair_message LONGTEXT",
         "ADD COLUMN chair_image_url VARCHAR(600)",

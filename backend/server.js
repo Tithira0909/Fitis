@@ -9,6 +9,9 @@ import multer from 'multer';
 import fs from 'fs';
 import { BrevoClient } from '@getbrevo/brevo';
 import crypto from 'crypto';
+import otplib from 'otplib';
+const authenticator = otplib.authenticator || otplib.default.authenticator;
+import QRCode from 'qrcode';
 
 
 
@@ -30,8 +33,8 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:3005',
     // Production
-    'https://qfactor.lk',
-    'https://www.qfactor.lk',
+    'https://fitis.lk',
+    'https://www.fitis.lk',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -41,6 +44,22 @@ app.use(express.json());
 
 // Expose uploads directory statically
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// ── Coming Soon Mode ─────────────────────────────────────────────────────────
+// Set COMING_SOON=Y in .env to show the coming soon page for all frontend routes.
+// API routes (/api/*) are always passed through so the backend works normally.
+const comingSoonPath = path.join(__dirname, 'coming-soon.html');
+if (process.env.COMING_SOON === 'Y') {
+  app.use((req, res, next) => {
+    // Always allow API and upload routes through
+    if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+      return next();
+    }
+    // Serve coming soon page for everything else
+    res.sendFile(comingSoonPath);
+  });
+  console.log('🚧 COMING SOON mode is ON — all frontend routes show the coming soon page.');
+}
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
@@ -74,6 +93,8 @@ const storage = multer.diskStorage({
       dest += 'benefits';
     } else if (req.path.includes('/upload/chapter-icon')) {
       dest += 'chapters';
+    } else if (req.path.includes('/admin/community-members')) {
+      dest += 'community';
     }
     // Ensure directory exists
     fs.mkdirSync(path.join(process.cwd(), dest), { recursive: true });
@@ -258,7 +279,7 @@ pool.query(`
   )
 `).then(() => console.log('Newsletters table ensured')).catch(err => console.error('Error creating newsletters table:', err));
 
-pool.query(`ALTER TABLE site_settings ADD COLUMN leadership_year VARCHAR(50) DEFAULT '2023/2024'`).then(() => console.log('Added leadership_year')).catch(() => {});
+pool.query(`ALTER TABLE site_settings ADD COLUMN leadership_year VARCHAR(50) DEFAULT '2023/2024'`).then(() => console.log('Added leadership_year')).catch(() => { });
 
 
 // Brevo (Sendinblue) API Client for Transactional Emails
@@ -308,7 +329,7 @@ app.post('/api/contact/chapter', async (req, res) => {
 
   try {
     await sendBrevoEmail(
-      'info@fitis.lk', 
+      'info@fitis.lk',
       'FITIS Info',
       `New Chapter Inquiry from ${name}`,
       `
@@ -344,7 +365,7 @@ const authenticateToken = (req, res, next) => {
 
 // Admin Login
 app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, otpToken } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
@@ -358,14 +379,28 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = rows[0];
     if (user.password !== password) {
-       return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!user.two_factor_secret) {
+      // Return a flag indicating 2FA setup is required
+      return res.json({ requires2FASetup: true, message: '2FA setup required' });
+    }
+
+    if (!otpToken) {
+      return res.status(400).json({ error: 'Google Authenticator OTP is required' });
+    }
+
+    const isValid = authenticator.verify({ token: otpToken, secret: user.two_factor_secret });
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid OTP token' });
     }
 
     // Create JWT
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
-      { expiresIn: '12h' }
+      { expiresIn: '24h' }
     );
 
     // Success
@@ -581,7 +616,7 @@ app.post('/api/community/apply', multer({
 // GET /api/community-members - Public endpoint to get approved community members
 app.get('/api/community-members', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url, fitis_membership_id FROM member_community_requests WHERE status = "Approved" ORDER BY created_at DESC');
     res.json(rows);
 
   } catch (error) {
@@ -594,7 +629,7 @@ app.get('/api/community-members', async (req, res) => {
 
 app.get('/api/community-members/:id', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url FROM member_community_requests WHERE id = ? AND status = "Approved"', [req.params.id]);
+    const [rows] = await pool.execute('SELECT id, company_name, official_email, company_id, company_logo_url, services, website_link, company_linkedin, primary_chapter, secondary_chapter, rep_name, rep_designation, rep_email, rep_mobile, rep_image_url, fitis_membership_id FROM member_community_requests WHERE id = ? AND status = "Approved"', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Member not found' });
     res.json(rows[0]);
 
@@ -725,7 +760,7 @@ app.get('/api/community/profile', authenticateToken, async (req, res) => {
     const member_id = req.user.id;
     const [rows] = await pool.execute('SELECT * FROM member_community_requests WHERE id = ?', [member_id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
-    
+
     // Do not return password
     const { password, ...safeData } = rows[0];
     res.json(safeData);
@@ -775,7 +810,7 @@ app.get('/api/community/profile-update/status', authenticateToken, async (req, r
 app.get('/api/admin/profile-updates', async (req, res) => {
   try {
     const [rows] = await pool.execute(`
-      SELECT u.*, m.company_name, m.official_email 
+      SELECT u.*, m.company_name, m.official_email
       FROM member_profile_updates u
       JOIN member_community_requests m ON u.member_id = m.id
       WHERE u.status = "Pending"
@@ -791,18 +826,18 @@ app.get('/api/admin/profile-updates', async (req, res) => {
 app.post('/api/admin/profile-updates/:id/approve', async (req, res) => {
   try {
     const update_id = req.params.id;
-    
+
     // Get the update data
     const [updates] = await pool.execute('SELECT * FROM member_profile_updates WHERE id = ?', [update_id]);
     if (updates.length === 0) return res.status(404).json({ error: 'Update request not found' });
-    
+
     const update = updates[0];
     const data = typeof update.updated_data === 'string' ? JSON.parse(update.updated_data) : update.updated_data;
-    
+
     // Apply updates to member_community_requests
     const allowedFields = [
-      'company_name', 'official_email', 'company_id', 'company_logo_url', 'services', 
-      'website_link', 'company_linkedin', 'primary_chapter', 'secondary_chapter', 
+      'company_name', 'official_email', 'company_id', 'company_logo_url', 'services',
+      'website_link', 'company_linkedin', 'primary_chapter', 'secondary_chapter',
       'rep_name', 'rep_designation', 'rep_email', 'rep_mobile', 'rep_image_url'
     ];
 
@@ -823,10 +858,10 @@ app.post('/api/admin/profile-updates/:id/approve', async (req, res) => {
     updateValues.push(update.member_id);
 
     await pool.execute(updateQuery, updateValues);
-    
+
     // Mark as approved
     await pool.execute('UPDATE member_profile_updates SET status = "Approved" WHERE id = ?', [update_id]);
-    
+
     res.json({ message: 'Profile update approved and applied successfully' });
   } catch (error) {
     console.error('Error approving profile update:', error);
@@ -984,7 +1019,7 @@ app.post('/api/auth/community-login', async (req, res) => {
 
     const user = rows[0];
     if (user.password !== password) {
-       return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (user.status === 'Pending') {
@@ -1002,9 +1037,9 @@ app.post('/api/auth/community-login', async (req, res) => {
     );
 
     await sendBrevoEmail(
-      email, 
-      user.company_name || 'Member', 
-      'FITIS Login Verification Code', 
+      email,
+      user.company_name || 'Member',
+      'FITIS Login Verification Code',
       `Your FITIS login verification code is: <strong style="font-size:24px;">${otp}</strong><br/>It expires in 15 minutes.`
     );
 
@@ -1042,7 +1077,7 @@ app.post('/api/auth/community-login/verify', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, company_name: user.company_name, email: user.official_email },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     res.json({ message: 'Login successful', token, user: { id: user.id, company_name: user.company_name, email: user.official_email } });
@@ -1052,39 +1087,6 @@ app.post('/api/auth/community-login/verify', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required' });
-  }
-
-  try {
-    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
-    if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const user = rows[0];
-    // NOTE: In production, always compare hashed passwords (e.g. using bcrypt).
-    // The instructions don't explicitly ask for bcrypt, so we are keeping it simple for the requested seed data.
-    if (user.password !== password) {
-       return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '2h' }
-    );
-
-    // Success
-    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username } });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Allowed tables and columns for generic CRUD to prevent SQL injection
 const TABLE_COLUMNS = {
@@ -1094,7 +1096,7 @@ const TABLE_COLUMNS = {
   partners: ['name', 'category', 'logo_url', 'website_url', 'sort_order', 'status'],
   newsletter_subscribers: ['email'],
   programs: ['title', 'slug', 'description', 'banner_image_url', 'read_more_url', 'status', 'sort_order'],
-    secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
+  secretariat_team: ['name', 'role', 'photo_url', 'linkedin_url', 'facebook_url', 'sort_order', 'status'],
   member_applications: ['primary_chapter', 'chapters_applied', 'company_name', 'membership_category', 'ceo_name', 'company_address', 'phone', 'fax', 'website', 'email', 'br_number', 'year_incorporation', 'boi_no', 'ownership_local', 'ownership_foreign', 'business_activities', 'industry_focus', 'revenue_local', 'revenue_foreign', 'employees_count', 'primary_nominee', 'secondary_nominee', 'business_registration', 'audited_accounts', 'company_profile', 'form_20', 'declaration_applicant_name', 'declaration_applicant_designation', 'declaration_date', 'agree_checkbox', 'status'],
   member_benefits: ['brand_name', 'benefit_title', 'category', 'offer_text', 'description', 'terms', 'link_url', 'logo_url', 'sort_order', 'status'],
   member_community_requests: ['company_name', 'primary_chapter', 'secondary_chapter', 'fitis_membership_id', 'services', 'company_logo_url', 'company_id', 'official_email', 'company_linkedin', 'website_link', 'rep_image_url', 'rep_name', 'rep_email', 'rep_mobile', 'rep_designation', 'password', 'status'],
@@ -1445,6 +1447,80 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/auth/setup-2fa - Admin setup 2FA
+app.post('/api/auth/setup-2fa', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate a new secret
+    const secret = authenticator.generateSecret();
+    const otpauthUrl = authenticator.keyuri(username, 'FITIS Admin', secret);
+
+    // Generate QR Code data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+    res.json({ secret, qrCodeDataUrl });
+  } catch (error) {
+    console.error('2FA Setup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/confirm-2fa - Admin confirm 2FA setup
+app.post('/api/auth/confirm-2fa', async (req, res) => {
+  const { username, password, secret, otpToken } = req.body;
+
+  if (!username || !password || !secret || !otpToken) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const [rows] = await pool.execute('SELECT * FROM admin_users WHERE username = ?', [username]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isValid = authenticator.verify({ token: otpToken, secret });
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid OTP token' });
+    }
+
+    // Save secret to database
+    await pool.execute('UPDATE admin_users SET two_factor_secret = ? WHERE id = ?', [secret, user.id]);
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ message: '2FA setup successful', token, user: { id: user.id, username: user.username } });
+  } catch (error) {
+    console.error('2FA Confirm error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // ADMIN: POST /api/admin/community-members - Admin direct creation of member
 const uploadCommunity = multer({ storage });
 app.post('/api/admin/community-members', authenticateToken, uploadCommunity.fields([{ name: 'company_logo', maxCount: 1 }, { name: 'rep_image', maxCount: 1 }]), async (req, res) => {
@@ -1482,24 +1558,24 @@ app.post('/api/admin/community-members', authenticateToken, uploadCommunity.fiel
 
     const [result] = await pool.execute(
       `INSERT INTO member_community_requests (
-        company_name, primary_chapter, secondary_chapter, fitis_membership_id, company_id, 
+        company_name, primary_chapter, secondary_chapter, fitis_membership_id, company_id,
         official_email, company_linkedin, website_link, services, company_logo_url,
-        rep_name, rep_email, rep_mobile, rep_designation, rep_image_url, 
+        rep_name, rep_email, rep_mobile, rep_designation, rep_image_url,
         status, password
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved', ?)`,
       [
-        company_name, 
-        primary_chapter || null, 
+        company_name,
+        primary_chapter || null,
         secondary_chapter || null,
-        fitis_membership_id || null, 
+        fitis_membership_id || null,
         company_id || null,
-        official_email, 
+        official_email,
         company_linkedin || null,
         website_link || null,
         services || null,
         company_logo_url,
-        rep_name || null, 
-        rep_email, 
+        rep_name || null,
+        rep_email,
         rep_mobile || null,
         rep_designation || null,
         rep_image_url,
@@ -2194,7 +2270,7 @@ app.get('/api/leadership-members', async (req, res) => {
     let params = [];
 
     if (type === 'past') {
-      query += ' WHERE type = "past" AND status = "published" ORDER BY year_end DESC, year_start DESC, sort_order ASC';
+      query += ' WHERE type = "past" AND status = "published" ORDER BY sort_order ASC';
     } else if (type === 'current') {
       query += ' WHERE type = "current" AND status = "published" ORDER BY hierarchy_level ASC, seat ASC';
     } else {

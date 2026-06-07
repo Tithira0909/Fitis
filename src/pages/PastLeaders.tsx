@@ -82,9 +82,11 @@ export const PastLeaders = () => {
                   <div className="flex-grow min-w-0 pr-6">
                     <h3 className="text-lg font-bold text-slate-900 truncate mb-1">{leader.name}</h3>
                     <p className="text-sm font-medium text-slate-500 mb-3 truncate">{leader.designation}</p>
-                    <div className="inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1 rounded">
-                      {leader.year_start} - {leader.year_end}
-                    </div>
+                    {(leader.year_start || leader.year_end) && (
+                      <div className="inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-1 rounded">
+                        {leader.year_start}{leader.year_end ? ` - ${leader.year_end}` : ''}
+                      </div>
+                    )}
                   </div>
 
                   {/* LinkedIn Bottom Right Corner */}
